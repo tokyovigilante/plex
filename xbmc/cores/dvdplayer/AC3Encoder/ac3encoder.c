@@ -24,6 +24,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <aften.h>
 
 static const int acmod_to_ch[8] = { 2, 1, 2, 3, 3, 4, 4, 5 };
 
@@ -56,7 +57,7 @@ static inline int swabdata(char* dst, char* src, int size)
 
 // call before using the encoder
 // initialises the aften context and the I/O buffers
-void ac3encoder_init(struct AC3Encoder *encoder, int iChannels, unsigned int uiSamplesPerSec, int uiBitsPerSample)
+void ac3encoder_init(struct AC3Encoder *encoder, int iChannels, unsigned int uiSamplesPerSec, int uiBitsPerSample, int remap)
 {
 	rb_init(&encoder->m_inputBuffer, 2048 * 6 * 10); // store up to 10240 six-channel samples
 	rb_init(&encoder->m_outputBuffer, AC3_SPDIF_FRAME_SIZE * 5); // store up to 5 AC3 frames
@@ -66,10 +67,11 @@ void ac3encoder_init(struct AC3Encoder *encoder, int iChannels, unsigned int uiS
 	encoder->m_aftenContext.channels = iChannels;
 	encoder->m_aftenContext.samplerate = uiSamplesPerSec;
 	encoder->m_iSampleSize = uiBitsPerSample;
-
+	encoder->remap = remap;
+	
+	
 	encoder->m_aftenContext.params.bitrate = 640; // set AC3 output bitrate to maximum
 	
-	// we have no way of knowing which LPCM channel is which, so just use best guess
 	encoder->m_aftenContext.acmod = -1;
 	encoder->m_aftenContext.lfe = 0;
 	switch (iChannels)
@@ -133,9 +135,17 @@ int ac3encoder_write_samples(struct AC3Encoder *encoder, unsigned char *samples,
 	int input_size = frames_in * encoder->m_aftenContext.channels * encoder->m_iSampleSize / 8;
 	rb_write(encoder->m_inputBuffer, samples, input_size);
 	
+	void (*aften_remap)(void *samples, int n, int ch,
+                        A52SampleFormat fmt, int acmod) = NULL;
+	
+	if(encoder->remap == 1)
+        aften_remap = aften_remap_mpeg_to_a52;
+    else
+        aften_remap = aften_remap_wav_to_a52;
+	
 	while (ac3coder_get_PCM_samplecount(encoder) >= AC3_SAMPLES_PER_FRAME)
 	{
-		// encode to output buffer
+		// copy to output buffer
 		encoder->irawSampleBytesRead = AC3_SAMPLES_PER_FRAME * encoder->m_aftenContext.channels * encoder->m_iSampleSize / 8;
 		unsigned char *sample_buffer;
 		sample_buffer = calloc(1, encoder->irawSampleBytesRead);
@@ -144,6 +154,9 @@ int ac3encoder_write_samples(struct AC3Encoder *encoder, unsigned char *samples,
 			free(sample_buffer);
 			return ac3encoder_get_AC3_samplecount(encoder);
 		}
+		
+		if(aften_remap)
+            aften_remap(sample_buffer, AC3_SAMPLES_PER_FRAME, encoder->m_aftenContext.channels, encoder->m_aftenContext.sample_format, encoder->m_aftenContext.acmod);
 		
 		//encode
 		unsigned char AC3_frame_buffer[AC3_SPDIF_FRAME_SIZE], oldendian[AC3_SPDIF_FRAME_SIZE];
@@ -157,19 +170,9 @@ int ac3encoder_write_samples(struct AC3Encoder *encoder, unsigned char *samples,
 			AC3_frame_buffer[2] = 0x1F;
 			AC3_frame_buffer[3] = 0x4E;
 			AC3_frame_buffer[4] = 0x01;
-			//AC3_frame_buffer[4] = AC3_frame_buffer[13] & 7; /* bsmod */
 			AC3_frame_buffer[5] = 0x00; /* data type */
 			AC3_frame_buffer[6] = (encoder->iAC3FrameSize << 3) & 0xFF;
 			AC3_frame_buffer[7] = (encoder->iAC3FrameSize >> 5) & 0xFF;
-			/*
-			pOut[0] = 0x72;
-			pOut[1] = 0xF8;
-			pOut[2] = 0x1F;
-			pOut[3] = 0x4E;
-			pOut[4] = 0x01; //(length) ? data_type : 0; /* & 0x1F; */
-		/*	pOut[5] = 0x00;
-			pOut[6] = (iDataSize2 << 3) & 0xFF;
-			pOut[7] = (iDataSize2 >> 5) & 0xFF;*/
 			
 			if(encoder->iAC3FrameSize < 0) 
 			{

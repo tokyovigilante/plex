@@ -42,9 +42,10 @@ struct AC3Encoder
     int got_fs_once;
     int iAC3FrameSize;
     int irawSampleBytesRead;	
+	int remap;
 };
 
-void ac3encoder_init(struct AC3Encoder *encoder, int iChannels, unsigned int uiSamplesPerSec, int uiBitsPerSample);
+void ac3encoder_init(struct AC3Encoder *encoder, int iChannels, unsigned int uiSamplesPerSec, int uiBitsPerSample, int remap);
 int ac3encoder_write_samples(struct AC3Encoder *encoder, unsigned char *samples, int samples_in);
 int ac3coder_get_PCM_samplecount(struct AC3Encoder *encoder);
 int ac3encoder_get_AC3_samplecount(struct AC3Encoder *encoder);
