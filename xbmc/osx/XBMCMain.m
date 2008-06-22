@@ -58,12 +58,10 @@ static XBMCMain *_o_sharedMainInstance = nil;
 {
   static BOOL handlingException = NO;
   
-  // Check to see if the exceptionHandler is being recurisvely called...if so then there is an exception being
+  // Check to see if the exceptionHandler is being recursively called...if so then there is an exception being
   // generated in this method.
-  //
-  if (handlingException) 
-  {
-    NSLog(@"**Exception** Fatal Error: Exception handler is recurising.");
+  if (handlingException) {
+    NSLog(@"**Exception** Fatal Error: Exception handler is recursing.");
     NSLog(@"**Exception** %@", [e reason]);
     return NO;
   }
