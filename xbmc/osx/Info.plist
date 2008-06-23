@@ -7,7 +7,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>English</string>
 	<key>CFBundleExecutable</key>
-	<string>XBMC</string>
+	<string>${EXECUTABLE_NAME}</string>
 	<key>CFBundleGetInfoString</key>
 	<string>Version ${VERSION}</string>
 	<key>CFBundleHelpBookName</key>
@@ -17,7 +17,7 @@
 	<key>CFBundleIdentifier</key>
 	<string>org.xbmc.XBMC</string>
 	<key>CFBundleInfoDictionaryVersion</key>
-	<string>${VERSION}</string>
+	<string>6.0</string>
 	<key>CFBundleName</key>
 	<string>XBMC</string>
 	<key>CFBundlePackageType</key>
@@ -28,5 +28,9 @@
 	<string>adrb</string>
 	<key>CFBundleVersion</key>
 	<string>687</string>
+	<key>SmartCrashReports_CompanyName</key>
+  <string>OSXBMC</string>
+  <key>SmartCrashReports_EmailTicket</key>
+  <string>SCR-76B35BCAB9</string>
 </dict>
 </plist>

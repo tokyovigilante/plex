@@ -835,6 +835,9 @@
 		E3FFF0090D46FD1D003D79C3 /* libavcodec-osx.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E3FFF0040D46FD1D003D79C3 /* libavcodec-osx.a */; };
 		E3FFF02F0D470BD8003D79C3 /* libavformat-osx.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E3FFF02E0D470BD8003D79C3 /* libavformat-osx.a */; };
 		EFD2EF100E0B25A900CE20D7 /* ExceptionHandling.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EFD2EF0F0E0B25A900CE20D7 /* ExceptionHandling.framework */; };
+		EFF0820B0E106C00004114E6 /* SmartCrashReportsAPI.o in Frameworks */ = {isa = PBXBuildFile; fileRef = EFF082090E106C00004114E6 /* SmartCrashReportsAPI.o */; };
+		EFF0820C0E106C00004114E6 /* SmartCrashReportsInstall.o in Frameworks */ = {isa = PBXBuildFile; fileRef = EFF0820A0E106C00004114E6 /* SmartCrashReportsInstall.o */; };
+		EFF0820E0E106C11004114E6 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EFF0820D0E106C11004114E6 /* Security.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -2862,6 +2865,9 @@
 		E3FFF0040D46FD1D003D79C3 /* libavcodec-osx.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libavcodec-osx.a"; path = "xbmc/lib/libffmpeg-OSX/libavcodec-osx.a"; sourceTree = "<group>"; };
 		E3FFF02E0D470BD8003D79C3 /* libavformat-osx.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libavformat-osx.a"; path = "xbmc/lib/libffmpeg-OSX/libavformat-osx.a"; sourceTree = "<group>"; };
 		EFD2EF0F0E0B25A900CE20D7 /* ExceptionHandling.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ExceptionHandling.framework; path = System/Library/Frameworks/ExceptionHandling.framework; sourceTree = SDKROOT; };
+		EFF082090E106C00004114E6 /* SmartCrashReportsAPI.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = SmartCrashReportsAPI.o; path = xbmc/lib/libSmartCrashReports/SmartCrashReportsAPI.o; sourceTree = "<group>"; };
+		EFF0820A0E106C00004114E6 /* SmartCrashReportsInstall.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = SmartCrashReportsInstall.o; path = xbmc/lib/libSmartCrashReports/SmartCrashReportsInstall.o; sourceTree = "<group>"; };
+		EFF0820D0E106C11004114E6 /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = System/Library/Frameworks/Security.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -2918,6 +2924,9 @@
 				EFD2EF100E0B25A900CE20D7 /* ExceptionHandling.framework in Frameworks */,
 				E3B578970E0E3CDB002B3B3E /* libaften_pcm.a in Frameworks */,
 				E3B578980E0E3CDB002B3B3E /* libaften_static.a in Frameworks */,
+				EFF0820B0E106C00004114E6 /* SmartCrashReportsAPI.o in Frameworks */,
+				EFF0820C0E106C00004114E6 /* SmartCrashReportsInstall.o in Frameworks */,
+				EFF0820E0E106C11004114E6 /* Security.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2947,6 +2956,9 @@
 		08FB779DFE84155DC02AAC07 /* External Frameworks and Libraries */ = {
 			isa = PBXGroup;
 			children = (
+				EFF0820D0E106C11004114E6 /* Security.framework */,
+				EFF082090E106C00004114E6 /* SmartCrashReportsAPI.o */,
+				EFF0820A0E106C00004114E6 /* SmartCrashReportsInstall.o */,
 				E3B578950E0E3CDB002B3B3E /* libaften_pcm.a */,
 				E3B578960E0E3CDB002B3B3E /* libaften_static.a */,
 				E38CB6B90DF7E5B2002B36E1 /* libXBMS-osx.a */,

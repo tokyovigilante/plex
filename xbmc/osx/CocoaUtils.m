@@ -21,8 +21,17 @@
 #include "CocoaUtils.h"
 #import "XBMCMain.h" 
 
+#import <libSmartCrashReports/SmartCrashReportsInstall.h>
+#import <libSmartCrashReports/SmartCrashReportsAPI.h>
+
 void Cocoa_Initialize(void* pApplication)
 {
+  UnsanitySCR_RegisterMatchSpecifier(CFSTR("org.xbmc.XBMC"), CFSTR("OSXBMC"), NULL, CFSTR("SCR-76B35BCAB9"), NULL);  
+  
+  Boolean authenticationWillBeRequired = FALSE;
+  if (UnsanitySCR_CanInstall(&authenticationWillBeRequired))
+    UnsanitySCR_Install(authenticationWillBeRequired ? kUnsanitySCR_GlobalInstall : 0);
+  
   // Intialize the Apple remote code.
   [[XBMCMain sharedInstance] setApplication: pApplication];
 }
