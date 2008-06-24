@@ -19,6 +19,7 @@ extern "C"
   // Initialization.
   //
   void Cocoa_Initialize(void* pApplication);
+  void InstallCrashReporter();
 
   //
   // Pools.

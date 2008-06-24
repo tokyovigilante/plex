@@ -26,14 +26,23 @@
 
 void Cocoa_Initialize(void* pApplication)
 {
-  UnsanitySCR_RegisterMatchSpecifier(CFSTR("org.xbmc.XBMC"), CFSTR("OSXBMC"), NULL, CFSTR("SCR-76B35BCAB9"), NULL);  
+  // Intialize the Apple remote code.
+  [[XBMCMain sharedInstance] setApplication: pApplication];
+}
+
+void InstallCrashReporter() 
+{
+//  CLog::Log(LOGDEBUG, "Validating that Unsanity Smart Crash Reporter is installed.");
+  NSLog(@"Validating that Unsanity Smart Crash Reporter is installed.");
   
   Boolean authenticationWillBeRequired = FALSE;
   if (UnsanitySCR_CanInstall(&authenticationWillBeRequired))
+  {
+    NSLog(@"Installing Unsanity Smart Crash Reporter%@.", (authenticationWillBeRequired ? @" authentication will be required" : @""));
+//    CLog::Log(LOGDEBUG, "Installing Unsanity Smart Crash Reporter%s.", 
+//              (authenticationWillBeRequired ? "authentication will be required" : ""));
     UnsanitySCR_Install(authenticationWillBeRequired ? kUnsanitySCR_GlobalInstall : 0);
-  
-  // Intialize the Apple remote code.
-  [[XBMCMain sharedInstance] setApplication: pApplication];
+  }
 }
 
 void* InitializeAutoReleasePool()

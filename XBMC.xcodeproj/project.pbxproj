@@ -834,7 +834,6 @@
 		E3FFF0070D46FD1D003D79C3 /* libavutil-osx.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E3FFF0020D46FD1D003D79C3 /* libavutil-osx.a */; };
 		E3FFF0090D46FD1D003D79C3 /* libavcodec-osx.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E3FFF0040D46FD1D003D79C3 /* libavcodec-osx.a */; };
 		E3FFF02F0D470BD8003D79C3 /* libavformat-osx.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E3FFF02E0D470BD8003D79C3 /* libavformat-osx.a */; };
-		EFD2EF100E0B25A900CE20D7 /* ExceptionHandling.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EFD2EF0F0E0B25A900CE20D7 /* ExceptionHandling.framework */; };
 		EFF0820B0E106C00004114E6 /* SmartCrashReportsAPI.o in Frameworks */ = {isa = PBXBuildFile; fileRef = EFF082090E106C00004114E6 /* SmartCrashReportsAPI.o */; };
 		EFF0820C0E106C00004114E6 /* SmartCrashReportsInstall.o in Frameworks */ = {isa = PBXBuildFile; fileRef = EFF0820A0E106C00004114E6 /* SmartCrashReportsInstall.o */; };
 		EFF0820E0E106C11004114E6 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EFF0820D0E106C11004114E6 /* Security.framework */; };
@@ -2864,10 +2863,10 @@
 		E3FFF0020D46FD1D003D79C3 /* libavutil-osx.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libavutil-osx.a"; path = "xbmc/lib/libffmpeg-OSX/libavutil-osx.a"; sourceTree = "<group>"; };
 		E3FFF0040D46FD1D003D79C3 /* libavcodec-osx.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libavcodec-osx.a"; path = "xbmc/lib/libffmpeg-OSX/libavcodec-osx.a"; sourceTree = "<group>"; };
 		E3FFF02E0D470BD8003D79C3 /* libavformat-osx.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libavformat-osx.a"; path = "xbmc/lib/libffmpeg-OSX/libavformat-osx.a"; sourceTree = "<group>"; };
-		EFD2EF0F0E0B25A900CE20D7 /* ExceptionHandling.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ExceptionHandling.framework; path = System/Library/Frameworks/ExceptionHandling.framework; sourceTree = SDKROOT; };
 		EFF082090E106C00004114E6 /* SmartCrashReportsAPI.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = SmartCrashReportsAPI.o; path = xbmc/lib/libSmartCrashReports/SmartCrashReportsAPI.o; sourceTree = "<group>"; };
 		EFF0820A0E106C00004114E6 /* SmartCrashReportsInstall.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = SmartCrashReportsInstall.o; path = xbmc/lib/libSmartCrashReports/SmartCrashReportsInstall.o; sourceTree = "<group>"; };
 		EFF0820D0E106C11004114E6 /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = System/Library/Frameworks/Security.framework; sourceTree = SDKROOT; };
+		EFF083260E11614A004114E6 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -2921,7 +2920,6 @@
 				88ECB6EC0DE07C56003396A7 /* libmysqlclient.a in Frameworks */,
 				B1A921F40DF6D14F0024CC4F /* libbz2.1.0.4.dylib in Frameworks */,
 				E38CB6BA0DF7E5B2002B36E1 /* libXBMS-osx.a in Frameworks */,
-				EFD2EF100E0B25A900CE20D7 /* ExceptionHandling.framework in Frameworks */,
 				E3B578970E0E3CDB002B3B3E /* libaften_pcm.a in Frameworks */,
 				E3B578980E0E3CDB002B3B3E /* libaften_static.a in Frameworks */,
 				EFF0820B0E106C00004114E6 /* SmartCrashReportsAPI.o in Frameworks */,
@@ -2962,7 +2960,6 @@
 				E3B578950E0E3CDB002B3B3E /* libaften_pcm.a */,
 				E3B578960E0E3CDB002B3B3E /* libaften_static.a */,
 				E38CB6B90DF7E5B2002B36E1 /* libXBMS-osx.a */,
-				EFD2EF0F0E0B25A900CE20D7 /* ExceptionHandling.framework */,
 				B1A921F30DF6D14F0024CC4F /* libbz2.1.0.4.dylib */,
 				88ECB6EB0DE07C56003396A7 /* libmysqlclient.a */,
 				88ECB6E90DE07BEE003396A7 /* libogg.a */,
@@ -3089,6 +3086,7 @@
 		E37D5CB40D3023BB0081D327 /* osx */ = {
 			isa = PBXGroup;
 			children = (
+				EFF083260E11614A004114E6 /* Info.plist */,
 				840A327C0DFBBD2600AA2033 /* KeyboardLayouts.cpp */,
 				840A327D0DFBBD2600AA2033 /* KeyboardLayouts.h */,
 				E306D12C0DDF7B590052C2AD /* XBMCHelper.cpp */,
