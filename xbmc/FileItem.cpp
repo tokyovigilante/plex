@@ -1904,7 +1904,7 @@ void CFileItemList::Stack()
       {
         // check for any dvd directories, only on known fast types
         // i'm adding xbms even thou it really isn't fast due to
-        // opening file to check for existance
+        // opening file to check for existence
         if( !item->IsRemote()
          || item->IsSmb()
          || CUtil::IsInRAR(item->m_strPath)
