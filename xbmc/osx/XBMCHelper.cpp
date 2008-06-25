@@ -164,25 +164,42 @@ void XBMCHelper::Install()
 {
   CLog::Log(LOGINFO, "Installing XBMCHelper at %s", m_launchAgentInstallFile.c_str());
   
-  // Make sure directory exists.
-  string strDir = getenv("HOME");
-  strDir += "/Library/LaunchAgents";
-  CreateDirectory(strDir.c_str(), NULL);
-
-  // Load template.
-  string plistData = ReadFile(m_launchAgentLocalFile.c_str());
-
-  // Replace it in the file.
-  int start = plistData.find("${PATH}");
-  plistData.replace(start, 7, m_helperFile.c_str(), m_helperFile.length());
-
-  // Install it.
-  WriteFile(m_launchAgentInstallFile.c_str(), plistData);
-
-  // Load it.
-  string cmd = "/bin/launchctl load ";
-  cmd += m_launchAgentInstallFile;
-  system(cmd.c_str());
+  // Make sure launch agent template exists
+  if (access(m_launchAgentLocalFile.c_str(), R_OK) == 0) 
+  {
+    // Make sure directory exists.
+    string strDir = getenv("HOME");
+    strDir += "/Library/LaunchAgents";
+    CreateDirectory(strDir.c_str(), NULL);
+    
+    // Load template.
+    string plistData = ReadFile(m_launchAgentLocalFile.c_str());
+    
+    if (plistData != "") 
+    {
+      // Replace it in the file.
+      int start = plistData.find("${PATH}");
+      plistData.replace(start, 7, m_helperFile.c_str(), m_helperFile.length());
+      
+      // Install it.
+      WriteFile(m_launchAgentInstallFile.c_str(), plistData);
+      
+      // Load it.
+      string cmd = "/bin/launchctl load ";
+      cmd += m_launchAgentInstallFile;
+      system(cmd.c_str());
+    }
+    else
+    {
+      CLog::Log(LOGERROR, "Unable to start \"%s\". Launch agent template (%s) is corrupted.", 
+                XBMC_HELPER_PROGRAM, m_launchAgentLocalFile.c_str());
+    }
+  }
+  else
+  {
+    CLog::Log(LOGERROR, "Unable to start \"%s\". Unable to find launch agent template (%s).",
+              XBMC_HELPER_PROGRAM, m_launchAgentLocalFile.c_str());
+  }
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -218,6 +235,8 @@ std::string XBMCHelper::ReadFile(const char* fileName)
 {
   ifstream is;
   is.open(fileName);
+  if (!is.is_open())
+    return "";
 
   // Get length of file:
   is.seekg (0, ios::end);
