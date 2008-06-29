@@ -4496,6 +4496,7 @@ HRESULT CApplication::Cleanup()
 #endif
     g_infoManager.Clear();
     DllLoaderContainer::Clear();
+    g_playlistPlayer.Clear();
     g_settings.Clear();
     g_guiSettings.Clear();
 
