@@ -137,13 +137,13 @@ PaStream* CPortAudio::CreateOutputStream(const CStdString& strName, int channels
       if (isDigital == true)
       {
         PaMacCoreStreamInfo macStream;
-		if (passthrough)
+		if (passthrough == true)
 		{
-			PaMacCore_SetupStreamInfo(&macStream, paMacCoreFailIfConversionRequired | 4);
+			PaMacCore_SetupStreamInfo(&macStream, paMacCoreFailIfConversionRequired | paMacCoreFlagRaw);
 		}
 		else
 		{
-			PaMacCore_SetupStreamInfo(&macStream, paMacCoreChangeDeviceParameters | paMacCoreFailIfConversionRequired | 4);
+			PaMacCore_SetupStreamInfo(&macStream, paMacCoreFailIfConversionRequired);
 		}
         outputParameters.hostApiSpecificStreamInfo = &macStream;
       }
