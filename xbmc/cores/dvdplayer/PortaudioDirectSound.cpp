@@ -58,7 +58,7 @@ PortAudioDirectSound::PortAudioDirectSound(IAudioCallback* pCallback, int iChann
 		&& iChannels > 2
 		&& !bPassthrough)
 	{
-		// Enable AC3 passthrough for digital devices	
+		// Enable AC3 passthrough for digital devices
 		int mpeg_remapping = 0;
 		if (strAudioCodec == "AAC") mpeg_remapping = 1;
 		ac3encoder_init(&m_ac3encoder, iChannels, uiSamplesPerSec, uiBitsPerSample, mpeg_remapping);
