@@ -67,12 +67,13 @@ std::vector<PaDeviceInfo* > CPortAudio::GetDeviceList(bool includeOutput, bool i
 //   12.15.07   ESF  Created.
 //
 //////////////////////////////////////////////////////////////////////////////
-PaStream* CPortAudio::CreateOutputStream(const CStdString& strName, int channels, int sampleRate, int bitsPerSample, bool isDigital, int packetSize)
+PaStream* CPortAudio::CreateOutputStream(const CStdString& strName, int channels, int sampleRate, int bitsPerSample, bool isDigital, bool passthrough, int packetSize)
 {
     PaStream* ret = 0;
 
     CLog::Log(LOGNOTICE, "Asked to create device:   [%s]", strName.c_str());
     CLog::Log(LOGNOTICE, "Device should be digital: [%d]\n", isDigital);
+    CLog::Log(LOGNOTICE, "Encoded passthrough:      [%d]\n", passthrough);
     CLog::Log(LOGNOTICE, "Channels:                 [%d]\n", channels);
     CLog::Log(LOGNOTICE, "Sample Rate:              [%d]\n", sampleRate);
     CLog::Log(LOGNOTICE, "BitsPerSample:            [%d]\n", bitsPerSample);
@@ -136,7 +137,14 @@ PaStream* CPortAudio::CreateOutputStream(const CStdString& strName, int channels
       if (isDigital == true)
       {
         PaMacCoreStreamInfo macStream;
-        PaMacCore_SetupStreamInfo(&macStream, paMacCoreChangeDeviceParameters | paMacCoreFailIfConversionRequired);
+		if (passthrough)
+		{
+			PaMacCore_SetupStreamInfo(&macStream, paMacCoreFailIfConversionRequired | 4);
+		}
+		else
+		{
+			PaMacCore_SetupStreamInfo(&macStream, paMacCoreChangeDeviceParameters | paMacCoreFailIfConversionRequired | 4);
+		}
         outputParameters.hostApiSpecificStreamInfo = &macStream;
       }
 #endif
