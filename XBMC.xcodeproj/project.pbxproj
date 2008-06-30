@@ -932,8 +932,8 @@
 		8DD76F7E0486A8DE00D96B5E /* XBMC */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = XBMC; sourceTree = BUILT_PRODUCTS_DIR; };
 		9409C1E80E01D696001626C3 /* ac3encoder.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ac3encoder.c; path = AC3Encoder/ac3encoder.c; sourceTree = "<group>"; };
 		9409C1E90E01D696001626C3 /* ac3encoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ac3encoder.h; path = AC3Encoder/ac3encoder.h; sourceTree = "<group>"; };
-		9409C1EA0E01D696001626C3 /* aften-types.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "aften-types.h"; path = "AC3Encoder/aften-types.h"; sourceTree = "<group>"; };
-		9409C1EB0E01D696001626C3 /* aften.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = aften.h; path = AC3Encoder/aften.h; sourceTree = "<group>"; };
+		9409C1EA0E01D696001626C3 /* aften-types.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "aften-types.h"; path = "../../lib/libaften/aften-types.h"; sourceTree = "<group>"; };
+		9409C1EB0E01D696001626C3 /* aften.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = aften.h; path = ../../lib/libaften/aften.h; sourceTree = "<group>"; };
 		9409C1EC0E01D696001626C3 /* ringbuffer.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ringbuffer.c; path = AC3Encoder/ringbuffer.c; sourceTree = "<group>"; };
 		9409C1ED0E01D696001626C3 /* ringbuffer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ringbuffer.h; path = AC3Encoder/ringbuffer.h; sourceTree = "<group>"; };
 		B1A921F30DF6D14F0024CC4F /* libbz2.1.0.4.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libbz2.1.0.4.dylib; path = /opt/local/lib/libbz2.1.0.4.dylib; sourceTree = "<absolute>"; };
