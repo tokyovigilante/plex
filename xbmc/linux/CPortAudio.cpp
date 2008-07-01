@@ -73,7 +73,12 @@ PaStream* CPortAudio::CreateOutputStream(const CStdString& strName, int channels
 
     CLog::Log(LOGNOTICE, "Asked to create device:   [%s]", strName.c_str());
     CLog::Log(LOGNOTICE, "Device should be digital: [%d]\n", isDigital);
+<<<<<<< HEAD:xbmc/linux/CPortAudio.cpp
     CLog::Log(LOGNOTICE, "CoreAudio S/PDIF mode:    [%d]\n", useCoreAudio);
+=======
+    CLog::Log(LOGNOTICE, "Encoded passthrough:      [%d]\n", passthrough);
+	CLog::Log(LOGNOTICE, "Fallback SPDIF mode:		[%d]\n", fallbackSPDIFmode);
+>>>>>>> It's dirty hack upon dirty hack, but i think it works:xbmc/linux/CPortAudio.cpp
     CLog::Log(LOGNOTICE, "Channels:                 [%d]\n", channels);
     CLog::Log(LOGNOTICE, "Sample Rate:              [%d]\n", sampleRate);
     CLog::Log(LOGNOTICE, "BitsPerSample:            [%d]\n", bitsPerSample);
@@ -137,9 +142,13 @@ PaStream* CPortAudio::CreateOutputStream(const CStdString& strName, int channels
       if (isDigital == true)
       {
         PaMacCoreStreamInfo macStream;
+<<<<<<< HEAD:xbmc/linux/CPortAudio.cpp
 		if (useCoreAudio)
+=======
+		if (!fallbackSPDIFmode && passthrough)
+>>>>>>> It's dirty hack upon dirty hack, but i think it works:xbmc/linux/CPortAudio.cpp
 		{
-			PaMacCore_SetupStreamInfo(&macStream, paMacCoreFailIfConversionRequired | paMacCoreFlagRaw);
+			PaMacCore_SetupStreamInfo(&macStream, paMacCoreChangeDeviceParameters | paMacCoreFailIfConversionRequired | paMacCoreFlagRaw);
 		}
 		else
 		{
