@@ -39,6 +39,10 @@
 
 #ifdef __APPLE__
 
+// SPDIF options
+#define SPDIF_DEFAULT 0
+#define SPDIF_FALLBACK 1
+
 // Display blanking options.
 #define BLANKING_DISABLED     0
 #define BLANKING_ALL_DISPLAYS 1
