@@ -356,6 +356,7 @@ bool PAPlayer::CreateStream(int num, int channels, int samplerate, int bitspersa
                                                        g_guiSettings.GetInt("audiooutput.mode") == AUDIO_DIGITAL,
 														// i need to be fixed for 5.1 music
 														false,
+														false,
                                                        PACKET_SIZE);
 
         // Remember parameters.

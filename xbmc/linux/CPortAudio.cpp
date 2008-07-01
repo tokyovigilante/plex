@@ -67,13 +67,14 @@ std::vector<PaDeviceInfo* > CPortAudio::GetDeviceList(bool includeOutput, bool i
 //   12.15.07   ESF  Created.
 //
 //////////////////////////////////////////////////////////////////////////////
-PaStream* CPortAudio::CreateOutputStream(const CStdString& strName, int channels, int sampleRate, int bitsPerSample, bool isDigital, bool passthrough, int packetSize)
+PaStream* CPortAudio::CreateOutputStream(const CStdString& strName, int channels, int sampleRate, int bitsPerSample, bool isDigital, bool passthrough, bool fallbackSPDIFmode, int packetSize)
 {
     PaStream* ret = 0;
 
     CLog::Log(LOGNOTICE, "Asked to create device:   [%s]", strName.c_str());
     CLog::Log(LOGNOTICE, "Device should be digital: [%d]\n", isDigital);
     CLog::Log(LOGNOTICE, "Encoded passthrough:      [%d]\n", passthrough);
+	CLog::Log(LOGNOTICE, "Fallback SPDIF mode:		[%d]\n", fallbackSPDIFmode);
     CLog::Log(LOGNOTICE, "Channels:                 [%d]\n", channels);
     CLog::Log(LOGNOTICE, "Sample Rate:              [%d]\n", sampleRate);
     CLog::Log(LOGNOTICE, "BitsPerSample:            [%d]\n", bitsPerSample);
@@ -137,23 +138,24 @@ PaStream* CPortAudio::CreateOutputStream(const CStdString& strName, int channels
       if (isDigital == true)
       {
         PaMacCoreStreamInfo macStream;
-		if (passthrough == true)
+		if (!fallbackSPDIFmode && passthrough)
 		{
-			PaMacCore_SetupStreamInfo(&macStream, paMacCoreFailIfConversionRequired | paMacCoreFlagRaw);
+			PaMacCore_SetupStreamInfo(&macStream, paMacCoreChangeDeviceParameters | paMacCoreFailIfConversionRequired | paMacCoreFlagRaw);
 		}
 		else
 		{
-			PaMacCore_SetupStreamInfo(&macStream, paMacCoreFailIfConversionRequired);
+			PaMacCore_SetupStreamInfo(&macStream, paMacCoreChangeDeviceParameters | paMacCoreFailIfConversionRequired);
 		}
         outputParameters.hostApiSpecificStreamInfo = &macStream;
       }
 #endif
 
       err = Pa_OpenStream(&ret, 0, &outputParameters, (double)sampleRate, framesPerBuffer, paNoFlag, 0, 0);
-    }
 
     if (err != 0)
+	{
         CLog::Log(LOGERROR, "[PortAudio] Error opening stream: %d.\n", err);
-
+	}
+	}
     return ret;
 }
