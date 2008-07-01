@@ -140,7 +140,7 @@ PaStream* CPortAudio::CreateOutputStream(const CStdString& strName, int channels
         PaMacCoreStreamInfo macStream;
 		if (!fallbackSPDIFmode && passthrough)
 		{
-			PaMacCore_SetupStreamInfo(&macStream, paMacCoreChangeDeviceParameters | paMacCoreFailIfConversionRequired | paMacCoreFlagRaw);
+			PaMacCore_SetupStreamInfo(&macStream, paMacCoreFailIfConversionRequired | paMacCoreFlagRaw);
 		}
 		else
 		{
