@@ -3072,7 +3072,10 @@ void CApplication::Render()
       {
         if (lastFrameTime + singleFrameTime > currentTime)
           nDelayTime = lastFrameTime + singleFrameTime - currentTime;
-        CLog::Log(LOGWARNING, "VSYNC ignored by driver (FPS=%.0f) enabling framerate limiter to sleep (%d)", g_infoManager.GetFPS(), nDelayTime);
+        
+        if (g_videoConfig.GetVSyncMode() == VSYNC_ALWAYS)
+          CLog::Log(LOGWARNING, "VSYNC ignored by driver (FPS=%.0f) enabling framerate limiter to sleep (%d)", g_infoManager.GetFPS(), nDelayTime);
+        
         Sleep(nDelayTime);
       }
     }
