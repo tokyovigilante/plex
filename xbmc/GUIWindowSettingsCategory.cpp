@@ -311,6 +311,7 @@ bool CGUIWindowSettingsCategory::OnMessage(CGUIMessage &message)
       {
         g_audioConfig.SetAC3Enabled(g_guiSettings.GetBool("audiooutput.ac3passthrough"));
         g_audioConfig.SetDTSEnabled(g_guiSettings.GetBool("audiooutput.dtspassthrough"));
+		
         if (g_audioConfig.NeedsSave())
         { // should we perhaps show a dialog here?
           g_audioConfig.Save();
@@ -496,6 +497,16 @@ void CGUIWindowSettingsCategory::CreateSettings()
         pControl->AddLabel(g_localizeStrings.Get(339), AUDIO_DIGITAL);
       pControl->SetValue(pSettingInt->GetData());
     }
+#ifdef __APPLE__
+	else if (strSetting.Equals("audiooutput.digitalaudiomode"))
+    {
+		CSettingInt *pSettingInt = (CSettingInt*)pSetting;
+		CGUISpinControlEx *pControl = (CGUISpinControlEx *)GetControl(GetSetting(strSetting)->GetID());
+		pControl->AddLabel(g_localizeStrings.Get(575), DIGITAL_COREAUDIO);
+		pControl->AddLabel(g_localizeStrings.Get(576), DIGITAL_PCM);
+		pControl->SetValue(pSettingInt->GetData());
+    }
+#endif
     else if (strSetting.Equals("videooutput.aspect"))
     {
       CSettingInt *pSettingInt = (CSettingInt*)pSetting;
@@ -1096,7 +1107,11 @@ void CGUIWindowSettingsCategory::UpdateSettings()
       if (pControl) pControl->SetEnabled((g_guiSettings.GetInt("cddaripper.encoder") != CDDARIP_ENCODER_WAV) &&
                                            (g_guiSettings.GetInt("cddaripper.quality") == CDDARIP_QUALITY_CBR));
     }
-    else if (strSetting.Equals("musicplayer.outputtoallspeakers") || strSetting.Equals("audiooutput.ac3passthrough") || strSetting.Equals("audiooutput.dtspassthrough") || strSetting.Equals("audiooutput.passthroughdevice"))
+    else if (strSetting.Equals("musicplayer.outputtoallspeakers") || 
+			 strSetting.Equals("audiooutput.ac3passthrough") || 
+			 strSetting.Equals("audiooutput.dtspassthrough") || 
+			 strSetting.Equals("audiooutput.passthroughdevice") ||
+			 strSetting.Equals("audiooutput.digitalaudiomode"))
     { // only visible if we are in digital mode
       CGUIControl *pControl = (CGUIControl *)GetControl(pSettingControl->GetID());
       if (pControl) pControl->SetEnabled(g_guiSettings.GetInt("audiooutput.mode") == AUDIO_DIGITAL);
