@@ -68,7 +68,7 @@ void ac3encoder_init(struct AC3Encoder *encoder, int iChannels, unsigned int uiS
 	encoder->remap = remap;
 	
 	
-	encoder->m_aftenContext.params.bitrate = 640; // set AC3 output bitrate to maximum
+	encoder->m_aftenContext.params.bitrate = AC3_BITRATE; // set AC3 output bitrate to maximum
 	
 	encoder->m_aftenContext.acmod = -1;
 	encoder->m_aftenContext.lfe = 0;

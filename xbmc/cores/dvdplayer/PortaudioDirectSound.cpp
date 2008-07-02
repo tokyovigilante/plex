@@ -101,8 +101,7 @@ PortAudioDirectSound::PortAudioDirectSound(IAudioCallback* pCallback, int iChann
 											   SPDIF_SAMPLERATE, 
 											   SPDIF_SAMPLESIZE,
 											   true,
-											   true,
-											   g_guiSettings.GetBool("audiooutput.usefallbackspdif"),
+											   g_guiSettings.GetInt("audiooutput.digitalaudiomode") == DIGITAL_COREAUDIO,
 											   SPDIF_CHANNELS*(SPDIF_SAMPLESIZE/8)*512);
 											   }
   else
@@ -111,9 +110,8 @@ PortAudioDirectSound::PortAudioDirectSound(IAudioCallback* pCallback, int iChann
 											   m_uiChannels, 
 											   m_uiSamplesPerSec, 
 											   m_uiBitsPerSample,
-											   g_guiSettings.GetInt("audiooutput.mode") == AUDIO_DIGITAL,
 											   m_bPassthrough,
-											   false,
+											   g_guiSettings.GetInt("audiooutput.digitalaudiomode") == DIGITAL_COREAUDIO,
 											   m_dwPacketSize);
   }
     
