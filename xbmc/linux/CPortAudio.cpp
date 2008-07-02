@@ -67,14 +67,13 @@ std::vector<PaDeviceInfo* > CPortAudio::GetDeviceList(bool includeOutput, bool i
 //   12.15.07   ESF  Created.
 //
 //////////////////////////////////////////////////////////////////////////////
-PaStream* CPortAudio::CreateOutputStream(const CStdString& strName, int channels, int sampleRate, int bitsPerSample, bool isDigital, bool passthrough, bool fallbackSPDIFmode, int packetSize)
+PaStream* CPortAudio::CreateOutputStream(const CStdString& strName, int channels, int sampleRate, int bitsPerSample, bool isDigital, bool useCoreAudio, int packetSize)
 {
     PaStream* ret = 0;
 
     CLog::Log(LOGNOTICE, "Asked to create device:   [%s]", strName.c_str());
     CLog::Log(LOGNOTICE, "Device should be digital: [%d]\n", isDigital);
-    CLog::Log(LOGNOTICE, "Encoded passthrough:      [%d]\n", passthrough);
-	CLog::Log(LOGNOTICE, "Fallback SPDIF mode:		[%d]\n", fallbackSPDIFmode);
+    CLog::Log(LOGNOTICE, "CoreAudio S/PDIF mode:    [%d]\n", useCoreAudio);
     CLog::Log(LOGNOTICE, "Channels:                 [%d]\n", channels);
     CLog::Log(LOGNOTICE, "Sample Rate:              [%d]\n", sampleRate);
     CLog::Log(LOGNOTICE, "BitsPerSample:            [%d]\n", bitsPerSample);
@@ -131,7 +130,7 @@ PaStream* CPortAudio::CreateOutputStream(const CStdString& strName, int channels
       if (isDigital == true)
       {
         PaMacCoreStreamInfo macStream;
-		if (!fallbackSPDIFmode && passthrough)
+		if (useCoreAudio)
 		{
 			PaMacCore_SetupStreamInfo(&macStream, paMacCoreFailIfConversionRequired | paMacCoreFlagRaw);
 		}

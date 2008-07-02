@@ -45,7 +45,7 @@ class CPortAudio
   //
   // Create an output stream.
   //
-  static PaStream* CreateOutputStream(const CStdString& strName, int channels, int sampleRate, int bitsPerSample, bool isDigital, bool passthrough, bool fallbackSPDIFmode, int packetSize);
+  static PaStream* CreateOutputStream(const CStdString& strName, int channels, int sampleRate, int bitsPerSample, bool isDigital, bool useCoreAudio, int packetSize);
 };
 
 #endif
