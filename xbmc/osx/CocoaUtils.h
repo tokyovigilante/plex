@@ -12,7 +12,7 @@
 #include "AppleRemoteKeys.h"
 
 #ifdef __cplusplus
-extern "C" 
+extern "C"
 {
 #endif
   //
@@ -26,7 +26,7 @@ extern "C"
   //
   void* InitializeAutoReleasePool();
   void DestroyAutoReleasePool(void* pool);
-  
+
   //
   // Graphics.
   //
@@ -35,7 +35,7 @@ extern "C"
   void Cocoa_GetScreenResolutionOfAnotherScreen(int display, int* w, int* h);
   int  Cocoa_GetNumDisplays();
   int  Cocoa_GetDisplay(int screen);
-  
+
   //
   // Open GL.
   //
@@ -54,23 +54,28 @@ extern "C"
   // SDL Hack
   //
   void Cocoa_GL_ReplaceSDLWindowContext();
-  
+
   //
   // Power and Screen
   //
-  int Cocoa_DimDisplayNow();      
+  int Cocoa_DimDisplayNow();
   void Cocoa_UpdateSystemActivity();
   int Cocoa_SleepSystem();
-  
+
   //
   // Mouse.
   //
   void Cocoa_HideMouse();
-  
+
   //
   // Smart folders.
   //
   void Cocoa_GetSmartFolderResults(const char* strFile, void (*)(void* userData, void* userData2, const char* path), void* userData, void* userData2);
+
+  //
+  // Version.
+  //
+  const char* Cocoa_GetAppVersion();
 
 #ifdef __cplusplus
 }

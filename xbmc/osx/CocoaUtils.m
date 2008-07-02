@@ -496,3 +496,22 @@ void Cocoa_GetSmartFolderResults(const char* strFile, void (*CallbackFunc)(void*
   CFRelease(filePath);
   CFRelease(doc);
 }
+
+static char strVersion[32];
+
+const char* Cocoa_GetAppVersion()
+{
+  // Get the main bundle for the app and return the version.
+  CFBundleRef mainBundle = CFBundleGetMainBundle();
+  CFStringRef versStr = (CFStringRef)CFBundleGetValueForInfoDictionaryKey(mainBundle, kCFBundleVersionKey);
+  
+  strVersion[0] = '\0';
+  
+  if (versStr != NULL && CFGetTypeID(versStr) == CFStringGetTypeID())
+  {
+  	const char* vers = CFStringGetCStringPtr(versStr, kCFStringEncodingMacRoman);
+  	strcpy(strVersion, vers);
+  }
+  
+  return strVersion;
+}

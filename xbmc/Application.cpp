@@ -433,7 +433,7 @@ CApplication::~CApplication(void)
 
   if (m_frameMutex)
     SDL_DestroyMutex(m_frameMutex);
-  
+
   if (m_frameCond)
     SDL_DestroyCond(m_frameCond);
 }
@@ -544,11 +544,11 @@ void CApplication::InitBasicD3D()
 #endif
   }
 
-#ifndef HAS_SDL  
+#ifndef HAS_SDL
 
   m_pd3dDevice->Clear(0, NULL, D3DCLEAR_TARGET, 0, 0, 0);
   m_pd3dDevice->Present( NULL, NULL, NULL, NULL );
-#endif  
+#endif
 }
 
 // This function does not return!
@@ -577,10 +577,10 @@ void CApplication::FatalErrorHandler(bool InitD3D, bool MapDrives, bool InitNetw
 #endif
   }
 
-#ifndef HAS_SDL  
+#ifndef HAS_SDL
   m_pd3dDevice->Clear(0, NULL, D3DCLEAR_TARGET, 0, 0, 0);
   m_pd3dDevice->Present( NULL, NULL, NULL, NULL );
-#endif  
+#endif
 
   // D3D is up, load default font
 #ifdef HAS_XFONT
@@ -620,7 +620,7 @@ void CApplication::FatalErrorHandler(bool InitD3D, bool MapDrives, bool InitNetw
     CIoSupport::RemapDriveLetter('E',"Harddisk0\\Partition1");
 
     //Add. also Drive F/G
-    if (CIoSupport::PartitionExists(6)) 
+    if (CIoSupport::PartitionExists(6))
       CIoSupport::RemapDriveLetter('F',"Harddisk0\\Partition6");
     if (CIoSupport::PartitionExists(7))
       CIoSupport::RemapDriveLetter('G',"Harddisk0\\Partition7");
@@ -891,7 +891,7 @@ HRESULT CApplication::Create(HWND hWnd)
   // map Q to home drive of xbe to load the config file
   static CStdString strExecutablePath;
   CUtil::GetHomePath(strExecutablePath);
-  
+
   // Check logpath...needs to be done before the first log to be meaningful.
 #ifdef _LINUX
   if (m_bPlatformDirectories)
@@ -911,7 +911,7 @@ HRESULT CApplication::Create(HWND hWnd)
     g_stSettings.m_logFolder = m_logPath;
   }
 #endif
-  
+
   // Grab a handle to our thread to be used later in identifying the render thread.
   m_threadID = GetCurrentThreadId();
 
@@ -927,12 +927,12 @@ HRESULT CApplication::Create(HWND hWnd)
   win32_exception::install_handler();
 #endif
 
-#ifdef HAS_XBOX_HARDWARE 
+#ifdef HAS_XBOX_HARDWARE
   char szDevicePath[MAX_PATH];
 
   CIoSupport::GetPartition(strExecutablePath.c_str()[0], szDevicePath);
   strcat(szDevicePath, &strExecutablePath.c_str()[2]);
-  
+
   CIoSupport::RemapDriveLetter('Q', szDevicePath);
 #endif
 
@@ -945,7 +945,7 @@ HRESULT CApplication::Create(HWND hWnd)
   if (!profile)
     profile = InitDirectoriesOSX();
   if (!profile)
-    profile = InitDirectoriesWin32();  
+    profile = InitDirectoriesWin32();
   if (profile)
   {
     profile->setName("Master user");
@@ -964,6 +964,7 @@ HRESULT CApplication::Create(HWND hWnd)
   CLog::Log(LOGNOTICE, "Starting XBMC, Platform: GNU/Linux.  Built on %s (SVN:%s)", __DATE__, SVN_REV);
 #elif defined(__APPLE__)
   CLog::Log(LOGNOTICE, "Starting XBMC, Platform: Mac OS X.  Built on %s", __DATE__);
+  CLog::Log(LOGNOTICE, "XBMC version %s.", Cocoa_GetAppVersion());
 #elif defined(_WIN32) && !defined(HAS_XBOX_HARDWARE)
   CLog::Log(LOGNOTICE, "Starting XBMC, Platform: Windows.  Built on %s (compiler %i)", __DATE__, _MSC_VER);
 #else
@@ -974,7 +975,7 @@ HRESULT CApplication::Create(HWND hWnd)
   CIoSupport::GetXbePath(szXBEFileName);
   CStdString strLogFile;
   strLogFile.Format("%sxbmc.log", _P(g_stSettings.m_logFolder).c_str());
-    
+
   CLog::Log(LOGNOTICE, "The executeable running is: %s", szXBEFileName);
   CLog::Log(LOGNOTICE, "Log File is located: %s", strLogFile.c_str());
   CLog::Log(LOGNOTICE, "-----------------------------------------------------------------------");
@@ -1238,7 +1239,7 @@ HRESULT CApplication::Create(HWND hWnd)
 
   //Check for X+Y - if pressed, set debug log mode and mplayer debuging on
   CheckForDebugButtonCombo();
-  
+
 #ifdef __APPLE__
   // Configure and possible manually start the helper.
   g_xbmcHelper.Configure();
@@ -1336,7 +1337,7 @@ HRESULT CApplication::Create(HWND hWnd)
   CStdString keymapPath;
 
   keymapPath = g_settings.GetUserDataItem("Keymap.xml");
-  
+
 #ifdef _XBOX
   if (access(strHomePath + "\\skin", 0) || access(keymapPath.c_str(), 0))
   {
@@ -1363,7 +1364,7 @@ HRESULT CApplication::Create(HWND hWnd)
   g_graphicsContext.SetD3DParameters(&m_d3dpp);
 #endif
   g_graphicsContext.SetVideoResolution(g_guiSettings.m_LookAndFeelResolution, TRUE);
-  
+
   // TODO LINUX SDL - Check that the resolution is ok
 #ifndef HAS_SDL
   if ( FAILED( hr = m_pD3D->CreateDevice(0, D3DDEVTYPE_HAL, NULL,
@@ -1404,7 +1405,7 @@ HRESULT CApplication::Create(HWND hWnd)
   g_graphicsContext.Get3DDevice()->SetTextureStageState(0, D3DTSS_MAGFILTER, D3DTEXF_LINEAR /*g_stSettings.m_maxFilter*/ );
   CUtil::InitGamma();
 #endif
-  
+
   // set GUI res and force the clear of the screen
   g_graphicsContext.SetVideoResolution(g_guiSettings.m_LookAndFeelResolution, TRUE, true);
 
@@ -1414,7 +1415,7 @@ HRESULT CApplication::Create(HWND hWnd)
   // Load the langinfo to have user charset <-> utf-8 conversion
   CStdString strLanguage = g_guiSettings.GetString("locale.language");
   strLanguage[0] = toupper(strLanguage[0]);
-  
+
   CStdString strLangInfoPath;
   strLangInfoPath.Format("Q:\\language\\%s\\langinfo.xml", strLanguage.c_str());
   strLangInfoPath = _P(strLangInfoPath);
@@ -1475,9 +1476,9 @@ HRESULT CApplication::Create(HWND hWnd)
 
   // show recovery console on fatal error instead of freezing
   CLog::Log(LOGINFO, "install unhandled exception filter");
-#ifndef _LINUX  
+#ifndef _LINUX
   SetUnhandledExceptionFilter(UnhandledExceptionFilter);
-#endif  
+#endif
 
 #ifdef HAS_XBOX_D3D
   D3DDevice::SetWaitCallback(WaitCallback);
@@ -1504,18 +1505,18 @@ void CApplication::InitDirectories()
 
 CProfile* CApplication::InitDirectoriesLinux()
 {
-/* 
+/*
    The following is the directory mapping for Platform Specific Mode:
 
    Q: => [read-only] system directory (/usr/share/xbmc)
-   U: => [read-write] user's directory that will override Q: system-wide 
+   U: => [read-write] user's directory that will override Q: system-wide
          installations like skins, screensavers, etc.
          ($HOME/.xbmc)
          NOTE: XBMC will look in both Q:\skin and U:\skin for skins. Same
          applies to screensavers, sounds, etc.
    T: => [read-write] userdata of master profile. It will by default be
          mapped to U:\userdata ($HOME/.xbmc/userdata)
-   P: => [read-write] current profile's userdata directory. 
+   P: => [read-write] current profile's userdata directory.
          Generally T:\ for the master profile or T:\profiles\<profile_name>
          for other profiles.
 
@@ -1596,7 +1597,7 @@ CProfile* CApplication::InitDirectoriesLinux()
 
   g_settings.m_vecProfiles.clear();
   g_settings.LoadProfiles(_P( PROFILES_FILE ));
-  
+
   if (g_settings.m_vecProfiles.size()==0)
   {
     profile = new CProfile;
@@ -1612,14 +1613,14 @@ CProfile* CApplication::InitDirectoriesOSX()
 {
 #ifdef __APPLE__
   Cocoa_Initialize(this);
-  
-  // We're going to manually manage the screensaver. 
+
+  // We're going to manually manage the screensaver.
   setenv("SDL_VIDEO_ALLOW_SCREENSAVER", "1", true);
 
   CStdString strExecutablePath;
   CUtil::GetHomePath(strExecutablePath);
   setenv("XBMC_HOME", strExecutablePath.c_str(), 0);
-  
+
   // Z: common for both
   CIoSupport::RemapDriveLetter('Z',"/tmp/xbmc");
   CreateDirectory(_P("Z:\\"), NULL);
@@ -1666,7 +1667,7 @@ CProfile* CApplication::InitDirectoriesOSX()
     profile = new CProfile();
     profile->setDirectory(_P("t:\\UserData"));
   }
-  
+
   return profile;
 #else
   return NULL;
@@ -1690,7 +1691,7 @@ CProfile* CApplication::InitDirectoriesWin32()
   {
     TCHAR szPath[MAX_PATH];
 
-    if(SUCCEEDED(SHGetFolderPath(NULL,CSIDL_APPDATA|CSIDL_FLAG_CREATE,NULL,0,szPath))) 
+    if(SUCCEEDED(SHGetFolderPath(NULL,CSIDL_APPDATA|CSIDL_FLAG_CREATE,NULL,0,szPath)))
       strWin32UserFolder = szPath;
     else
       strWin32UserFolder = strExecutablePath;
@@ -1705,7 +1706,7 @@ CProfile* CApplication::InitDirectoriesWin32()
     // create user/app data/XBMC/UserData
     CUtil::AddFileToFolder(strWin32UserFolder,"XBMC\\UserData",strPath);
     CreateDirectory(strPath.c_str(), NULL);
-    CIoSupport::RemapDriveLetter('T', strPath.c_str()); 
+    CIoSupport::RemapDriveLetter('T', strPath.c_str());
     // See if the keymap file exists, and if not, copy it from our "virgin" one.
     CopyUserDataIfNeeded(strPath, "Keymap.xml");
     CopyUserDataIfNeeded(strPath, "RssFeeds.xml");
@@ -1937,8 +1938,8 @@ HRESULT CApplication::Initialize()
 
   SAFE_DELETE(m_splash);
 
-  if (g_guiSettings.GetBool("masterlock.startuplock") && 
-      g_settings.m_vecProfiles[0].getLockMode() != LOCK_MODE_EVERYONE && 
+  if (g_guiSettings.GetBool("masterlock.startuplock") &&
+      g_settings.m_vecProfiles[0].getLockMode() != LOCK_MODE_EVERYONE &&
      !g_settings.m_vecProfiles[0].getLockCode().IsEmpty())
   {
      g_passwordManager.CheckStartUpLock();
@@ -1981,7 +1982,7 @@ HRESULT CApplication::Initialize()
 
 #ifdef HAS_PYTHON
   g_pythonParser.bStartup = true;
-#endif  
+#endif
   g_sysinfo.Refresh();
 
   CLog::Log(LOGINFO, "removing tempfiles");
@@ -2083,7 +2084,7 @@ void CApplication::StopIdleThread()
 
 void CApplication::StartWebServer()
 {
-#ifdef HAS_WEB_SERVER    
+#ifdef HAS_WEB_SERVER
   if (g_guiSettings.GetBool("servers.webserver") && m_network.IsAvailable())
   {
     CLog::Log(LOGNOTICE, "Webserver: Starting...");
@@ -2113,7 +2114,7 @@ void CApplication::StartWebServer()
 
 void CApplication::StopWebServer()
 {
-#ifdef HAS_WEB_SERVER    
+#ifdef HAS_WEB_SERVER
   if (m_pWebServer)
   {
     CLog::Log(LOGNOTICE, "Webserver: Stopping...");
@@ -2123,7 +2124,7 @@ void CApplication::StopWebServer()
     CSectionLoader::Unload("LIBHTTP");
     CLog::Log(LOGNOTICE, "Webserver: Stopped...");
   }
-#endif  
+#endif
 }
 
 void CApplication::StartFtpServer()
@@ -2149,7 +2150,7 @@ void CApplication::StartFtpServer()
       }
       else
       {
-        // 'FileZilla Server.xml' does not exist or is corrupt, 
+        // 'FileZilla Server.xml' does not exist or is corrupt,
         // falling back to ftp emergency recovery mode
         CLog::Log(LOGNOTICE, "XBFileZilla: 'FileZilla Server.xml' is missing or is corrupt!");
         CLog::Log(LOGNOTICE, "XBFileZilla: Starting ftp emergency recovery mode");
@@ -2496,7 +2497,7 @@ void CApplication::StopServices()
   CFanController::Instance()->Stop();
   CFanController::RemoveInstance();
   StopIdleThread();
-#endif  
+#endif
 }
 
 void CApplication::DelayLoadSkin()
@@ -2741,11 +2742,11 @@ bool CApplication::LoadUserWindows(const CStdString& strSkinPath)
   for (unsigned int i=0;i<vecSkinPath.size();++i)
   {
     CStdString strPath;
-#ifndef _LINUX    
+#ifndef _LINUX
     strPath.Format("%s\\%s", vecSkinPath[i], "custom*.xml");
 #else
     strPath.Format("%s/%s", vecSkinPath[i], "custom*.xml");
-#endif    
+#endif
     CLog::Log(LOGINFO, "Loading user windows, path %s", vecSkinPath[i].c_str());
     hFind = FindFirstFile(strPath.c_str(), &NextFindFileData);
 
@@ -2901,7 +2902,7 @@ void CApplication::DoRender()
 #ifndef HAS_SDL
   if(!m_pd3dDevice)
     return;
-#endif    
+#endif
 
   g_graphicsContext.Lock();
 
@@ -3011,10 +3012,10 @@ void CApplication::NewFrame()
 #ifdef HAS_SDL
   SDL_mutexP(m_frameMutex);
 
-  // We just posted another frame. Keep track and notify. 
+  // We just posted another frame. Keep track and notify.
   m_frameCount++;
   SDL_CondSignal(m_frameCond);
-  
+
   SDL_mutexV(m_frameMutex);
 #endif
 }
@@ -3030,7 +3031,7 @@ void CApplication::Render()
   if (!m_AppActive && !m_bStop) {Sleep(1); ResetScreenSaver(); return;}
 
 #ifdef __APPLE__
-  // Make sure the system mouse cursor is hidden. I'm not sure if this 
+  // Make sure the system mouse cursor is hidden. I'm not sure if this
   // is a question of needing to call it once a bit later than we do
   // (see http://lists.apple.com/archives/Mac-opengl/2006/Nov/msg00005.html)
   // or a question of something making the cursor appear at a later time.
@@ -3040,10 +3041,10 @@ void CApplication::Render()
   if (frameCount++ % 10 == 0 && g_advancedSettings.m_fullScreen)
     Cocoa_HideMouse();
 #endif
-  
+
   MEASURE_FUNCTION;
 
-  { 
+  {
     // Frame rate limiter (really bad, but it does the trick :p)
     const static unsigned int singleFrameTime = 10; // default limit 100 fps
     static unsigned int lastFrameTime = 0;
@@ -3055,7 +3056,7 @@ void CApplication::Render()
     if (g_graphicsContext.IsFullScreenVideo() && !IsPaused())
     {
       SDL_mutexP(m_frameMutex);
-      
+
       // If we have frames or if we get notified of one, consume it.
       if (m_frameCount > 0 || SDL_CondWaitTimeout(m_frameCond, m_frameMutex, 100) == 0)
       {
@@ -3067,15 +3068,15 @@ void CApplication::Render()
     else
     {
       // only "limit frames" if we are not using vsync.
-      if (g_videoConfig.GetVSyncMode() != VSYNC_ALWAYS || 
+      if (g_videoConfig.GetVSyncMode() != VSYNC_ALWAYS ||
           (g_infoManager.GetFPS() > g_graphicsContext.GetFPS() + 10) && g_infoManager.GetFPS() > 1000/singleFrameTime)
       {
         if (lastFrameTime + singleFrameTime > currentTime)
           nDelayTime = lastFrameTime + singleFrameTime - currentTime;
-        
+
         if (g_videoConfig.GetVSyncMode() == VSYNC_ALWAYS)
           CLog::Log(LOGWARNING, "VSYNC ignored by driver (FPS=%.0f) enabling framerate limiter to sleep (%d)", g_infoManager.GetFPS(), nDelayTime);
-        
+
         Sleep(nDelayTime);
       }
     }
@@ -3094,7 +3095,7 @@ void CApplication::Render()
   // Present the backbuffer contents to the display
 #ifndef HAS_SDL
   if (m_pd3dDevice) m_pd3dDevice->Present( NULL, NULL, NULL, NULL );
-#elif defined(HAS_SDL_2D) 
+#elif defined(HAS_SDL_2D)
   g_graphicsContext.Flip();
 #elif defined(HAS_SDL_OPENGL)
   g_graphicsContext.Flip();
@@ -3125,14 +3126,14 @@ void CApplication::RenderMemoryStatus()
       GlobalMemoryStatus(&stat);
 #ifdef __APPLE__
       double dCPU = m_resourceCounter.GetCPUUsage();
-      wszText.Format(L"FreeMem %ju/%ju MB, FPS %2.1f, CPU-Total %d%%. CPU-XBMC %4.2f%%", stat.dwAvailPhys/(1024*1024), stat.dwTotalPhys/(1024*1024), 
+      wszText.Format(L"FreeMem %ju/%ju MB, FPS %2.1f, CPU-Total %d%%. CPU-XBMC %4.2f%%", stat.dwAvailPhys/(1024*1024), stat.dwTotalPhys/(1024*1024),
                g_infoManager.GetFPS(), g_cpuInfo.getUsedPercentage(), dCPU);
 #elif !defined(_LINUX)
       wszText.Format(L"FreeMem %d/%d Kb, FPS %2.1f, CPU %2.0f%%", stat.dwAvailPhys/1024, stat.dwTotalPhys/1024, g_infoManager.GetFPS(), (1.0f - m_idleThread.GetRelativeUsage())*100);
 #else
       double dCPU = m_resourceCounter.GetCPUUsage();
       CStdString strCores = g_cpuInfo.GetCoresUsageString();
-      wszText.Format(L"FreeMem %d/%d Kb, FPS %2.1f, %s. CPU-XBMC %4.2f%%", stat.dwAvailPhys/1024, stat.dwTotalPhys/1024, 
+      wszText.Format(L"FreeMem %d/%d Kb, FPS %2.1f, %s. CPU-XBMC %4.2f%%", stat.dwAvailPhys/1024, stat.dwTotalPhys/1024,
                g_infoManager.GetFPS(), strCores.c_str(), dCPU);
 #endif
 
@@ -3147,11 +3148,11 @@ void CApplication::RenderMemoryStatus()
           xShift *= -1;
         lastShift = now;
       }
-      
+
 #ifndef __APPLE__
       float x = xShift + 0.04f * g_graphicsContext.GetWidth() + g_settings.m_ResInfo[res].Overscan.left;
       float y = yShift + 0.04f * g_graphicsContext.GetHeight() + g_settings.m_ResInfo[res].Overscan.top;
-      
+
       // Disable this for now as it might still be responsible for some crashes.
       CGUITextLayout::DrawOutlineText(g_fontManager.GetFont("font13"), x, y, 0xffffffff, 0xff000000, 2, wszText);
 #endif
@@ -3227,7 +3228,7 @@ bool CApplication::OnKey(CKey& key)
       }
       else
       { // see if we've got an ascii key
-        if (g_Keyboard.GetUnicode()) 
+        if (g_Keyboard.GetUnicode())
         {
 #ifdef __APPLE__
           // If not plain ASCII, use the button translator.
@@ -3267,16 +3268,16 @@ bool CApplication::OnKey(CKey& key)
   //  Play a sound based on the action
   g_audioManager.PlayActionSound(action);
 
-#ifdef HAS_SDL 
+#ifdef HAS_SDL
   g_Keyboard.Reset();
 #endif
-  
+
   return OnAction(action);
 }
 
 bool CApplication::OnAction(const CAction &action)
 {
-#ifdef HAS_WEB_SERVER    
+#ifdef HAS_WEB_SERVER
   // Let's tell the outside world about this action
   if (m_pXbmcHttp && g_stSettings.m_HttpApiBroadcastLevel>=2)
   {
@@ -3945,7 +3946,7 @@ bool CApplication::ProcessGamepad(float frameTime)
       {
         return true;
       }
-      
+
       if (fullrange)
       {
         action.fAmount1 = (action.fAmount1+1.0f)/2.0f;
@@ -4040,7 +4041,7 @@ bool CApplication::ProcessMouse()
 }
 
 void  CApplication::CheckForTitleChange()
-{ 
+{
   if (g_stSettings.m_HttpApiBroadcastLevel>=1)
     if (IsPlayingVideo())
     {
@@ -4077,7 +4078,7 @@ void  CApplication::CheckForTitleChange()
 
 bool CApplication::ProcessHTTPApiButtons()
 {
-#ifdef HAS_WEB_SERVER    
+#ifdef HAS_WEB_SERVER
   if (m_pXbmcHttp)
   {
     // copy key from webserver, and reset it in case we're called again before
@@ -4123,7 +4124,7 @@ bool CApplication::ProcessHTTPApiButtons()
     }
   }
   return false;
-#endif  
+#endif
 }
 
 bool CApplication::ProcessEventServer(float frameTime)
@@ -4137,11 +4138,11 @@ bool CApplication::ProcessEventServer(float frameTime)
   bool isAxis = false;
   float fAmount = 0.0;
   bool done = false;
-  
+
   while (!done)
   {
     WORD wKeyID = es->GetButtonCode(joystickName, isAxis, fAmount);
-    
+
     if (wKeyID)
     {
       // If it's an axis, save the value to repeat it.
@@ -4162,7 +4163,7 @@ bool CApplication::ProcessEventServer(float frameTime)
           ProcessJoystickEvent((*iter).first, (*iterAxis).first, true, (*iterAxis).second);
       }
     }
-    
+
     if (wKeyID)
     {
       if (joystickName.length() > 0)
@@ -4221,7 +4222,7 @@ bool CApplication::ProcessEventServer(float frameTime)
       done = true;
     }
   }
-#endif  
+#endif
   return false;
 }
 
@@ -4239,28 +4240,28 @@ bool CApplication::ProcessJoystickEvent(const std::string& joystickName, int wKe
    g_Joystick.Reset();
 #endif
    g_Mouse.SetInactive();
-   
+
    // Figure out what window we're taking the event for.
    WORD iWin = m_gWindowManager.GetActiveWindow() & WINDOW_ID_MASK;
    if (m_gWindowManager.HasModalDialog())
        iWin = m_gWindowManager.GetTopMostModalDialogID() & WINDOW_ID_MASK;
-   
+
    // This code is copied from the OnKey handler, it should be factored out.
-   if (iWin == WINDOW_FULLSCREEN_VIDEO && 
-       g_application.m_pPlayer && 
+   if (iWin == WINDOW_FULLSCREEN_VIDEO &&
+       g_application.m_pPlayer &&
        g_application.m_pPlayer->IsInMenu())
    {
      // If player is in some sort of menu, (ie DVDMENU) map buttons differently.
      iWin = WINDOW_VIDEO_MENU;
    }
-     
+
    bool fullRange = false;
    CAction action;
    action.fAmount1 = fAmount;
 
    //if (action.fAmount1 < 0.0)
    // wKeyID = -wKeyID;
-   
+
    // Translate using regular joystick translator.
    if (g_buttonTranslator.TranslateJoystickString(iWin, joystickName.c_str(), wKeyID, isAxis, action.wID, action.strAction, fullRange))
    {
@@ -4273,7 +4274,7 @@ bool CApplication::ProcessJoystickEvent(const std::string& joystickName, int wKe
      CLog::Log(LOGDEBUG, "ERROR mapping joystick (%s)", joystickName.c_str());
    }
 #endif
-   
+
    return false;
 }
 
@@ -4289,7 +4290,7 @@ bool CApplication::ProcessKeyboard()
     // got a valid keypress - convert to a key code
     WORD wkeyID;
     if (vkey) // FIXME, every ascii has a vkey so vkey would always and ascii would never be processed, but fortunately OnKey uses wkeyID only to detect keyboard use and the real key is recalculated correctly.
-      wkeyID = (WORD)vkey | KEY_VKEY; 
+      wkeyID = (WORD)vkey | KEY_VKEY;
     else
       wkeyID = KEY_UNICODE;
     //  CLog::Log(LOGDEBUG,"Keyboard: time=%i key=%i", timeGetTime(), vkey);
@@ -4510,7 +4511,7 @@ void CApplication::Stop()
     m_bStop = true;
     CLog::Log(LOGNOTICE, "stop all");
 
-#ifdef HAS_WEB_SERVER    
+#ifdef HAS_WEB_SERVER
     if (m_pXbmcHttp)
       getApplicationMessenger().HttpApi("broadcastlevel; ShutDown;1");
 #endif
@@ -4545,7 +4546,7 @@ void CApplication::Stop()
 
     CLog::Log(LOGNOTICE, "unload skin");
     UnloadSkin();
-    
+
 #ifdef __APPLE__
     if (g_xbmcHelper.IsAlwaysOn() == false)
       g_xbmcHelper.Stop();
@@ -4554,7 +4555,7 @@ void CApplication::Stop()
 /* Python resource freeing must be done after skin has been unloaded, not before
    some windows still need it when deinitializing during skin unloading. */
 #ifdef HAS_PYTHON
-  CLog::Log(LOGNOTICE, "stop python"); 
+  CLog::Log(LOGNOTICE, "stop python");
   g_pythonParser.FreeResources();
 #endif
 #ifdef HAS_LCD
@@ -4619,10 +4620,10 @@ bool CApplication::PlayMediaSync(const CFileItem& item, int iPlaylist)
   {
     CGUIDialogProgress* dlgProgress = (CGUIDialogProgress*)m_gWindowManager.GetWindow(WINDOW_DIALOG_PROGRESS);
     if (item.IsInternetStream() && dlgProgress)
-    {  
+    {
        dlgProgress->ShowProgressBar(false);
        dlgProgress->SetHeading(260);
-       dlgProgress->SetLine(0, 14003); 
+       dlgProgress->SetLine(0, 14003);
        dlgProgress->SetLine(1, "");
        dlgProgress->SetLine(2, "");
        dlgProgress->StartModal();
@@ -4636,7 +4637,7 @@ bool CApplication::PlayMediaSync(const CFileItem& item, int iPlaylist)
        dlgProgress->Close();
        if (dlgProgress->IsCanceled())
           return true;
-    } 
+    }
 
     if (gotPlayList)
     {
@@ -4856,8 +4857,8 @@ bool CApplication::PlayFile(const CFileItem& item, bool bRestart)
           options.starttime = bookmark.timeInSeconds;
           options.state = bookmark.playerState;
         }
-      } 
-      else if (item.HasVideoInfoTag()) 
+      }
+      else if (item.HasVideoInfoTag())
       {
         const CVideoInfoTag *tag = item.GetVideoInfoTag();
 
@@ -4969,11 +4970,11 @@ void CApplication::OnPlayBackEnded()
 
   // informs python script currently running playback has ended
   // (does nothing if python is not loaded)
-#ifdef HAS_PYTHON  
+#ifdef HAS_PYTHON
   g_pythonParser.OnPlayBackEnded();
 #endif
 
-#ifdef HAS_WEB_SERVER      
+#ifdef HAS_WEB_SERVER
   // Let's tell the outside world as well
   if (m_pXbmcHttp && g_stSettings.m_HttpApiBroadcastLevel>=1)
     getApplicationMessenger().HttpApi("broadcastlevel; OnPlayBackEnded;1");
@@ -4994,13 +4995,13 @@ void CApplication::OnPlayBackEnded()
 
 void CApplication::OnPlayBackStarted()
 {
-#ifdef HAS_PYTHON  
+#ifdef HAS_PYTHON
   // informs python script currently running playback has started
   // (does nothing if python is not loaded)
   g_pythonParser.OnPlayBackStarted();
 #endif
 
-#ifdef HAS_WEB_SERVER      
+#ifdef HAS_WEB_SERVER
   // Let's tell the outside world as well
   if (m_pXbmcHttp && g_stSettings.m_HttpApiBroadcastLevel>=1)
     getApplicationMessenger().HttpApi("broadcastlevel; OnPlayBackStarted;1");
@@ -5023,11 +5024,11 @@ void CApplication::OnQueueNextItem()
 {
   // informs python script currently running that we are requesting the next track
   // (does nothing if python is not loaded)
-#ifdef HAS_PYTHON  
+#ifdef HAS_PYTHON
   g_pythonParser.OnQueueNextItem(); // currently unimplemented
 #endif
 
-#ifdef HAS_WEB_SERVER      
+#ifdef HAS_WEB_SERVER
   // Let's tell the outside world as well
   if (m_pXbmcHttp && g_stSettings.m_HttpApiBroadcastLevel>=1)
     getApplicationMessenger().HttpApi("broadcastlevel; OnQueueNextItem;1");
@@ -5042,11 +5043,11 @@ void CApplication::OnPlayBackStopped()
 {
   // informs python script currently running playback has ended
   // (does nothing if python is not loaded)
-#ifdef HAS_PYTHON  
+#ifdef HAS_PYTHON
   g_pythonParser.OnPlayBackStopped();
 #endif
 
-#ifdef HAS_WEB_SERVER      
+#ifdef HAS_WEB_SERVER
   // Let's tell the outside world as well
   if (m_pXbmcHttp && g_stSettings.m_HttpApiBroadcastLevel>=1)
     getApplicationMessenger().HttpApi("broadcastlevel; OnPlayBackStopped;1");
@@ -5101,9 +5102,9 @@ bool CApplication::IsPlayingVideo() const
     return false;
   if (!m_pPlayer->IsPlaying())
     return false;
-  if (m_pPlayer->HasVideo()) 
+  if (m_pPlayer->HasVideo())
     return true;
-      
+
   return false;
 }
 
@@ -5213,7 +5214,7 @@ void CApplication::ResetScreenSaver()
   {
     m_dwSaverTick = timeGetTime(); // Start the timer going ...
   }
-  
+
 #ifdef __APPLE__
   if (m_bDisplaySleeping)
   {
@@ -5222,7 +5223,7 @@ void CApplication::ResetScreenSaver()
     m_bDisplaySleeping = false;
   }
 #endif
-}	
+}
 
 bool CApplication::ResetScreenSaverWindow()
 {
@@ -5240,7 +5241,7 @@ bool CApplication::ResetScreenSaverWindow()
           g_settings.m_vecProfiles[0].getLockMode() != LOCK_MODE_EVERYONE        &&
           g_settings.m_vecProfiles[iProfile].getLockMode() != LOCK_MODE_EVERYONE &&
          !g_guiSettings.GetString("screensaver.mode").Equals("Black")            &&
-        !(g_guiSettings.GetBool("screensaver.usemusicvisinstead")                && 
+        !(g_guiSettings.GetBool("screensaver.usemusicvisinstead")                &&
          !g_guiSettings.GetString("screensaver.mode").Equals("Black")            &&
           g_application.IsPlayingAudio())                                          )
       {
@@ -5280,7 +5281,7 @@ bool CApplication::ResetScreenSaverWindow()
     }
 
     // Fade to dim or black screensaver is active --> fade in
-#ifndef HAS_SDL    
+#ifndef HAS_SDL
     D3DGAMMARAMP Ramp;
     for (float fade = fFadeLevel; fade <= 1; fade += 0.01f)
     {
@@ -5295,7 +5296,7 @@ bool CApplication::ResetScreenSaverWindow()
     }
     m_pd3dDevice->SetGammaRamp(0, &m_OldRamp); // put the old gamma ramp back in place
 #else
-    
+
    if (g_advancedSettings.m_fullScreen == true)
    {
      Uint16 RampRed[256];
@@ -5413,7 +5414,7 @@ void CApplication::ActivateScreenSaver(bool forceType /*= false */)
   else if (m_screenSaverMode == "Dim")
   {
     fFadeLevel = (FLOAT) g_guiSettings.GetInt("screensaver.dimlevel") / 100; // 0.07f;
-  }  
+  }
   else if (m_screenSaverMode == "Black")
   {
     fFadeLevel = 0;
@@ -5423,9 +5424,9 @@ void CApplication::ActivateScreenSaver(bool forceType /*= false */)
     m_gWindowManager.ActivateWindow(WINDOW_SCREENSAVER);
     return ;
   }
-  
+
   // Fade to fFadeLevel
-#ifndef HAS_SDL  
+#ifndef HAS_SDL
   D3DGAMMARAMP Ramp;
   m_pd3dDevice->GetGammaRamp(&m_OldRamp); // Store the old gamma ramp
   for (float fade = 1.f; fade >= fFadeLevel; fade -= 0.01f)
@@ -5458,7 +5459,7 @@ void CApplication::ActivateScreenSaver(bool forceType /*= false */)
       SDL_SetGammaRamp(RampRed, RampGreen, RampBlue);
     }
   }
-#endif      
+#endif
 }
 
 void CApplication::CheckShutdown()
@@ -5512,11 +5513,11 @@ void CApplication::CheckShutdown()
       {
         m_dwSaverTick = timeGetTime();
       }
-#ifdef HAS_FTP_SERVER    
+#ifdef HAS_FTP_SERVER
       else if (m_pFileZilla && m_pFileZilla->GetNoConnections() != 0) // is FTP active ?
       {
         m_dwSaverTick = timeGetTime();
-      }                        
+      }
 #endif
       else if (m_gWindowManager.IsWindowActive(WINDOW_DIALOG_PROGRESS))
       {
@@ -5528,19 +5529,19 @@ void CApplication::CheckShutdown()
       }
 
       if (bShutDown)
-      { 
-#ifdef __APPLE__ 
+      {
+#ifdef __APPLE__
         // Since it is a sleep instead of a shutdown, let's set everything to reset when we wake up.
-        bShutDown = false; 
+        bShutDown = false;
         m_dwSaverTick = timeGetTime();
         m_bInactive = false;
-        
+
         // Sleep the box
         Cocoa_SleepSystem();
-#else                                                         
+#else
         m_applicationMessenger.Shutdown(); // Turn off the box
 #endif
-      }   
+      }
     }
   }
 
@@ -5567,7 +5568,7 @@ void CApplication::CheckDisplaySleep()
       // We playing some music.
       m_bInactive = false;
     }
-	else 
+	else
     {
       // Nothing doing here, so start the timer going.
       m_bInactive = true;
@@ -6013,7 +6014,7 @@ bool CApplication::OnMessage(CGUIMessage& message)
         { // a python script
           g_pythonParser.evalFile(item.m_strPath.c_str());
         }
-        else 
+        else
 #endif
 #ifdef HAS_XBOX_HARDWARE
         if (item.IsXBE())
@@ -6031,7 +6032,7 @@ bool CApplication::OnMessage(CGUIMessage& message)
             iRegion = 0;
           CUtil::RunXBE(item.m_strPath.c_str(),NULL,F_VIDEO(iRegion));
         }
-        else 
+        else
 #endif
         if (item.IsAudio() || item.IsVideo())
         { // an audio or video file
@@ -6048,7 +6049,7 @@ bool CApplication::OnMessage(CGUIMessage& message)
 
 void CApplication::Process()
 {
-  MEASURE_FUNCTION;  
+  MEASURE_FUNCTION;
 
   // check if we need to load a new skin
   if (m_dwSkinTime && timeGetTime() >= m_dwSkinTime)
@@ -6082,9 +6083,9 @@ void CApplication::Process()
 #endif
 
   // check if we can free unused memory
-#ifndef _LINUX  
+#ifndef _LINUX
   g_audioManager.FreeUnused();
-#endif  
+#endif
 
   // check how far we are through playing the current item
   // and do anything that needs doing (lastfm submission, playcount updates etc)
@@ -6125,16 +6126,16 @@ void CApplication::ProcessSlow()
   // Check if we need to activate the screensaver (if enabled).
   if (g_guiSettings.GetString("screensaver.mode") != "None")
     CheckScreenSaver();
-  
-#ifdef __APPLE__       
-   // If playing video tickle system, or else if in full-screen always tickle.  
+
+#ifdef __APPLE__
+   // If playing video tickle system, or else if in full-screen always tickle.
    if (((IsPlayingVideo() && !m_pPlayer->IsPaused()) && ((timeGetTime() - m_dwOSXscreensaverTicks) > 5000)) ||
        g_advancedSettings.m_fullScreen == true)
-   {            
+   {
      Cocoa_UpdateSystemActivity();
      m_dwOSXscreensaverTicks = timeGetTime();
    }
-   
+
   // Only activate display sleep if fullscreen mode.
   if (g_guiSettings.GetInt("system.displaysleeptime" ) && g_advancedSettings.m_fullScreen)
   {
@@ -6143,9 +6144,9 @@ void CApplication::ProcessSlow()
 #endif
 
   // Check if we need to shutdown (if enabled).
-#ifdef __APPLE__  
+#ifdef __APPLE__
   if (g_guiSettings.GetInt("system.shutdowntime") && g_advancedSettings.m_fullScreen)
-#else                                                                                
+#else
   if (g_guiSettings.GetInt("system.shutdowntime"))
 #endif
   {
@@ -6197,7 +6198,7 @@ void CApplication::ProcessSlow()
 
   //Check to see if current playing Title has changed and whether we should broadcast the fact
   CheckForTitleChange();
-  
+
 #if defined(_LINUX) && defined(HAS_FILESYSTEM_SMB)
   smb.CheckIfIdle();
 #endif
@@ -6501,8 +6502,8 @@ float CApplication::GetPercentage() const
       const CMusicInfoTag& tag = *m_itemCurrentFile->GetMusicInfoTag();
       if (tag.GetDuration() > 0)
         return (float)(GetTime() / tag.GetDuration() * 100);
-    } 
-    
+    }
+
     if (m_itemCurrentFile->IsStack())
       return (float)(GetTime() / GetTotalTime() * 100);
     else
@@ -6546,7 +6547,7 @@ bool CApplication::SwitchToFullScreen()
     m_frameCount = 0;
     SDL_mutexV(m_frameMutex);
 #endif
-    
+
     // then switch to fullscreen mode
     m_gWindowManager.ActivateWindow(WINDOW_FULLSCREEN_VIDEO);
     g_TextureManager.Flush();
