@@ -190,6 +190,9 @@ VOID CDetectDVDMedia::UpdateDvdrom()
         }
         break;
       case DRIVE_READY:
+#ifndef __APPLE__
+        return ;
+#endif
       case DRIVE_CLOSED_MEDIA_PRESENT:
         {
           if ( m_DriveState != DRIVE_CLOSED_MEDIA_PRESENT)
