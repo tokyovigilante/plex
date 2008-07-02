@@ -236,6 +236,7 @@
 #endif
 
 #include "cores/dlgcache.h"
+#include "lib/libcdio/logging.h"
 
 using namespace std;
 using namespace XFILE;
@@ -1776,6 +1777,9 @@ CProfile* CApplication::InitDirectoriesWin32()
 
 HRESULT CApplication::Initialize()
 {
+  // turn off cdio logging
+  cdio_loglevel_default = CDIO_LOG_ERROR;
+
   CLog::Log(LOGINFO, "creating subdirectories");
 
   //CLog::Log(LOGINFO, "userdata folder: %s", g_stSettings.m_userDataFolder.c_str());

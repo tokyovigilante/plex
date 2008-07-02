@@ -100,7 +100,7 @@ void CDetectDVDMedia::Process()
   {
     UpdateDvdrom();
     m_bStartup = false;
-    Sleep(1000);
+    Sleep(2000);
     if ( m_bAutorun )
     {
       Sleep(1500); // Media in drive, wait 1.5s more to be sure the device is ready for playback
@@ -172,11 +172,6 @@ VOID CDetectDVDMedia::UpdateDvdrom()
         }
         break;
 
-      case DRIVE_READY:
-        // drive is ready
-        //m_DriveState = DRIVE_READY;
-        return ;
-        break;
       case DRIVE_CLOSED_NO_MEDIA:
         {
           // nothing in there...
@@ -194,22 +189,26 @@ VOID CDetectDVDMedia::UpdateDvdrom()
           return ;
         }
         break;
+      case DRIVE_READY:
       case DRIVE_CLOSED_MEDIA_PRESENT:
         {
-          m_DriveState = DRIVE_CLOSED_MEDIA_PRESENT;
-          // drive has been closed and is ready
-          OutputDebugString("Drive closed media present, remounting...\n");
-          CIoSupport::Dismount("Cdrom0");
-          CIoSupport::RemapDriveLetter('D', "Cdrom0");
-          // Detect ISO9660(mode1/mode2) or CDDA filesystem
-          DetectMediaType();
-          CGUIMessage msg(GUI_MSG_NOTIFY_ALL, 0, 0, GUI_MSG_UPDATE_SOURCES);
-          waitLock.Leave();
-          m_gWindowManager.SendThreadMessage( msg );
-          // Tell the application object that a new Cd is inserted
-          // So autorun can be started.
-          if ( !m_bStartup )
-            m_bAutorun = true;
+          if ( m_DriveState != DRIVE_CLOSED_MEDIA_PRESENT)
+          {
+            m_DriveState = DRIVE_CLOSED_MEDIA_PRESENT;
+            // drive has been closed and is ready
+            OutputDebugString("Drive closed media present, remounting...\n");
+            CIoSupport::Dismount("Cdrom0");
+            CIoSupport::RemapDriveLetter('D', "Cdrom0");
+            // Detect ISO9660(mode1/mode2) or CDDA filesystem
+            DetectMediaType();
+            CGUIMessage msg(GUI_MSG_NOTIFY_ALL, 0, 0, GUI_MSG_UPDATE_SOURCES);
+            waitLock.Leave();
+            m_gWindowManager.SendThreadMessage( msg );
+            // Tell the application object that a new Cd is inserted
+            // So autorun can be started.
+            if ( !m_bStartup )
+              m_bAutorun = true;
+          }
           return ;
         }
         break;
@@ -291,7 +290,6 @@ void CDetectDVDMedia::DetectMediaType()
     }
   }
 #endif
-
   CLog::Log(LOGINFO, "Using protocol %s", strNewUrl.c_str());
 
   if (m_pCdInfo->IsValidFs())
@@ -447,8 +445,9 @@ DWORD CDetectDVDMedia::GetTrayState()
     laststatus = status;
     cdio_destroy(cdio);
   }
+  else
+    return DRIVE_NOT_READY;  
 
-  
 #endif // USING_CDIO78
 #endif // _LINUX
 #if defined(_WIN32PC)
