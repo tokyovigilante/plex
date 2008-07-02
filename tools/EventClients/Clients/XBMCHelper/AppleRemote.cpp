@@ -26,7 +26,7 @@
  * g++ -o XBMCHelper AppleRemote.cpp -framework CoreFoundation -framework Carbon -framework IOKit -framework ForceFeedback
  */
 #define PROGNAME "XBMCHelper"
-#define PROGVERS "1.0.1"
+#define PROGVERS "1.1.0"
 
 #include <stdio.h>
 #include <getopt.h>
@@ -69,12 +69,12 @@ using namespace std;
 
 static struct option long_options[] = 
 {
-    { "help",       no_argument,       0, 'h' },
-		{ "server",     required_argument, 0, 's' },
-		{ "universal",  no_argument,       0, 'u' },
-		{ "timeout",    required_argument, 0, 't' },
-		{ "verbose",    no_argument,       0, 'v' },
-    { "externalConfig", no_argument,   0, 'x' },
+    { "help",       no_argument,         0, 'h' },
+		{ "server",     required_argument,   0, 's' },
+		{ "universal",  no_argument,         0, 'u' },
+		{ "timeout",    required_argument,   0, 't' },
+		{ "verbose",    no_argument,         0, 'v' },
+    { "externalConfig", no_argument,     0, 'x' },
     { 0, 0, 0, 0 },
 };
 static const char *options = "hsutvx";
@@ -490,11 +490,15 @@ void doRun(IOHIDDeviceInterface **hidDeviceInterface, CFMutableArrayRef cookies)
   IOReturn ioReturnValue;
 
   ioReturnValue = (*hidDeviceInterface)->open(hidDeviceInterface, kIOHIDOptionsTypeSeizeDevice);
-
-  processQueue(hidDeviceInterface, cookies);
-
   if (ioReturnValue == KERN_SUCCESS)
-      ioReturnValue = (*hidDeviceInterface)->close(hidDeviceInterface);
+  {
+    // Enable secure input. This ensures we don't lose exclusivity.
+    EnableSecureEventInput();
+    processQueue(hidDeviceInterface, cookies);
+    DisableSecureEventInput();
+
+    ioReturnValue = (*hidDeviceInterface)->close(hidDeviceInterface);
+  }
       
   (*hidDeviceInterface)->Release(hidDeviceInterface);
 }

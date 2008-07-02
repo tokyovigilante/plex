@@ -46,7 +46,10 @@ class XBMCHelper
 
  private:
 
+  bool EnsureLatestHelperInstalled();
+
   int GetProcessPid(const char* processName);
+  std::string GetInstalledHelperVersion();
 
   std::string ReadFile(const char* fileName);
   void WriteFile(const char* fileName, const std::string& data);
@@ -60,6 +63,8 @@ class XBMCHelper
   std::string m_launchAgentLocalFile;
   std::string m_launchAgentInstallFile;
   std::string m_helperFile;
+  std::string m_helperInstalledFile;
+  std::string m_helperInstalledVersionFile;
 };
 
 extern XBMCHelper g_xbmcHelper;
