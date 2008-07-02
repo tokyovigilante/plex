@@ -40,8 +40,8 @@
 #ifdef __APPLE__
 
 // SPDIF options
-#define SPDIF_DEFAULT 0
-#define SPDIF_FALLBACK 1
+#define DIGITAL_COREAUDIO 0
+#define DIGITAL_PCM 1
 
 // Display blanking options.
 #define BLANKING_DISABLED     0

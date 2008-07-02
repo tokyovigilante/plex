@@ -1642,6 +1642,10 @@ bool CSettings::SaveAvpackSettings(TiXmlNode *io_pRoot) const
   SetInteger(pNode, "mode", g_guiSettings.GetInt("audiooutput.mode"));
   SetBoolean(pNode, "ac3passthrough", g_guiSettings.GetBool("audiooutput.ac3passthrough"));
   SetBoolean(pNode, "dtspassthrough", g_guiSettings.GetBool("audiooutput.dtspassthrough"));
+#ifdef __APPLE__
+  SetBoolean(pNode, "digitalaudiomode", g_guiSettings.GetBool("audiooutput.digitalaudiomode"));
+#endif
+
 #ifdef _LINUX
   SetString(pNode, "audiodevice", g_guiSettings.GetString("audiooutput.audiodevice"));
   SetString(pNode, "passthroughdevice", g_guiSettings.GetString("audiooutput.passthroughdevice"));
