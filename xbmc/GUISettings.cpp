@@ -380,7 +380,7 @@ CGUISettings::CGUISettings(void)
   AddBool(2, "appleremote.alwayson", 13602, false);
   AddInt(3, "appleremote.sequencetime", 13603, 500, 50, 50, 1000, SPIN_CONTROL_INT_PLUS, MASK_MS, TEXT_OFF);
 #endif
-  
+
   AddCategory(4, "autorun", 447);
   AddBool(1, "autorun.dvd", 240, true);
   AddBool(2, "autorun.vcd", 241, true);
@@ -403,20 +403,20 @@ CGUISettings::CGUISettings(void)
 #endif
 
   AddCategory(4, "cache", 439);
-  AddInt(1, "cache.harddisk", 14025, 1024, 0, 1024, 4096, SPIN_CONTROL_INT_PLUS, MASK_KB, TEXT_OFF);
+  AddInt(1, "cache.harddisk", 14025, 1024, 1024, 1024, 8096, SPIN_CONTROL_INT_PLUS, MASK_KB);
   AddSeparator(2, "cache.sep1");
-  AddInt(3, "cachevideo.dvdrom", 14026, 2048, 0, 1024, 16384, SPIN_CONTROL_INT_PLUS, MASK_KB, TEXT_OFF);
-  AddInt(4, "cachevideo.lan", 14027, 2048, 0, 1024, 32768, SPIN_CONTROL_INT_PLUS, MASK_KB, TEXT_OFF);
-  AddInt(5, "cachevideo.internet", 14028, 4096, 0, 1024, 32768, SPIN_CONTROL_INT_PLUS, MASK_KB, TEXT_OFF);
+  AddInt(3, "cachevideo.dvdrom", 14026, 2048, 1024, 1024, 16384, SPIN_CONTROL_INT_PLUS, MASK_KB);
+  AddInt(4, "cachevideo.lan", 14027, 2048, 1024, 1024, 32768, SPIN_CONTROL_INT_PLUS, MASK_KB);
+  AddInt(5, "cachevideo.internet", 14028, 4096, 1024, 1024, 32768, SPIN_CONTROL_INT_PLUS, MASK_KB);
   AddSeparator(6, "cache.sep2");
-  AddInt(7, "cacheaudio.dvdrom", 14030, 256, 0, 512, 4096, SPIN_CONTROL_INT_PLUS, MASK_KB, TEXT_OFF);
-  AddInt(8, "cacheaudio.lan", 14031, 256, 0, 256, 16384, SPIN_CONTROL_INT_PLUS, MASK_KB, TEXT_OFF);
-  AddInt(9, "cacheaudio.internet", 14032, 256, 0, 512, 32768, SPIN_CONTROL_INT_PLUS, MASK_KB, TEXT_OFF);
+  AddInt(7, "cacheaudio.dvdrom", 14030, 256, 256, 512, 4096, SPIN_CONTROL_INT_PLUS, MASK_KB);
+  AddInt(8, "cacheaudio.lan", 14031, 256, 256, 256, 16384, SPIN_CONTROL_INT_PLUS, MASK_KB);
+  AddInt(9, "cacheaudio.internet", 14032, 256, 256, 512, 32768, SPIN_CONTROL_INT_PLUS, MASK_KB);
   AddSeparator(10, "cache.sep3");
-  AddInt(11, "cachedvd.dvdrom", 14034, 2048, 0, 512, 16384, SPIN_CONTROL_INT_PLUS, MASK_KB, TEXT_OFF);
-  AddInt(12, "cachedvd.lan", 14035, 2048, 0, 256, 16384, SPIN_CONTROL_INT_PLUS, MASK_KB, TEXT_OFF);
+  AddInt(11, "cachedvd.dvdrom", 14034, 2048, 256, 512, 16384, SPIN_CONTROL_INT_PLUS, MASK_KB);
+  AddInt(12, "cachedvd.lan", 14035, 2048, 256, 256, 16384, SPIN_CONTROL_INT_PLUS, MASK_KB);
   AddSeparator(13, "cache.sep4");
-  AddInt(14, "cacheunknown.internet", 14060, 4096, 0, 512, 32768, SPIN_CONTROL_INT_PLUS, MASK_KB, TEXT_OFF);
+  AddInt(14, "cacheunknown.internet", 14060, 4096, 256, 512, 32768, SPIN_CONTROL_INT_PLUS, MASK_KB);
 
   AddCategory(4, "audiooutput", 772);
 
@@ -471,12 +471,12 @@ CGUISettings::CGUISettings(void)
   AddBool(6, "videolibrary.singleseason", 20412, true);
   AddSeparator(7, "videolibrary.sep1");
   AddBool(8, "videolibrary.updateonstartup", 22000, false);
-  AddBool(9, "videolibrary.backgroundupdate", 22001, false);    
-  AddSeparator(10, "videolibrary.sep2");  
+  AddBool(9, "videolibrary.backgroundupdate", 22001, false);
+  AddSeparator(10, "videolibrary.sep2");
   AddString(11, "videolibrary.cleanup", 334, "", BUTTON_CONTROL_STANDARD);
   AddString(12, "videolibrary.export", 647, "", BUTTON_CONTROL_STANDARD);
   AddString(13, "videolibrary.import", 648, "", BUTTON_CONTROL_STANDARD);
-  
+
   AddCategory(5, "videoplayer", 16003);
   AddString(1, "videoplayer.calibrate", 214, "", BUTTON_CONTROL_STANDARD);
   AddString(2, "videoplayer.jumptoaudiohardware", 16001, "", BUTTON_CONTROL_STANDARD);
@@ -486,11 +486,11 @@ CGUISettings::CGUISettings(void)
 #endif
   AddInt(5, "videoplayer.displayresolution", 169, (int)AUTORES, (int)HDTV_1080i, 1, (int)CUSTOM+MAX_RESOLUTIONS, SPIN_CONTROL_TEXT);
   AddInt(6, "videoplayer.framerateconversions", 336, FRAME_RATE_LEAVE_AS_IS, FRAME_RATE_LEAVE_AS_IS, 1, FRAME_RATE_USE_PAL60, SPIN_CONTROL_TEXT);
-  
+
   AddSeparator(7, "videoplayer.sep1.5");
   AddInt(8, "videoplayer.highqualityupscaling", 13112, SOFTWARE_UPSCALING_DISABLED, SOFTWARE_UPSCALING_DISABLED, 1, SOFTWARE_UPSCALING_ALWAYS, SPIN_CONTROL_TEXT);
   AddInt(9, "videoplayer.upscalingalgorithm", 13116, VS_SCALINGMETHOD_BICUBIC_SOFTWARE, VS_SCALINGMETHOD_BICUBIC_SOFTWARE, 1, VS_SCALINGMETHOD_SINC_SOFTWARE, SPIN_CONTROL_TEXT);
-  
+
 #ifdef HAS_XBOX_HARDWARE
   AddInt(7, "videoplayer.flicker", 13100, 1, 0, 1, 5, SPIN_CONTROL_INT_PLUS, -1, TEXT_OFF);
   AddBool(8, "videoplayer.soften", 215, false);
@@ -551,7 +551,7 @@ CGUISettings::CGUISettings(void)
   AddString(15, "network.httpproxyport", 707, "8080", BUTTON_CONTROL_INPUT, false, 707);
   AddSeparator(16, "network.sep2");
   AddBool(17, "network.enableinternet", 14054, true);
-  
+
   // hidden proxy authentication details
   AddString(0, "network.httpproxyusername", 706, "", BUTTON_CONTROL_INPUT);
   AddString(0, "network.httpproxypassword", 706, "", BUTTON_CONTROL_INPUT);
@@ -596,7 +596,7 @@ CGUISettings::CGUISettings(void)
   AddBool(1,    "upnp.client", 20111, false);
   AddBool(2, "upnp.renderer", 21881, false);
   AddSeparator(3,"upnp.sep1");
-  AddBool(4, "upnp.server", 21360, false);  
+  AddBool(4, "upnp.server", 21360, false);
   AddString(5, "upnp.musicshares", 21361, "", BUTTON_CONTROL_STANDARD);
   AddString(6, "upnp.videoshares", 21362, "", BUTTON_CONTROL_STANDARD);
   AddString(7, "upnp.pictureshares", 21363, "", BUTTON_CONTROL_STANDARD);
@@ -659,11 +659,11 @@ CGUISettings::CGUISettings(void)
   AddCategory(7, "videoscreen", 131);
   AddInt(1, "videoscreen.resolution",169,(int)AUTORES, (int)HDTV_1080i, 1, (int)CUSTOM+MAX_RESOLUTIONS, SPIN_CONTROL_TEXT);
   AddString(2, "videoscreen.testresolution",13109,"", BUTTON_CONTROL_STANDARD);
-  
+
 #ifdef __APPLE__
   AddInt(3, "videoscreen.displayblanking", 13130, BLANKING_DISABLED, BLANKING_DISABLED, 1, BLANKING_ALL_DISPLAYS, SPIN_CONTROL_TEXT);
 #endif
-  
+
   AddString(3, "videoscreen.guicalibration",214,"", BUTTON_CONTROL_STANDARD);
 #ifdef HAS_XBOX_HARDWARE
   AddInt(4, "videoscreen.flickerfilter", 13100, 5, 0, 1, 5, SPIN_CONTROL_INT_PLUS, -1, TEXT_OFF);
@@ -1035,7 +1035,7 @@ void CGUISettings::LoadXML(TiXmlElement *pRootElement, bool hideSettings /* = fa
     SetInt("videooutput.aspect", VIDEO_WIDESCREEN);
   else
     SetInt("videooutput.aspect", VIDEO_NORMAL);
-  
+
   SetBool("videooutput.hd480p", g_videoConfig.Has480p());
   SetBool("videooutput.hd720p", g_videoConfig.Has720p());
   SetBool("videooutput.hd1080i", g_videoConfig.Has1080i());
@@ -1072,14 +1072,14 @@ void CGUISettings::LoadXML(TiXmlElement *pRootElement, bool hideSettings /* = fa
       SetInt("videoscreen.resolution", newRes);
     }
   }
-  
+
   // Move replaygain settings into our struct
   m_replayGain.iPreAmp = GetInt("musicplayer.replaygainpreamp");
   m_replayGain.iNoGainPreAmp = GetInt("musicplayer.replaygainnogainpreamp");
   m_replayGain.iType = GetInt("musicplayer.replaygaintype");
   m_replayGain.bAvoidClipping = GetBool("musicplayer.replaygainavoidclipping");
 
-#if defined(_LINUX) && !defined(__APPLE__)  
+#if defined(_LINUX) && !defined(__APPLE__)
   CStdString timezone = GetString("locale.timezone");
   if(timezone == "0" || timezone.IsEmpty())
   {
@@ -1087,7 +1087,7 @@ void CGUISettings::LoadXML(TiXmlElement *pRootElement, bool hideSettings /* = fa
     SetString("locale.timezone", timezone);
   }
   g_timezone.SetTimezone(timezone);
-#endif  
+#endif
 }
 
 void CGUISettings::LoadFromXML(TiXmlElement *pRootElement, mapIter &it, bool advanced /* = false */)
