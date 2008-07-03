@@ -763,3 +763,51 @@ bool CCharsetConverter::isValidUtf8(const CStdString& str)
 {
   return isValidUtf8(str.c_str(), str.size());
 }
+
+
+void CCharsetConverter::GuiCharsetTo(const CStdStringA& strDestCharset, CStdStringA& strSourceDest)
+{
+  CStdString strSource=strSourceDest;
+  GuiCharsetTo(strDestCharset, strSource, strSourceDest);
+}
+
+void CCharsetConverter::GuiCharsetTo(const CStdStringA& strDestCharset, const CStdStringA& strSource, CStdStringA& strDest)
+{
+
+  CStdString strCharset=g_langInfo.GetGuiCharSet();
+  if (strCharset == strDestCharset) 
+  {
+    strDest = strSource;
+    return;
+  }
+  
+  iconv_t iconvString=iconv_open(strDestCharset.c_str(), strCharset.c_str());
+
+  if (iconvString != (iconv_t) - 1)
+  {
+    size_t inBytes  = (strSource.length() + 1);
+    size_t outBytes = (strSource.length() + 1) * 4;
+    const char *src = strSource.c_str();
+    char       *dst = strDest.GetBuffer(outBytes);
+
+    if (iconv_const(iconvString, &src, &inBytes, &dst, &outBytes) == (size_t) -1)
+    {
+      CLog::Log(LOGERROR, "%s failed", __FUNCTION__);
+      strDest.ReleaseBuffer();
+      strDest = strSource;
+      return;
+    }
+
+    if (iconv(iconvString, NULL, NULL, &dst, &outBytes) == (size_t)-1)
+    {
+      CLog::Log(LOGERROR, "%s failed cleanup", __FUNCTION__);
+      strDest.ReleaseBuffer();
+      strDest = strSource;
+      return;
+    }
+
+    strDest.ReleaseBuffer();
+
+    iconv_close(iconvString);
+  }
+}

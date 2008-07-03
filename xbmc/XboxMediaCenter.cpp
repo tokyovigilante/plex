@@ -31,12 +31,16 @@
 #include "Application.h"
 #include "FileItem.h"
 #include "PlayListPlayer.h"
-
+#include "CocoaUtils.h"
 
 CApplication g_application;
 
 int main(int argc, char* argv[])
 {
+#ifdef __APPLE__
+  void* pool = InitializeAutoReleasePool();
+#endif
+
   CFileItemList playlist;
   if (argc > 1)
   {
@@ -98,6 +102,10 @@ int main(int argc, char* argv[])
     printf("********ERROR- exception caught on main loop. exiting");
 	return -1;
   }
+
+#ifdef __APPLE__
+  DestroyAutoReleasePool(pool);
+#endif
 
   return 0;
 }

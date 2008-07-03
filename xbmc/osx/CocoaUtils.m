@@ -82,7 +82,7 @@ int Cocoa_GetDisplay(int screen)
 
 void Cocoa_GetScreenResolutionOfAnotherScreen(int screen, int* w, int* h)
 {
-	CFDictionaryRef mode = CGDisplayCurrentMode(Cocoa_GetDisplay(screen));
+  CFDictionaryRef mode = CGDisplayCurrentMode(Cocoa_GetDisplay(screen));
   CFNumberGetValue(CFDictionaryGetValue(mode, kCGDisplayWidth), kCFNumberSInt32Type, w);
   CFNumberGetValue(CFDictionaryGetValue(mode, kCGDisplayHeight), kCFNumberSInt32Type, h);
 }
@@ -281,6 +281,15 @@ void Cocoa_GL_SetFullScreen(int screen, int width, int height, bool fs, bool bla
 
 void Cocoa_GL_EnableVSync(bool enable)
 {
+#if 1
+  NSOpenGLContext* context = (NSOpenGLContext*)Cocoa_GL_GetCurrentContext();
+  
+  // Flush synchronised with vertical retrace                       
+  GLint theOpenGLCPSwapInterval = enable ? 1 : 0;
+  [context setValues:(const GLint*)&theOpenGLCPSwapInterval forParameter:(NSOpenGLContextParameter) NSOpenGLCPSwapInterval];
+  
+#else
+
   CGLContextObj cglContext;
   cglContext = CGLGetCurrentContext();
   if (cglContext)
@@ -295,6 +304,7 @@ void Cocoa_GL_EnableVSync(bool enable)
     if (cglErr != kCGLNoError)
       printf("ERROR: CGLSetParameter for kCGLCPSwapInterval failed with error %d: %s", cglErr, CGLErrorString(cglErr));
   }
+#endif
 }
 
 void* Cocoa_GL_GetWindowPixelFormat()
@@ -341,6 +351,15 @@ void* Cocoa_GL_CreateContext(void* pixFmt, void* shareCtx)
     return nil;
   NSOpenGLContext* newContext = [[NSOpenGLContext alloc] initWithFormat:pixFmt
                                                            shareContext:(NSOpenGLContext*)shareCtx];
+
+  // Enable GL multithreading if available.                                                           
+  //CGLContextObj theCGLContextObj = (CGLContextObj) [newContext CGLContextObj];
+  //CGLEnable(theCGLContextObj, kCGLCEMPEngine);
+
+  // Flush synchronised with vertical retrace                       
+  GLint theOpenGLCPSwapInterval = 1;
+  [newContext setValues:(const GLint*)&theOpenGLCPSwapInterval forParameter:(NSOpenGLContextParameter) NSOpenGLCPSwapInterval];
+                                                           
   return newContext;
 }
 
@@ -410,4 +429,58 @@ int Cocoa_SleepSystem()
 void Cocoa_HideMouse()
 {
   [NSCursor hide];
+}
+
+void Cocoa_GetSmartFolderResults(const char* strFile, void (*CallbackFunc)(void* userData, void* userData2, const char* path), void* userData, void* userData2)
+{
+  NSString*     filePath = [[NSString alloc] initWithUTF8String:strFile];
+  NSDictionary* doc = [[NSDictionary alloc] initWithContentsOfFile:filePath];
+  NSString*     raw = [doc objectForKey:@"RawQuery"];
+  NSArray*      searchPaths = [[doc objectForKey:@"SearchCriteria"] objectForKey:@"FXScopeArrayOfPaths"];
+
+  // Ugh, Carbon from now on...
+  MDQueryRef query = MDQueryCreate(kCFAllocatorDefault, (CFStringRef)raw, NULL, NULL);
+  if (query)
+  {
+  	if (searchPaths)
+  	  MDQuerySetSearchScope(query, (CFArrayRef)searchPaths, 0);
+  	  
+    MDQueryExecute(query, 0);
+
+	// Keep track of when we started.
+	CFAbsoluteTime startTime = CFAbsoluteTimeGetCurrent(); 
+    for (;;)
+    {
+      CFRunLoopRunInMode(kCFRunLoopDefaultMode, 0, YES);
+    
+      // If we're done or we timed out.
+      if (MDQueryIsGatheringComplete(query) == true ||
+      	  CFAbsoluteTimeGetCurrent() - startTime >= 5)
+      {
+        // Stop the query.
+        MDQueryStop(query);
+      
+    	CFIndex count = MDQueryGetResultCount(query);
+    	char title[BUFSIZ];
+    	int i;
+  
+    	for (i = 0; i < count; ++i) 
+   		{
+      	  MDItemRef resultItem = (MDItemRef)MDQueryGetResultAtIndex(query, i);
+      	  CFStringRef titleRef = (CFStringRef)MDItemCopyAttribute(resultItem, kMDItemPath);
+      
+      	  CFStringGetCString(titleRef, title, BUFSIZ, kCFStringEncodingUTF8);
+      	  CallbackFunc(userData, userData2, title);
+      	  CFRelease(titleRef);
+    	}  
+    
+        CFRelease(query);
+    	break;
+      }
+    }
+  }
+  
+  // Freeing these causes a crash when scanning for new content.
+  CFRelease(filePath);
+  CFRelease(doc);
 }

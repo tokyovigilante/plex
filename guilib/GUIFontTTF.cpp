@@ -23,7 +23,6 @@
 #include "GUIFontTTF.h"
 #include "GUIFontManager.h"
 #include "GraphicContext.h"
-
 #include <math.h>
 
 // stuff for freetype
@@ -60,8 +59,16 @@ using namespace std;
 #ifdef _LINUX
 #define max(a,b) ((a)>(b)?(a):(b))
 #define min(a,b) ((a)<(b)?(a):(b))
-#define ROUND rintf
-#define ROUND_TO_PIXEL rintf
+// NOTE: rintf is inaccurate - it appears to round to the nearest EVEN integer, rather than to the nearest integer
+//       this is a useful reference for wintel platforms that may be useful:
+//         http://ldesoras.free.fr/doc/articles/rounding_en.pdf
+//       For now, we've dumped down to the simple (and slow?) floor(x + 0.5f)
+//       Ideally we'd have a common round_int routine that does float -> float, as this is the case
+//       we actually use (both here and in CGUIImage)
+//#define ROUND rintf
+//#define ROUND_TO_PIXEL rintf
+#define ROUND(x) floor(x + 0.5f)
+#define ROUND_TO_PIXEL(x) floor(x + 0.5f)
 #else
 namespace MathUtils {
   inline int round_int (double x);
@@ -69,7 +76,7 @@ namespace MathUtils {
 
 #define ROUND(x) (float)(MathUtils::round_int(x))
 
-#ifdef HAS_XBOX_D3D
+#if defined(HAS_XBOX_D3D) || defined(HAS_SDL_OPENGL)
 #define ROUND_TO_PIXEL(x) (float)(MathUtils::round_int(x))
 #else
 #define ROUND_TO_PIXEL(x) (float)(MathUtils::round_int(x)) - 0.5f
@@ -244,8 +251,16 @@ void CGUIFontTTF::Clear()
   m_face = NULL;
 }
 
-bool CGUIFontTTF::Load(const CStdString& strFilename, float height, float aspect, float lineSpacing)
+bool CGUIFontTTF::Load(const CStdString& strFile, float height, float aspect, float lineSpacing)
 {
+  CStdString strFilename = strFile;
+  
+#ifdef __APPLE__
+  // Hardware to the unicode version that's built into every system.
+  if (strFilename.Right(9) == "Arial.ttf")
+    strFilename = "/Library/Fonts/Arial Unicode.ttf";
+#endif
+  
 #ifndef HAS_SDL
   // create our character texture + font shader
   m_pD3DDevice = g_graphicsContext.Get3DDevice();
@@ -305,8 +320,16 @@ bool CGUIFontTTF::Load(const CStdString& strFilename, float height, float aspect
   m_textureWidth = ((m_cellHeight * CHARS_PER_TEXTURE_LINE) & ~63) + 64;
 #ifdef HAS_SDL_OPENGL
   m_textureWidth = PadPow2(m_textureWidth);
+  
+  GLint maxTextureSize; 
+  glGetIntegerv(GL_MAX_TEXTURE_SIZE, &maxTextureSize);
+#else
+  int maxTextureSize = 2048;
 #endif
-  if (m_textureWidth > 4096) m_textureWidth = 4096;
+  
+  // Use a maximum texture width of 2048, which should work on all Macs. Ideally we should query the maximum texture width.
+  if (m_textureWidth > maxTextureSize) 
+    m_textureWidth = maxTextureSize;
 
   // set the posX and posY so that our texture will be created on first character write.
   m_posX = m_textureWidth;

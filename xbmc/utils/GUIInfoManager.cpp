@@ -3644,14 +3644,25 @@ CStdString CGUIInfoManager::GetItemLabel(const CFileItem *item, int info ) const
         CUtil::GetDirectory(CorrectAllItemsSortHack(item->GetVideoInfoTag()->m_strFileNameAndPath), path);
       else
         CUtil::GetDirectory(item->m_strPath, path);
+      CURL url(path);
+      url.GetURLWithoutUserDetails(path);
+      CUtil::UrlDecode(path);
       return path;
     }
   case LISTITEM_FILENAME_AND_PATH:
-    if (item->IsMusicDb() && item->HasMusicInfoTag())
-      return CorrectAllItemsSortHack(item->GetMusicInfoTag()->GetURL());
-    if (item->IsVideoDb() && item->HasVideoInfoTag())
-      return CorrectAllItemsSortHack(item->GetVideoInfoTag()->m_strFileNameAndPath);
-    return item->m_strPath;
+    {
+      CStdString path;
+      if (item->IsMusicDb() && item->HasMusicInfoTag())
+        path = CorrectAllItemsSortHack(item->GetMusicInfoTag()->GetURL());
+      else if (item->IsVideoDb() && item->HasVideoInfoTag())
+        path = CorrectAllItemsSortHack(item->GetVideoInfoTag()->m_strFileNameAndPath);
+      else
+        path = item->m_strPath;
+      CURL url(path);
+      url.GetURLWithoutUserDetails(path);
+      CUtil::UrlDecode(path);
+      return path;
+    }
   case LISTITEM_PICTURE_PATH:
     if (item->IsPicture() && (!item->IsZIP() || item->IsRAR() || item->IsCBZ() || item->IsCBR()))
       return item->m_strPath;

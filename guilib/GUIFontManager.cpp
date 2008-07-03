@@ -93,6 +93,17 @@ CGUIFont* GUIFontManager::LoadTTF(const CStdString& strFontName, const CStdStrin
 #endif
   }
   
+#ifdef __APPLE__
+  // See if it's a system font.
+  if (CUtil::GetExtension(strFilename).length() == 0)
+  {
+    // We need to just take the base file, since it has the wrong path on it by this point. 
+    CStdString fontPath = "/Library/Fonts/" + CUtil::GetFileName(strFilename) + ".ttf";
+    if (XFILE::CFile::Exists(fontPath))
+      strPath = fontPath;
+  }
+#endif
+  
   // check if we already have this font file loaded (font object could differ only by color or style)
   CStdString TTFfontName;
   TTFfontName.Format("%s_%f_%f", strFilename, newSize, aspect);

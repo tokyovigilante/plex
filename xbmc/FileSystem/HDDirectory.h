@@ -22,6 +22,8 @@
 
 
 #include "IDirectory.h"
+struct WIN32_FILE_DATA;
+class CFileItem;
 
 namespace DIRECTORY
 {
@@ -35,5 +37,9 @@ public:
   virtual bool Create(const char* strPath);
   virtual bool Exists(const char* strPath);
   virtual bool Remove(const char* strPath);
+protected:
+  bool       IsAllowed(CFileItem* pItem, WIN32_FIND_DATA& wfd);
+  CFileItem* BuildFileItem(const CStdString& strRoot, WIN32_FIND_DATA& wfd);
+  CFileItem* BuildResolvedFileItem(const CStdString& strRoot, WIN32_FIND_DATA& wfd);
 };
 }

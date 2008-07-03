@@ -115,12 +115,14 @@ public:
     
     if (!m_pHead)
     {
-      m_pEnd = pElement;
-      m_pHead = m_pEnd;
+      // First element in list.
+      m_pHead = m_pEnd = pElement;
     }
     else
     {
+      // Next element in list.
       m_pEnd->pNext = pElement;
+      m_pEnd = pElement;
     }
   }
   

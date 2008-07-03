@@ -1896,6 +1896,15 @@ bool CUtil::IsUPnP(const CStdString& strFile)
     return strFile.Left(5).Equals("upnp:");
 }
 
+#ifdef __APPLE__
+bool CUtil::IsSmartFolder(const CStdString& strFile)
+{
+  CStdString strExtension;
+  CUtil::GetExtension(strFile,strExtension);
+  return (strExtension.Compare(".savedSearch") == 0); 
+}
+#endif
+
 bool CUtil::IsMemCard(const CStdString& strFile)
 {
   return strFile.Left(3).Equals("mem");
@@ -2909,7 +2918,8 @@ void CUtil::Split(const CStdString& strFileNameAndPath, CStdString& strPath, CSt
   while (i > 0)
   {
     char ch = strFileNameAndPath[i];
-    if (ch == ':' || ch == '/' || ch == '\\') break;
+    // Only break on ':' if it's a drive separator for DOS (ie d:foo)
+    if (ch == '/' || ch == '\\' || (ch == ':' && i == 1)) break;
     else i--;
   }
   if (i == 0)
@@ -3519,7 +3529,12 @@ void CUtil::ConvertFileItemToPlayListItem(const CFileItem *pItem, CPlayListItem 
 
 bool CUtil::IsUsingTTFSubtitles()
 {
+#ifdef __APPLE__
+  // That's all we use for now, baby.
+  return true;
+#else
   return CUtil::GetExtension(g_guiSettings.GetString("subtitles.font")).Equals(".ttf");
+#endif
 }
 
 typedef struct
@@ -4540,7 +4555,7 @@ int CUtil::ExecBuiltIn(const CStdString& execString)
   }
   else if (execute.Equals("container.previousviewmode"))
   {
-    CGUIMessage message(GUI_MSG_CHANGE_VIEW_MODE, m_gWindowManager.GetActiveWindow(), 0, 0, -1);
+    CGUIMessage message(GUI_MSG_CHANGE_VIEW_MODE, m_gWindowManager.GetActiveWindow(), 0, 0, MAXDWORD);
     g_graphicsContext.SendMessage(message);
   }
   else if (execute.Equals("container.setviewmode"))
@@ -4555,7 +4570,7 @@ int CUtil::ExecBuiltIn(const CStdString& execString)
   }
   else if (execute.Equals("container.previoussortmethod"))
   {
-    CGUIMessage message(GUI_MSG_CHANGE_SORT_METHOD, m_gWindowManager.GetActiveWindow(), 0, 0, -1);
+    CGUIMessage message(GUI_MSG_CHANGE_SORT_METHOD, m_gWindowManager.GetActiveWindow(), 0, 0, MAXDWORD);
     g_graphicsContext.SendMessage(message);
   }
   else if (execute.Equals("container.setsortmethod"))

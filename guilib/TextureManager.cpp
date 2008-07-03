@@ -651,9 +651,15 @@ int CGUITextureManager::Load(const CStdString& strTextureName, DWORD dwColorKey,
       for (int iImage = 0; iImage < nImages; ++iImage)
       {
         CTexture* pclsTexture = new CTexture(pTextures[iImage], info.Width, info.Height, true, 100, pPal);
+        
         pclsTexture->SetDelay(Delay[iImage]);
         pclsTexture->SetLoops(nLoops);
         pMap->Add(pclsTexture);
+#ifndef HAS_SDL
+        delete pTextures[iImage];
+#else
+        SDL_FreeSurface(pTextures[iImage]);
+#endif
       }
 
       delete [] pTextures;

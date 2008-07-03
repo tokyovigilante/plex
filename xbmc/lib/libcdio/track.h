@@ -1,11 +1,11 @@
-/* -*- c -*-
-    $Id$
+/*
+    $Id: track.h,v 1.14 2008/03/25 15:59:09 karl Exp $
 
-    Copyright (C) 2005, 2006 Rocky Bernstein <rocky@panix.com>
+    Copyright (C) 2005, 2006, 2008 Rocky Bernstein <rocky@gnu.org>
 
-    This program is free software; you can redistribute it and/or modify
+    This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 2 of the License, or
+    the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
     This program is distributed in the hope that it will be useful,
@@ -14,8 +14,7 @@
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with this program; if not, write to the Free Software
-    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 /** \file track.h 
@@ -196,6 +195,42 @@ extern "C" {
     @return the starting LSN or CDIO_INVALID_LSN on error.
   */
   lsn_t cdio_get_track_lsn(const CdIo_t *p_cdio, track_t i_track);
+
+  /*!  
+    Return the starting LBA for the pregap for track number
+    i_track in p_cdio.  Track numbers usually start at something 
+    greater than 0, usually 1.
+
+    @param p_cdio object to get information from
+    @param i_track  the track number we want the LBA for
+    @return the starting LBA or CDIO_INVALID_LBA on error.
+  */
+  lba_t cdio_get_track_pregap_lba(const CdIo_t *p_cdio, track_t i_track);
+
+  /*!  
+    Return the starting LSN for the pregap for track number
+    i_track in p_cdio.  Track numbers usually start at something 
+    greater than 0, usually 1.
+
+    @param p_cdio object to get information from
+    @param i_track  the track number we want the LSN for
+    @return the starting LSN or CDIO_INVALID_LSN on error.
+  */
+  lsn_t cdio_get_track_pregap_lsn(const CdIo_t *p_cdio, track_t i_track);
+
+  /*!
+    Get the International Standard Recording Code (ISRC) for track number
+    i_track in p_cdio.  Track numbers usually start at something
+    greater than 0, usually 1.
+
+    @return the International Standard Recording Code (ISRC) or NULL
+    if there is none or we don't have the ability to get it.
+
+    Note: string is malloc'd so caller has to free() the returned
+    string when done with it.
+
+  */
+  char * cdio_get_track_isrc (const CdIo_t *p_cdio, track_t i_track);
   
   /*!  
     Return the starting MSF (minutes/secs/frames) for track number

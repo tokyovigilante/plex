@@ -19,6 +19,8 @@
  *
  */
 
+#include "osx/KeyboardLayouts.h"
+
 #include "stdafx.h"
 #include "GUISettings.h"
 #include "GUIDialogKeyboard.h"
@@ -79,6 +81,9 @@ void CGUIDialogKeyboard::OnInitWindow()
   // natual entry on keyboards.
   //
   m_dwDefaultFocusControlID = 300;
+
+  g_OSXKeyboardLayouts.HoldLayout();
+
 #endif
 
   CGUIDialog::OnInitWindow();
@@ -113,6 +118,8 @@ bool CGUIDialogKeyboard::OnAction(const CAction &action)
   if (m_lastSearchUpdate || m_lastSearchUpdate + SEARCH_DELAY >= now)
     m_lastSearchUpdate = now;
 
+  if(g_OSXKeyboardLayouts.Process(action.kKey)) return true;
+  
   if (action.wID == ACTION_BACKSPACE
 #ifdef __APPLE__
      || action.wID == ACTION_PARENT_DIR
@@ -168,28 +175,23 @@ bool CGUIDialogKeyboard::OnAction(const CAction &action)
     else if (b == 0x20) Character(b);   // space
     return true;
   }
-  else if (action.wID >= KEY_ASCII)
+  else
   { // input from the keyboard
-    //char ch = action.wID & 0xFF;
     switch (action.unicode)
     {
-    case 13:  // enter
-    case 10:  // enter
-      OnOK();
-      break;
-    case 8:   // backspace
-      Backspace();
-      break;
-    case 27:  // escape
-      Close();
-      break;
-    default:  //use character input
-      Character(action.unicode);
-      break;
+      case 8:   // backspace
+        Backspace();
+        break;
+      case 27:  // escape
+        Close();
+        break;
+      default:  //
+        if(!CGUIDialog::OnAction(action)) 
+          Character(action.unicode);
+        break;
     }
     return true;
   }
-  return CGUIDialog::OnAction(action);
 }
 
 bool CGUIDialogKeyboard::OnMessage(CGUIMessage& message)
@@ -666,6 +668,9 @@ int CGUIDialogKeyboard::ShowAndVerifyPassword(CStdString& strPassword, const CSt
 
 void CGUIDialogKeyboard::Close(bool forceClose)
 {
+
+  g_OSXKeyboardLayouts.RepareLayout();
+
   // reset the heading (we don't always have this)
   m_strHeading = "";
   // call base class

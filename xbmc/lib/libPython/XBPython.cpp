@@ -346,6 +346,7 @@ void XBPython::Initialize()
 void XBPython::Finalize()
 {
   m_iDllScriptCounter--;
+  
   // for linux - we never release the library. its loaded and stays in memory.
   EnterCriticalSection(&m_critSection);
 
@@ -398,14 +399,6 @@ void XBPython::FreeResources()
     }
 
     LeaveCriticalSection(&m_critSection );
-
-    // shut down the interpreter
-    PyEval_AcquireLock();
-    PyThreadState_Swap(mainThreadState);
-    Py_Finalize();
-    // free_arenas();
-    mainThreadState = NULL;
-    g_sectionLoader.UnloadDLL(PYTHON_DLL);
   }
 
   CloseHandle(m_hEvent);

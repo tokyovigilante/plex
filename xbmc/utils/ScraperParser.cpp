@@ -45,6 +45,7 @@ CScraperParser::CScraperParser()
   m_name = m_content = NULL;
   m_document = NULL;
   m_settings = NULL;
+  m_SearchStringEncoding = "UTF-8";
 }
 
 CScraperParser::~CScraperParser()
@@ -56,6 +57,7 @@ CScraperParser::~CScraperParser()
   m_document = NULL;
   m_name = m_content = NULL;
   m_settings = NULL;
+//  m_SearchStringEncoding = NULL;
 }
 
 bool CScraperParser::Load(const CStdString& strXMLFile)
@@ -98,6 +100,16 @@ bool CScraperParser::Load(const CStdString& strXMLFile)
       m_pRootElement = NULL;
       return false;
     }
+
+    TiXmlElement* pChildElement = m_pRootElement->FirstChildElement("CreateSearchUrl");
+    if (pChildElement)
+    { 
+      if(!(m_SearchStringEncoding = pChildElement->Attribute("SearchStringEncoding")))
+        m_SearchStringEncoding = "UTF-8";
+    } 
+       
+  return true;
+
   }
   else
   {

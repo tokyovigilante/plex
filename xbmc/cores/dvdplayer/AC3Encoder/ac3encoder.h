@@ -19,7 +19,7 @@
    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
  */
-
+#pragma once
 #include "ringbuffer.h"
 #include "aften-types.h"
 
@@ -29,6 +29,7 @@
 #define SPDIF_SAMPLERATE 48000
 #define AC3_SAMPLES_PER_FRAME 1536
 #define AC3_SPDIF_FRAME_SIZE AC3_SAMPLES_PER_FRAME * SPDIF_CHANNELS * SPDIF_SAMPLESIZE / 8
+#define AC3_BITRATE 640
 
 struct AC3Encoder
 {

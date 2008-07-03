@@ -571,7 +571,9 @@ HRESULT CTextureBundle::LoadTexture(const CStdString& Filename, D3DXIMAGE_INFO* 
                                             + sizeof (DWORD)
 #endif /* HAS_XBOX_D3D */
                                            ]);
+#ifdef HAS_XBOX_D3D
   D3DPalette* pPal = 0;
+#endif
   void* ResData = 0;
 
   WORD RealSize[2];
@@ -591,8 +593,10 @@ HRESULT CTextureBundle::LoadTexture(const CStdString& Filename, D3DXIMAGE_INFO* 
 
   if (flags & XPRFLAG_PALETTE)
   {
+#ifdef HAS_XBOX_D3D
     pPal = new D3DPalette;
     memcpy(pPal, Next, sizeof(D3DPalette));
+#endif
     Next += sizeof(D3DPalette);
   }
 
@@ -641,7 +645,9 @@ HRESULT CTextureBundle::LoadTexture(const CStdString& Filename, D3DXIMAGE_INFO* 
 PackedLoadError:
   CLog::Log(LOGERROR, "Error loading texture: %s: Invalid data", Filename.c_str());
   delete [] pTex;
+#ifdef HAS_XBOX_D3D
   if (pPal) delete pPal;
+#endif
   return E_FAIL;
 }
 
@@ -671,7 +677,9 @@ int CTextureBundle::LoadAnim(const CStdString& Filename, D3DXIMAGE_INFO* pInfo, 
   *pAnimInfo;
 
   D3DTexture** ppTex = 0;
+#ifdef HAS_XBOX_D3D
   D3DPalette* pPal = 0;
+#endif
   void* ResData = 0;
 
   BYTE* Next = UnpackedBuf;
@@ -687,8 +695,10 @@ int CTextureBundle::LoadAnim(const CStdString& Filename, D3DXIMAGE_INFO* pInfo, 
 
   if (flags & XPRFLAG_PALETTE)
   {
+#ifdef HAS_XBOX_D3D
     pPal = new D3DPalette;
     memcpy(pPal, Next, sizeof(D3DPalette));
+#endif
     Next += sizeof(D3DPalette);
   }
 
@@ -764,7 +774,9 @@ PackedAnimError:
       delete [] ppTex[i];
     delete [] ppTex;
   }
+#ifdef HAS_XBOX_D3D
   if (pPal) delete pPal;
+#endif
   if (*ppDelays) delete [] *ppDelays;
   return 0;
 }

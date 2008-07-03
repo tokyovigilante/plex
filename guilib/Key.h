@@ -31,6 +31,8 @@
 
 #include "XBIRRemote.h"
 
+#include "common/SDLKeyboard.h"
+
 // Analogue - don't change order
 #define KEY_BUTTON_A                        256
 #define KEY_BUTTON_B                        257
@@ -363,6 +365,7 @@ struct CAction
   DWORD m_dwButtonCode;
   CStdString strAction;
   WCHAR unicode; // new feature, does not fit into wID like ASCII, wouldn't be good design either!? Will be set whenever ASCII is set into wID (for backwards compatibility)
+  SVKey kKey;
 };
 
 /*!

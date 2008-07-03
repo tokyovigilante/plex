@@ -1,11 +1,11 @@
 /* -*- c -*-
-    $Id$
+    $Id: device.h,v 1.39 2008/03/28 01:28:50 rocky Exp $
 
-    Copyright (C) 2005, 2006 Rocky Bernstein <rocky@cpan.org>
+    Copyright (C) 2005, 2006, 2008 Rocky Bernstein <rocky@gnu.org>
 
-    This program is free software; you can redistribute it and/or modify
+    This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 2 of the License, or
+    the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
     This program is distributed in the hope that it will be useful,
@@ -14,8 +14,7 @@
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with this program; if not, write to the Free Software
-    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 /** \file device.h 
@@ -159,7 +158,8 @@ extern "C" {
     DRIVER_SOLARIS, /**< Sun Solaris Driver */
     DRIVER_OSX,     /**< Apple OSX Driver */
     DRIVER_WIN32,   /**< Microsoft Windows Driver. Includes ASPI and 
-		         ioctl acces. */
+		         ioctl access. */
+    DRIVER_NETBSD,  /**< NetBSD Driver. */
     DRIVER_CDRDAO,  /**< cdrdao format CD image. This is listed
 		         before BIN/CUE, to make the code prefer cdrdao
 		         over BIN/CUE when both exist. */
@@ -185,7 +185,7 @@ extern "C" {
 #define CDIO_MIN_DRIVER        DRIVER_AIX
 #define CDIO_MIN_DEVICE_DRIVER CDIO_MIN_DRIVER
 #define CDIO_MAX_DRIVER        DRIVER_NRG
-#define CDIO_MAX_DEVICE_DRIVER DRIVER_WIN32
+#define CDIO_MAX_DEVICE_DRIVER DRIVER_NETBSD
 
   /** The following are status codes for completion of a given cdio
      operation. By design 0 is successful completion and -1 is error
@@ -441,36 +441,6 @@ extern "C" {
   /*! True if CD-ROM understand ATAPI commands. */
   bool_3way_t cdio_have_atapi (CdIo_t *p_cdio);
 
-  /*! True if AIX driver is available. */
-  bool cdio_have_aix    (void);
-
-  /*! True if BSDI driver is available. */
-  bool cdio_have_bsdi    (void);
-
-  /*! True if FreeBSD driver is available. */
-  bool cdio_have_freebsd (void);
-
-  /*! True if GNU/Linux driver is available. */
-  bool cdio_have_linux   (void);
-
-  /*! True if Sun Solaris driver is available. */
-  bool cdio_have_solaris (void);
-
-  /*! True if Apple OSX driver is available. */
-  bool cdio_have_osx     (void);
-
-  /*! True if Microsoft Windows driver is available. */
-  bool cdio_have_win32   (void);
-
-  /*! True if Nero driver is available. */
-  bool cdio_have_nrg     (void);
-
-  /*! True if BIN/CUE driver is available. */
-  bool cdio_have_bincue  (void);
-
-  /*! True if cdrdao CDRDAO driver is available. */
-  bool cdio_have_cdrdao  (void);
-
   /*! Like cdio_have_xxx but uses an enumeration instead. */
   bool cdio_have_driver (driver_id_t driver_id);
   
@@ -587,7 +557,7 @@ extern "C" {
       the some sort of device name.
 
      @return the cdio object for subsequent operations. 
-     NULL on error or there is no BSDI driver.
+     NULL on error or there is no AIX driver.
 
      @see cdio_open
    */
@@ -598,7 +568,7 @@ extern "C" {
       the some sort of device name.
 
      @return the cdio object for subsequent operations. 
-     NULL on error or there is no BSDI driver.
+     NULL on error or there is no AIX driver.
 
      @see cdio_open
    */

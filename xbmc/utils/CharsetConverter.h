@@ -93,6 +93,10 @@ public:
   void logicalToVisualBiDi(const CStdStringA& strSource, CStdStringA& strDest, FriBidiCharSet fribidiCharset, FriBidiCharType base = FRIBIDI_TYPE_LTR);
   void logicalToVisualBiDi(const CStdStringA& strSource, CStdStringA& strDest, CStdStringA& charset, FriBidiCharType base = FRIBIDI_TYPE_LTR);
 
+  void GuiCharsetTo(const CStdStringA& strDestCharset, CStdStringA& strSourceDest);
+
+  void GuiCharsetTo(const CStdStringA& strDestCharset, const CStdStringA& strSource, CStdStringA& strDest);
+
 private:
   std::vector<CStdString> m_vecCharsetNames;
   std::vector<CStdString> m_vecCharsetLabels;

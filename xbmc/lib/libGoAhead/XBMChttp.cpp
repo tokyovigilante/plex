@@ -1326,7 +1326,7 @@ int CXbmcHttp::xbmcGetCurrentlyPlaying(int numParas, CStdString paras[])
 	      return SetResponse(openTag+"Changed:False");
         //if still here, continue collecting info
 	  }
-	  thumb=g_infoManager.GetImage(VIDEOPLAYER_COVER, -1);
+	  thumb=g_infoManager.GetImage(VIDEOPLAYER_COVER, MAXDWORD);
 		
 		//CPicture pic;
         //pic.CacheSkinImage("defaultAlbumCover.png", cachedThumb);
@@ -1378,7 +1378,7 @@ int CXbmcHttp::xbmcGetCurrentlyPlaying(int numParas, CStdString paras[])
         output+=closeTag+openTag+"Bitrate"+tag+":"+bitRate;  
       if (!sampleRate.IsEmpty())
         output+=closeTag+openTag+"Samplerate"+tag+":"+sampleRate;  
-	  thumb=g_infoManager.GetImage(MUSICPLAYER_COVER, -1);
+	  thumb=g_infoManager.GetImage(MUSICPLAYER_COVER, MAXDWORD);
       copyThumb(thumb,thumbFn);
 	  output+=closeTag+openTag+"Thumb"+tag+":"+thumb;
     }

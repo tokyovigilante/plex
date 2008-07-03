@@ -193,7 +193,7 @@ CFileItem::CFileItem(const CStdString& strPath, bool bIsFolder)
   m_bIsFolder = bIsFolder;
 #ifdef DEBUG
   // tuxbox urls cannot have a / at end
-  if (m_bIsFolder && !m_strPath.IsEmpty() && !IsFileFolder() && !CUtil::IsTuxBox(m_strPath))
+  if (m_bIsFolder && !m_strPath.IsEmpty() && !IsFileFolder() && !CUtil::IsTuxBox(m_strPath) && strPath.Left(14) != "smartfolder://")
     ASSERT(CUtil::HasSlashAtEnd(m_strPath));
 #endif
 
@@ -557,11 +557,14 @@ bool CFileItem::IsInternetStream() const
   if (strProtocol.size() == 0)
     return false;
 
+  if (IsOnLAN())
+    return false;
+  
   if (strProtocol == "shout" || strProtocol == "mms" ||
-      strProtocol == "http" || /*strProtocol == "ftp" ||*/
-      strProtocol == "rtsp" || strProtocol == "rtp" ||
-      strProtocol == "udp"  || strProtocol == "lastfm" ||
-      strProtocol == "https")
+      strProtocol == "http"  || strProtocol == "ftp" ||
+      strProtocol == "rtsp"  || strProtocol == "rtp" ||
+      strProtocol == "udp"   || strProtocol == "lastfm" ||
+      strProtocol == "https" || strProtocol == "xbms")
     return true;
 
   return false;
@@ -635,7 +638,7 @@ bool CFileItem::IsDVDImage() const
 {
   CStdString strExtension;
   CUtil::GetExtension(m_strPath, strExtension);
-  if (strExtension.Equals(".img") || strExtension.Equals(".iso")) return true;
+  if (strExtension.Equals(".img") || strExtension.Equals(".iso") || strExtension.Equals(".nrg")) return true;
   return false;
 }
 

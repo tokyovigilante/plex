@@ -39,6 +39,8 @@ CAPEv2Tag::~CAPEv2Tag()
 
 bool CAPEv2Tag::ReadTag(const char* filename, bool checkID3Tag)
 {
+  printf("Reading tag from %s\n", filename);
+  
   if (!filename || !m_dll.Load())
     return false;
 
@@ -97,7 +99,7 @@ bool CAPEv2Tag::ReadTag(const char* filename, bool checkID3Tag)
   // Replay gain info
   GetReplayGainFromTag(tag);
 
-  delete tag;
+  m_dll.DeleteAPETag(tag);
   return true;
 }
 

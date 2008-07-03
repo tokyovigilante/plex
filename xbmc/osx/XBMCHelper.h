@@ -29,7 +29,7 @@ class XBMCHelper
   XBMCHelper();
 
   void Start();
-  void Stop();
+  void Stop(bool hup = FALSE);
 
   void Configure();
 

@@ -24,19 +24,19 @@
 /* #undef HAVE_CDDB */
 
 /* Define to 1 if you have the <CoreFoundation/CFBase.h> header file. */
-/* #undef HAVE_COREFOUNDATION_CFBASE_H */
+#define HAVE_COREFOUNDATION_CFBASE_H 1
 
 /* Define to 1 if you have the <curses.h> header file. */
 /* #undef HAVE_CURSES_H */
 
 /* Define 1 if you have Darwin OS X-type CD-ROM support */
-/* #undef HAVE_DARWIN_CDROM */
+#define HAVE_DARWIN_CDROM 1
 
 /* Define if time.h defines extern long timezone and int daylight vars. */
 #define HAVE_DAYLIGHT 1
 
 /* Define to 1 if you have the Apple DiskArbitration framework */
-/* #undef HAVE_DISKARBITRATION */
+#define HAVE_DISKARBITRATION 1
 
 /* Define to 1 if you have the <dlfcn.h> header file. */
 #define HAVE_DLFCN_H 1
@@ -90,7 +90,7 @@
 #define HAVE_INTTYPES_H 1
 
 /* Define to 1 if you have the <IOKit/IOKitLib.h> header file. */
-/* #undef HAVE_IOKIT_IOKITLIB_H */
+#define HAVE_IOKIT_IOKITLIB_H 1
 
 /* Supports ISO _Pragma() macro */
 #define HAVE_ISOC99_PRAGMA 
@@ -115,19 +115,19 @@
 #define HAVE_LIMITS_H 1
 
 /* Define 1 if you have Linux-type CD-ROM support */
-#define HAVE_LINUX_CDROM 1
+/* #undef HAVE_LINUX_CDROM */
 
 /* Define to 1 if you have the <linux/cdrom.h> header file. */
-#define HAVE_LINUX_CDROM_H 1
+/* #undef HAVE_LINUX_CDROM_H */
 
 /* Define 1 if timeout is in cdrom_generic_command struct */
 /* #undef HAVE_LINUX_CDROM_TIMEOUT */
 
 /* Define to 1 if you have the <linux/major.h> header file. */
-#define HAVE_LINUX_MAJOR_H 1
+/* #undef HAVE_LINUX_MAJOR_H */
 
 /* Define to 1 if you have the <linux/version.h> header file. */
-#define HAVE_LINUX_VERSION_H 1
+/* #undef HAVE_LINUX_VERSION_H */
 
 /* Define to 1 if you have the `lstat' function. */
 #define HAVE_LSTAT 1
@@ -143,6 +143,9 @@
 
 /* Define to 1 if you have the <ncurses.h> header file. */
 #define HAVE_NCURSES_H 1
+
+/* Define 1 if you have NetBSD CD-ROM support */
+/* #undef HAVE_NETBSD_CDROM */
 
 /* Define to 1 if you have the <pwd.h> header file. */
 #define HAVE_PWD_H 1
@@ -189,6 +192,9 @@
 /* Define to 1 if you have the <string.h> header file. */
 #define HAVE_STRING_H 1
 
+/* Define this if you have struct timespec */
+#define HAVE_STRUCT_TIMESPEC 
+
 /* Define to 1 if you have the <sys/cdio.h> header file. */
 /* #undef HAVE_SYS_CDIO_H */
 
@@ -213,6 +219,9 @@
 /* Define this <sys/stat.h> defines S_ISSOCK() */
 #define HAVE_S_ISSOCK 
 
+/* Define to 1 if timegm is available */
+#define HAVE_TIMEGM 1
+
 /* Define if you have an extern long timenzone variable. */
 #define HAVE_TIMEZONE_VAR 1
 
@@ -226,12 +235,3 @@
 #define HAVE_TZSET 1
 
 /* Define to 1 if you have the <unistd.h> header file. */
-#define HAVE_UNISTD_H 1
-
-/* Define this if you have libvcdinfo installed */
-/* #undef HAVE_VCDINFO */
-
-/* Define to 1 if you have the `vsnprintf' function. */
-#define HAVE_VSNPRINTF 1
-
-/* Define 1 if you have MinGW CD-ROM support */

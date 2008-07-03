@@ -1,11 +1,12 @@
 /*
-    $Id: mmc.h,v 1.30 2007/11/21 03:01:58 rocky Exp $
+    $Id: mmc.h,v 1.32 2008/05/09 06:13:32 edsdead Exp $
 
-    Copyright (C) 2003, 2004, 2005, 2006, 2007 Rocky Bernstein <rocky@gnu.org>
+    Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008
+                  Rocky Bernstein <rocky@gnu.org>
 
-    This program is free software; you can redistribute it and/or modify
+    This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 2 of the License, or
+    the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
     This program is distributed in the hope that it will be useful,
@@ -14,8 +15,7 @@
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with this program; if not, write to the Free Software
-    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 /**
@@ -28,10 +28,10 @@
 #ifndef __CDIO_MMC_H__
 #define __CDIO_MMC_H__
 
-#include "cdio.h"
-#include "types.h"
-#include "dvd.h"
-#include "audio.h"
+#include <cdio/cdio.h>
+#include <cdio/types.h>
+#include <cdio/dvd.h>
+#include <cdio/audio.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -209,11 +209,7 @@ extern "C" {
   } cdio_mmc_mode_page_t;
     
 
-#if defined(_XBOX) || defined(WIN32)
-  #pragma pack(1)
-#else
-  PRAGMA_BEGIN_PACKED
-#endif
+PRAGMA_BEGIN_PACKED
   struct mmc_audio_volume_entry_s 
   {
     uint8_t  selection; /* Only the lower 4 bits are used. */
@@ -230,11 +226,7 @@ extern "C" {
 
   typedef struct mmc_audio_volume_s mmc_audio_volume_t;
   
-#if defined(_XBOX) || defined(WIN32)
-  #pragma pack()
-#else
-  PRAGMA_END_PACKED
-#endif
+PRAGMA_END_PACKED
   
 
 /** Return type codes for GET_CONFIGURATION. */
@@ -789,10 +781,11 @@ mmc_audio_read_subchannel (CdIo_t *p_cdio,
 
     @return 0 if command completed successfully.
   */
-  int mmc_run_cmd( const CdIo_t *p_cdio, unsigned int i_timeout_ms,
-                   const mmc_cdb_t *p_cdb,
-                   cdio_mmc_direction_t e_direction, unsigned int i_buf, 
-                   /*in/out*/ void *p_buf );
+  driver_return_code_t
+  mmc_run_cmd( const CdIo_t *p_cdio, unsigned int i_timeout_ms,
+               const mmc_cdb_t *p_cdb,
+               cdio_mmc_direction_t e_direction, unsigned int i_buf, 
+               /*in/out*/ void *p_buf );
 
   /**
     Run a Multimedia command (MMC) specifying the CDB length.
@@ -813,7 +806,8 @@ mmc_audio_read_subchannel (CdIo_t *p_cdio,
 
     @return 0 if command completed successfully.
   */
-  int mmc_run_cmd_len( const CdIo_t *p_cdio, unsigned int i_timeout_ms,
+  driver_return_code_t
+  mmc_run_cmd_len( const CdIo_t *p_cdio, unsigned int i_timeout_ms,
                    const mmc_cdb_t *p_cdb, unsigned int i_cdb,
                    cdio_mmc_direction_t e_direction, unsigned int i_buf,
                    /*in/out*/ void *p_buf );

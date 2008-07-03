@@ -50,7 +50,7 @@ static int GetBSDProcessList(kinfo_proc **procList, size_t *procCount);
 /////////////////////////////////////////////////////////////////////////////
 XBMCHelper::XBMCHelper()
   : m_errorStarting(false)
-  , m_mode(APPLE_REMOTE_DISABLED)
+  , m_mode(APPLE_REMOTE_DISABLED) // Shouldn't these values come from somewhere?
   , m_alwaysOn(false)
   , m_sequenceDelay(0)
 {
@@ -75,20 +75,27 @@ XBMCHelper::XBMCHelper()
 /////////////////////////////////////////////////////////////////////////////
 void XBMCHelper::Start()
 {
-  printf("Asking helper to start.\n");
+  CLog::Log(LOGINFO, "Asking XBMCHelper to start");
+
   string cmd = m_helperFile + " -x &";
   system(cmd.c_str());
 }
 
 /////////////////////////////////////////////////////////////////////////////
-void XBMCHelper::Stop()
+void XBMCHelper::Stop(bool hup)
 {
-  printf("Asked to stop\n");
+  CLog::Log(LOGINFO, "Asking XBMCHelper to stop");
 
   // Kill the process.
   int pid = GetProcessPid(XBMC_HELPER_PROGRAM);
   if (pid != -1)
-    kill(pid, SIGKILL);
+  {
+    kill(pid, (hup ? SIGHUP : SIGKILL));
+  }
+  else
+  {
+    CLog::Log(LOGINFO, "XBMCHelper is not running");
+  }
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -131,9 +138,7 @@ void XBMCHelper::Configure()
     WriteFile(m_configFile.c_str(), strConfig);
 
     // If process is running, kill -HUP to have it reload settings.
-    int pid = GetProcessPid(XBMC_HELPER_PROGRAM);
-    if (pid != -1)
-      kill(pid, SIGHUP);
+    Stop(TRUE);
   }
 
   // Turning off?
@@ -157,6 +162,8 @@ void XBMCHelper::Configure()
 /////////////////////////////////////////////////////////////////////////////
 void XBMCHelper::Install()
 {
+  CLog::Log(LOGINFO, "Installing XBMCHelper at %s", m_launchAgentInstallFile.c_str());
+  
   // Make sure directory exists.
   string strDir = getenv("HOME");
   strDir += "/Library/LaunchAgents";
@@ -181,6 +188,8 @@ void XBMCHelper::Install()
 /////////////////////////////////////////////////////////////////////////////
 void XBMCHelper::Uninstall()
 {
+  CLog::Log(LOGINFO, "Uninstalling XBMCHelper from %s", m_launchAgentInstallFile.c_str());
+  
   // Call the unloader.
   string cmd = "/bin/launchctl unload ";
   cmd += m_launchAgentInstallFile;
@@ -248,7 +257,7 @@ void XBMCHelper::WriteFile(const char* fileName, const std::string& data)
 /////////////////////////////////////////////////////////////////////////////
 int XBMCHelper::GetProcessPid(const char* strProgram)
 {
-  kinfo_proc* mylist = (kinfo_proc *)malloc(sizeof(kinfo_proc));
+  kinfo_proc* mylist;
   size_t mycount = 0;
   int ret = -1;
 
@@ -263,8 +272,9 @@ int XBMCHelper::GetProcessPid(const char* strProgram)
       //if (ignorePid == 0 || ignorePid != proc->kp_proc.p_pid)
       ret = proc->kp_proc.p_pid;
     }
+    
   }
-
+  
   free (mylist);
 
   return ret;

@@ -444,8 +444,9 @@ void CGUIControl::SetHeight(float height)
 
 void CGUIControl::SetVisible(bool bVisible)
 {
-  // just force to hidden if necessary
-  m_forceHidden = !bVisible;
+  CGUIMessage msg((bVisible ? GUI_MSG_VISIBLE : GUI_MSG_HIDDEN), GetID(), GetID());
+  OnMessage(msg);
+
 /*
   if (m_visibleCondition)
     bVisible = g_infoManager.GetBool(m_visibleCondition, m_dwParentID);

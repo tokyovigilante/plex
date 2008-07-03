@@ -667,7 +667,7 @@ __int64 CFileCurl::Seek(__int64 iFilePosition, int iWhence)
     return -1;
 
   CReadState* oldstate = NULL;
-  if(m_url.Left(5).Equals("http:") || m_url.Left(6).Equals("https:"))
+  if(!(m_url.Find(":31339") >= 0) && (m_url.Left(5).Equals("http:") || m_url.Left(6).Equals("https:")))
   {
     CURL url(m_url);
     oldstate = m_state;

@@ -23,6 +23,9 @@ void CLowLevelKeyboard::Reset()
   m_bCtrl = false;
   m_bAlt = false;
   m_bRAlt = false;
+  m_bApple = false;
+  
+  m_KeyCode = SDLK_UNKNOWN;
   m_cAscii = '\0';
   m_wUnicode = '\0';
   m_VKey = 0;
@@ -41,6 +44,9 @@ void CLowLevelKeyboard::Update(SDL_Event& m_keyEvent)
     m_bShift = (m_keyEvent.key.keysym.mod & KMOD_SHIFT) != 0;
     m_bAlt = (m_keyEvent.key.keysym.mod & KMOD_ALT) != 0;
     m_bRAlt = (m_keyEvent.key.keysym.mod & KMOD_RALT) != 0;
+    m_bApple = (m_keyEvent.key.keysym.mod & KMOD_META) != 0;
+    
+    m_KeyCode = m_keyEvent.key.keysym.scancode;
 
     if ((m_keyEvent.key.keysym.unicode >= 'A' && m_keyEvent.key.keysym.unicode <= 'Z') ||
         (m_keyEvent.key.keysym.unicode >= 'a' && m_keyEvent.key.keysym.unicode <= 'z'))
@@ -214,6 +220,18 @@ void CLowLevelKeyboard::Update(SDL_Event& m_keyEvent)
   {
     Reset();
   }
+}
+
+SVKey CLowLevelKeyboard::GetSVKey()
+{
+  SVKey l_svkey;
+
+  l_svkey.Shift = m_bShift;
+  l_svkey.Ctrl = m_bCtrl;
+  l_svkey.Alt = m_bAlt | m_bRAlt;
+  l_svkey.Apple = m_bApple;
+  l_svkey.SVKey = m_KeyCode;
+  return l_svkey;	
 }
 
 #endif

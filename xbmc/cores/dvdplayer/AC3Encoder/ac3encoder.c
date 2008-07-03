@@ -1,6 +1,6 @@
 /*
    OSXBMC
-   ac3eoncoder.c  - AC3Encoder
+   ac3encoder.c  - AC3Encoder
    
    Copyright (c) 2008, Ryan Walklin (ryanwalklin@gmail.com)
 
@@ -53,8 +53,6 @@ static inline int swabdata(char* dst, char* src, int size)
 	
 }
 
-
-
 // call before using the encoder
 // initialises the aften context and the I/O buffers
 void ac3encoder_init(struct AC3Encoder *encoder, int iChannels, unsigned int uiSamplesPerSec, int uiBitsPerSample, int remap)
@@ -69,8 +67,7 @@ void ac3encoder_init(struct AC3Encoder *encoder, int iChannels, unsigned int uiS
 	encoder->m_iSampleSize = uiBitsPerSample;
 	encoder->remap = remap;
 	
-	
-	encoder->m_aftenContext.params.bitrate = 640; // set AC3 output bitrate to maximum
+	encoder->m_aftenContext.params.bitrate = AC3_BITRATE; // set AC3 output bitrate to maximum
 	
 	encoder->m_aftenContext.acmod = -1;
 	encoder->m_aftenContext.lfe = 0;
@@ -164,15 +161,18 @@ int ac3encoder_write_samples(struct AC3Encoder *encoder, unsigned char *samples,
 		{
 			memset(&AC3_frame_buffer, 0, AC3_SPDIF_FRAME_SIZE);
 			encoder->iAC3FrameSize = aften_encode_frame(&encoder->m_aftenContext, oldendian, sample_buffer, AC3_SAMPLES_PER_FRAME);
-			swabdata((char*)AC3_frame_buffer+8, (char*)oldendian, encoder->iAC3FrameSize);
+			
 			AC3_frame_buffer[0] = 0x72; /* sync words */
 			AC3_frame_buffer[1] = 0xF8;
 			AC3_frame_buffer[2] = 0x1F;
 			AC3_frame_buffer[3] = 0x4E;
 			AC3_frame_buffer[4] = 0x01;
-			AC3_frame_buffer[5] = 0x00; /* data type */
+
+			AC3_frame_buffer[5] = oldendian[5] & 0x7; /* bsmod */
 			AC3_frame_buffer[6] = (encoder->iAC3FrameSize << 3) & 0xFF;
 			AC3_frame_buffer[7] = (encoder->iAC3FrameSize >> 5) & 0xFF;
+			
+			swabdata((char*)AC3_frame_buffer+8, (char*)oldendian, encoder->iAC3FrameSize);
 			
 			if(encoder->iAC3FrameSize < 0) 
 			{

@@ -419,6 +419,8 @@ CApplication::CApplication(void)
 
   m_bPresentFrame = false;
   m_bPlatformDirectories = false;
+
+  m_logPath = NULL;
 }
 
 CApplication::~CApplication(void)
@@ -426,7 +428,10 @@ CApplication::~CApplication(void)
   delete m_itemCurrentFile;
   delete m_currentStack;
 
-    if (m_frameMutex)
+  if (m_logPath)
+    delete[] m_logPath;
+
+  if (m_frameMutex)
     SDL_DestroyMutex(m_frameMutex);
   
   if (m_frameCond)
@@ -901,9 +906,9 @@ HRESULT CApplication::Create(HWND hWnd)
   }
   else
   {
-    char* logPath = new char[MAX_PATH];
-    snprintf(logPath, MAX_PATH, "%s/", strExecutablePath.c_str());
-    g_stSettings.m_logFolder = logPath;
+    m_logPath = new char[MAX_PATH];
+    snprintf(m_logPath, MAX_PATH, "%s/", strExecutablePath.c_str());
+    g_stSettings.m_logFolder = m_logPath;
   }
 #endif
   
@@ -930,8 +935,6 @@ HRESULT CApplication::Create(HWND hWnd)
   
   CIoSupport::RemapDriveLetter('Q', szDevicePath);
 #endif
-
-  CStdString strLogFile, strLogFileOld;
 
   CProfile *profile;
 
@@ -969,6 +972,9 @@ HRESULT CApplication::Create(HWND hWnd)
   CLog::Log(LOGNOTICE, "Q is mapped to: %s", strExecutablePath.c_str());
   char szXBEFileName[1024];
   CIoSupport::GetXbePath(szXBEFileName);
+  CStdString strLogFile;
+  strLogFile.Format("%sxbmc.log", _P(g_stSettings.m_logFolder).c_str());
+    
   CLog::Log(LOGNOTICE, "The executeable running is: %s", szXBEFileName);
   CLog::Log(LOGNOTICE, "Log File is located: %s", strLogFile.c_str());
   CLog::Log(LOGNOTICE, "-----------------------------------------------------------------------");
@@ -1621,9 +1627,6 @@ CProfile* CApplication::InitDirectoriesOSX()
   CStdString home = getenv("HOME");
   CIoSupport::RemapDriveLetter('Q', (char*) strExecutablePath.c_str());
 
-  g_settings.m_vecProfiles.clear();
-  g_settings.LoadProfiles(_P(PROFILES_FILE));
-
   CProfile* profile = NULL;
 
   if (m_bPlatformDirectories)
@@ -1638,6 +1641,9 @@ CProfile* CApplication::InitDirectoriesOSX()
     CStdString str2 = str;
     str2.append("/Mounts");
     CreateDirectory(str2.c_str(), NULL);
+    str2 = str;
+    str2.append("/skin");
+    CreateDirectory(str2.c_str(), NULL);
     str.append("/UserData");
     CreateDirectory(str.c_str(), NULL);
 
@@ -1650,23 +1656,17 @@ CProfile* CApplication::InitDirectoriesOSX()
     str.append("/Library/Application Support/XBMC");
     CIoSupport::RemapDriveLetter('T', str.c_str());
     CIoSupport::RemapDriveLetter('U', str.c_str());
-    
-    if (g_settings.m_vecProfiles.size()==0)
-    {
-      profile = new CProfile;
-      CStdString s = getenv("HOME");
-      s.append("/Library/Application Support/XBMC/UserData");
-      profile->setDirectory(s.c_str());
-    }
   }
-  else
+
+  g_settings.m_vecProfiles.clear();
+  g_settings.LoadProfiles(_P(PROFILES_FILE));
+
+  if (g_settings.m_vecProfiles.size() == 0)
   {
-    if (g_settings.m_vecProfiles.size()==0)
-    {
-      profile = new CProfile;
-      profile->setDirectory(_P("q:\\UserData"));
-    }
+    profile = new CProfile();
+    profile->setDirectory(_P("t:\\UserData"));
   }
+  
   return profile;
 #else
   return NULL;
@@ -3043,8 +3043,9 @@ void CApplication::Render()
   
   MEASURE_FUNCTION;
 
-  { // frame rate limiter (really bad, but it does the trick :p)
-    const static unsigned int singleFrameTime = 10;       // default limit 100 fps
+  { 
+    // Frame rate limiter (really bad, but it does the trick :p)
+    const static unsigned int singleFrameTime = 10; // default limit 100 fps
     static unsigned int lastFrameTime = 0;
     unsigned int currentTime = timeGetTime();
     int nDelayTime = 0;
@@ -3066,17 +3067,13 @@ void CApplication::Render()
     else
     {
       // only "limit frames" if we are not using vsync.
-      if (g_videoConfig.GetVSyncMode() != VSYNC_ALWAYS)
+      if (g_videoConfig.GetVSyncMode() != VSYNC_ALWAYS || 
+          (g_infoManager.GetFPS() > g_graphicsContext.GetFPS() + 10) && g_infoManager.GetFPS() > 1000/singleFrameTime)
       {
         if (lastFrameTime + singleFrameTime > currentTime)
           nDelayTime = lastFrameTime + singleFrameTime - currentTime;
+        CLog::Log(LOGWARNING, "VSYNC ignored by driver (FPS=%.0f) enabling framerate limiter to sleep (%d)", g_infoManager.GetFPS(), nDelayTime);
         Sleep(nDelayTime);
-      }
-      else if ((g_infoManager.GetFPS() > g_graphicsContext.GetFPS() + 10) && g_infoManager.GetFPS() > 1000/singleFrameTime)
-      {
-        //The driver is ignoring vsync. Was set to ALWAYS, set to VIDEO. Framerate will be limited from next render.
-        CLog::Log(LOGWARNING, "VSYNC ignored by driver, enabling framerate limiter.");
-        g_videoConfig.SetVSyncMode(VSYNC_VIDEO);
       }
     }
 #else
@@ -3168,6 +3165,9 @@ bool CApplication::OnKey(CKey& key)
   // Turn the mouse off, as we've just got a keypress from controller or remote
   g_Mouse.SetInactive();
   CAction action;
+
+  action.kKey = g_Keyboard.GetSVKey();
+  action.unicode = g_Keyboard.GetUnicode();
 
   // a key has been pressed.
   // Reset the screensaver timer
@@ -4133,43 +4133,53 @@ bool CApplication::ProcessEventServer(float frameTime)
   std::string joystickName;
   bool isAxis = false;
   float fAmount = 0.0;
+  bool done = false;
   
-  WORD wKeyID = es->GetButtonCode(joystickName, isAxis, fAmount);
-  
-  if (wKeyID)
+  while (!done)
   {
-    // If it's an axis, save the value to repeat it.
-    if (isAxis == true)
+    WORD wKeyID = es->GetButtonCode(joystickName, isAxis, fAmount);
+    
+    if (wKeyID)
     {
-      if (fabs(fAmount) >= 0.08)
-        m_lastAxisMap[joystickName][wKeyID] = fAmount;
+      // If it's an axis, save the value to repeat it.
+      if (isAxis == true)
+      {
+        if (fabs(fAmount) >= 0.2)
+          m_lastAxisMap[joystickName][wKeyID] = fAmount;
+        else
+          m_lastAxisMap[joystickName].erase(wKeyID);
+      }
+    }
+    else if (m_lastAxisMap.size() > 0)
+    {
+      // Process all the stored axis.
+      for (map<std::string, map<int, float> >::iterator iter = m_lastAxisMap.begin(); iter != m_lastAxisMap.end(); ++iter)
+      {
+        for (map<int, float>::iterator iterAxis = (*iter).second.begin(); iterAxis != (*iter).second.end(); ++iterAxis)
+          ProcessJoystickEvent((*iter).first, (*iterAxis).first, true, (*iterAxis).second);
+      }
+    }
+    
+    if (wKeyID)
+    {
+      if (joystickName.length() > 0)
+      {
+        ProcessJoystickEvent(joystickName, wKeyID, isAxis, fAmount);
+      }
       else
-        m_lastAxisMap[joystickName].erase(wKeyID);
-    }
-  }
-  else if (m_lastAxisMap.size() > 0)
-  {
-    // Process all the stored axis.
-    for (map<std::string, map<int, float> >::iterator iter = m_lastAxisMap.begin(); iter != m_lastAxisMap.end(); ++iter)
-    {
-      for (map<int, float>::iterator iterAxis = (*iter).second.begin(); iterAxis != (*iter).second.end(); ++iterAxis)
-        ProcessJoystickEvent((*iter).first, (*iterAxis).first, true, (*iterAxis).second);
-    }
-  }
-  
-  if (wKeyID)
-  {
-    if (joystickName.length() > 0)
-    {
-      ProcessJoystickEvent(joystickName, wKeyID, isAxis, fAmount);
+      {
+        CKey key(wKeyID);
+        return OnKey( key );
+      }
     }
     else
     {
-      CKey key(wKeyID);
-      return OnKey( key );
+      done = true;
     }
   }
-  
+
+  done = false;
+  while (!done)
   {
     CAction action;
     action.wID = ACTION_MOUSE;
@@ -4202,6 +4212,10 @@ bool CApplication::ProcessEventServer(float frameTime)
         }
       }
       return m_gWindowManager.OnAction(action);
+    }
+    else
+    {
+      done = true;
     }
   }
 #endif  
@@ -4253,7 +4267,7 @@ bool CApplication::ProcessJoystickEvent(const std::string& joystickName, int wKe
    }
    else
    {
-     CLog::Log(LOGDEBUG, "ERROR mapping joystick action");
+     CLog::Log(LOGDEBUG, "ERROR mapping joystick (%s)", joystickName.c_str());
    }
 #endif
    

@@ -403,28 +403,29 @@ CGUISettings::CGUISettings(void)
 #endif
 
   AddCategory(4, "cache", 439);
-  AddInt(1, "cache.harddisk", 14025, 256, 0, 256, 4096, SPIN_CONTROL_INT_PLUS, MASK_KB, TEXT_OFF);
+  AddInt(1, "cache.harddisk", 14025, 1024, 0, 1024, 4096, SPIN_CONTROL_INT_PLUS, MASK_KB, TEXT_OFF);
   AddSeparator(2, "cache.sep1");
-  AddInt(3, "cachevideo.dvdrom", 14026, 2048, 0, 256, 16384, SPIN_CONTROL_INT_PLUS, MASK_KB, TEXT_OFF);
-  AddInt(4, "cachevideo.lan", 14027, 2048, 0, 256, 16384, SPIN_CONTROL_INT_PLUS, MASK_KB, TEXT_OFF);
-  AddInt(5, "cachevideo.internet", 14028, 4096, 0, 256, 16384, SPIN_CONTROL_INT_PLUS, MASK_KB, TEXT_OFF);
+  AddInt(3, "cachevideo.dvdrom", 14026, 2048, 0, 1024, 16384, SPIN_CONTROL_INT_PLUS, MASK_KB, TEXT_OFF);
+  AddInt(4, "cachevideo.lan", 14027, 2048, 0, 1024, 32768, SPIN_CONTROL_INT_PLUS, MASK_KB, TEXT_OFF);
+  AddInt(5, "cachevideo.internet", 14028, 4096, 0, 1024, 32768, SPIN_CONTROL_INT_PLUS, MASK_KB, TEXT_OFF);
   AddSeparator(6, "cache.sep2");
-  AddInt(7, "cacheaudio.dvdrom", 14030, 256, 0, 256, 4096, SPIN_CONTROL_INT_PLUS, MASK_KB, TEXT_OFF);
-  AddInt(8, "cacheaudio.lan", 14031, 256, 0, 256, 4096, SPIN_CONTROL_INT_PLUS, MASK_KB, TEXT_OFF);
-  AddInt(9, "cacheaudio.internet", 14032, 256, 0, 256, 4096, SPIN_CONTROL_INT_PLUS, MASK_KB, TEXT_OFF);
+  AddInt(7, "cacheaudio.dvdrom", 14030, 256, 0, 512, 4096, SPIN_CONTROL_INT_PLUS, MASK_KB, TEXT_OFF);
+  AddInt(8, "cacheaudio.lan", 14031, 256, 0, 256, 16384, SPIN_CONTROL_INT_PLUS, MASK_KB, TEXT_OFF);
+  AddInt(9, "cacheaudio.internet", 14032, 256, 0, 512, 32768, SPIN_CONTROL_INT_PLUS, MASK_KB, TEXT_OFF);
   AddSeparator(10, "cache.sep3");
-  AddInt(11, "cachedvd.dvdrom", 14034, 2048, 0, 256, 16384, SPIN_CONTROL_INT_PLUS, MASK_KB, TEXT_OFF);
+  AddInt(11, "cachedvd.dvdrom", 14034, 2048, 0, 512, 16384, SPIN_CONTROL_INT_PLUS, MASK_KB, TEXT_OFF);
   AddInt(12, "cachedvd.lan", 14035, 2048, 0, 256, 16384, SPIN_CONTROL_INT_PLUS, MASK_KB, TEXT_OFF);
   AddSeparator(13, "cache.sep4");
-  AddInt(14, "cacheunknown.internet", 14060, 4096, 0, 256, 16384, SPIN_CONTROL_INT_PLUS, MASK_KB, TEXT_OFF);
+  AddInt(14, "cacheunknown.internet", 14060, 4096, 0, 512, 32768, SPIN_CONTROL_INT_PLUS, MASK_KB, TEXT_OFF);
 
   AddCategory(4, "audiooutput", 772);
-  AddInt(3, "audiooutput.mode", 337, AUDIO_ANALOG, AUDIO_ANALOG, 1, AUDIO_DIGITAL, SPIN_CONTROL_TEXT);
+
+	AddInt(3, "audiooutput.mode", 337, AUDIO_ANALOG, AUDIO_ANALOG, 1, AUDIO_DIGITAL, SPIN_CONTROL_TEXT);
   AddBool(4, "audiooutput.ac3passthrough", 364, true);
   AddBool(5, "audiooutput.dtspassthrough", 254, true);
 #ifdef __APPLE__
-  AddString(6, "audiooutput.audiodevice", 545, "Default", SPIN_CONTROL_TEXT);
-  //AddString(7, "audiooutput.passthroughdevice", 546, "S/PDIF", BUTTON_CONTROL_INPUT);
+  AddInt(6, "audiooutput.digitalaudiomode", 574,  DIGITAL_COREAUDIO, DIGITAL_COREAUDIO, 1, DIGITAL_PCM, SPIN_CONTROL_TEXT);
+  AddString(7, "audiooutput.audiodevice", 545, "Default", SPIN_CONTROL_TEXT);
 #elif defined(_LINUX)
   AddString(6, "audiooutput.audiodevice", 545, "default", BUTTON_CONTROL_INPUT);
   AddString(7, "audiooutput.passthroughdevice", 546, "iec958", BUTTON_CONTROL_INPUT);
@@ -506,7 +507,7 @@ CGUISettings::CGUISettings(void)
   AddBool(17, "videoplayer.editdecision", 22003, false);
 
   AddCategory(5, "subtitles", 287);
-  AddString(1, "subtitles.font", 288, "Arial.ttf", SPIN_CONTROL_TEXT);
+  AddString(1, "subtitles.font", 288, "Arial", SPIN_CONTROL_TEXT);
   AddInt(2, "subtitles.height", 289, 28, 16, 2, 74, SPIN_CONTROL_TEXT); // use text as there is a disk based lookup needed
   AddInt(3, "subtitles.style", 736, FONT_STYLE_BOLD, FONT_STYLE_NORMAL, 1, FONT_STYLE_BOLD_ITALICS, SPIN_CONTROL_TEXT);
   AddInt(4, "subtitles.color", 737, SUBTITLE_COLOR_START, SUBTITLE_COLOR_START, 1, SUBTITLE_COLOR_END, SPIN_CONTROL_TEXT);
