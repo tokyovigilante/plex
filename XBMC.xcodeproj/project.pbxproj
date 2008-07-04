@@ -3057,6 +3057,13 @@
 			path = libcmyth;
 			sourceTree = "<group>";
 		};
+		940237D80E1CD94400619E65 /* EyeTVInterface */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = EyeTVInterface;
+			sourceTree = "<group>";
+		};
 		9409C1E50E01D680001626C3 /* AC3Encoder */ = {
 			isa = PBXGroup;
 			children = (
@@ -3919,6 +3926,7 @@
 		E38E14F80D25F9F900618676 /* dvdplayer */ = {
 			isa = PBXGroup;
 			children = (
+				940237D80E1CD94400619E65 /* EyeTVInterface */,
 				9409C1E50E01D680001626C3 /* AC3Encoder */,
 				E38E14F90D25F9F900618676 /* ALSADirectSound.cpp */,
 				E38E14FA0D25F9F900618676 /* ALSADirectSound.h */,
