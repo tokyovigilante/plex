@@ -123,7 +123,14 @@ PaStream* CPortAudio::CreateOutputStream(const CStdString& strName, int channels
       outputParameters.device = pickedDevice;
       outputParameters.hostApiSpecificStreamInfo = NULL;
       outputParameters.sampleFormat = paInt16;
-      outputParameters.suggestedLatency = Pa_GetDeviceInfo(pickedDevice)->defaultLowOutputLatency;
+
+      CLog::Log(LOGINFO, "Portaudio latency range: %fms to %fms\n",
+                Pa_GetDeviceInfo(pickedDevice)->defaultLowOutputLatency*1000.0,
+                Pa_GetDeviceInfo(pickedDevice)->defaultHighOutputLatency*1000.0);
+
+      double latency = (Pa_GetDeviceInfo(pickedDevice)->defaultLowOutputLatency + Pa_GetDeviceInfo(pickedDevice)->defaultHighOutputLatency) / 2.0;
+      CLog::Log(LOGINFO, "Portaudio latency selected: %fms\n", latency*1000.0);
+      outputParameters.suggestedLatency = latency;
 
 #ifdef __APPLE__
       // We want to change sample rates to fit our needs, but only if we're doing digital out.
