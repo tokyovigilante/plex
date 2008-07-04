@@ -568,8 +568,8 @@ CGUISettings::CGUISettings(void)
   AddSeparator(5, "servers.sep1");
 #endif
 #ifdef HAS_WEB_SERVER
-  AddBool(6,  "servers.webserver",        263, false);
-  AddString(7,"servers.webserverport",    730, "80", BUTTON_CONTROL_INPUT, false, 730);
+  AddBool(6,  "servers.webserver",        263, true);
+  AddString(7,"servers.webserverport",    730, "3000", BUTTON_CONTROL_INPUT, false, 730);
   AddString(8,"servers.webserverpassword",733, "", BUTTON_CONTROL_HIDDEN_INPUT, true, 733);
 #endif
 #endif
