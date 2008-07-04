@@ -1652,6 +1652,30 @@ CProfile* CApplication::InitDirectoriesOSX()
     CopyUserDataIfNeeded(str, "Keymap.xml");
     CopyUserDataIfNeeded(str, "RssFeeds.xml");
 
+    // Create a reasonable sources.xml if one doesn't exist already.
+    CStdString sourcesFile = str;
+    sourcesFile.append("/Sources.xml");
+
+    CStdString sampleSourcesFile = strExecutablePath;
+    sampleSourcesFile.append("/userdata/Sources.xml");
+
+    if (::access(sourcesFile.c_str(), R_OK)       != 0 &&
+        ::access(sampleSourcesFile.c_str(), R_OK) == 0)
+    {
+      // Read the sample.
+      CLog::Log(LOGINFO, "Creating sample sources.xml file.");
+      string strSources = XBMCHelper::ReadFile(sampleSourcesFile.c_str());
+
+      // Replace with real home directory.
+      CStdString strHome = getenv("HOME");
+      for (int start = 0; (start=strSources.find("${HOME}")) != string::npos; )
+        strSources.replace(start, 7, strHome.c_str(), strHome.length());
+
+      // Write the sample.
+      printf("Writing sample to [%s]\n", sourcesFile.c_str());
+      XBMCHelper::WriteFile(sourcesFile.c_str(), strSources);
+    }
+
     // Put the user data folder somewhere standard for the platform.
     str = getenv("HOME");
     str.append("/Library/Application Support/XBMC");

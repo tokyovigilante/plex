@@ -44,15 +44,15 @@ class XBMCHelper
 
   bool ErrorStarting() { return m_errorStarting; }
 
+  static std::string ReadFile(const char* fileName);
+  static void WriteFile(const char* fileName, const std::string& data);
+
  private:
 
   bool EnsureLatestHelperInstalled();
 
   int GetProcessPid(const char* processName);
   std::string GetInstalledHelperVersion();
-
-  std::string ReadFile(const char* fileName);
-  void WriteFile(const char* fileName, const std::string& data);
 
   bool m_alwaysOn;
   int  m_mode;
