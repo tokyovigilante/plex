@@ -286,7 +286,6 @@
 		E38E1FE00D25F9FD00618676 /* PlayerCoreFactory.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E38E16430D25F9FA00618676 /* PlayerCoreFactory.cpp */; };
 		E38E1FE50D25F9FD00618676 /* ssrc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E38E16560D25F9FA00618676 /* ssrc.cpp */; };
 		E38E1FE70D25F9FD00618676 /* LinuxRenderer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E38E165B0D25F9FA00618676 /* LinuxRenderer.cpp */; };
-		E38E1FE80D25F9FD00618676 /* LinuxRendererATI.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E38E165D0D25F9FA00618676 /* LinuxRendererATI.cpp */; };
 		E38E1FE90D25F9FD00618676 /* LinuxRendererGL.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E38E165F0D25F9FA00618676 /* LinuxRendererGL.cpp */; };
 		E38E1FEC0D25F9FD00618676 /* RenderManager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E38E16650D25F9FA00618676 /* RenderManager.cpp */; };
 		E38E1FF00D25F9FD00618676 /* VideoFilterShader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E38E166F0D25F9FA00618676 /* VideoFilterShader.cpp */; };
@@ -1506,8 +1505,6 @@
 		E38E165A0D25F9FA00618676 /* ComboRenderer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ComboRenderer.h; sourceTree = "<group>"; };
 		E38E165B0D25F9FA00618676 /* LinuxRenderer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = LinuxRenderer.cpp; sourceTree = "<group>"; };
 		E38E165C0D25F9FA00618676 /* LinuxRenderer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LinuxRenderer.h; sourceTree = "<group>"; };
-		E38E165D0D25F9FA00618676 /* LinuxRendererATI.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = LinuxRendererATI.cpp; sourceTree = "<group>"; };
-		E38E165E0D25F9FA00618676 /* LinuxRendererATI.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LinuxRendererATI.h; sourceTree = "<group>"; };
 		E38E165F0D25F9FA00618676 /* LinuxRendererGL.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = LinuxRendererGL.cpp; sourceTree = "<group>"; };
 		E38E16600D25F9FA00618676 /* LinuxRendererGL.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LinuxRendererGL.h; sourceTree = "<group>"; };
 		E38E16640D25F9FA00618676 /* PixelShaderRenderer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PixelShaderRenderer.h; sourceTree = "<group>"; };
@@ -4373,8 +4370,6 @@
 				E38E165A0D25F9FA00618676 /* ComboRenderer.h */,
 				E38E165B0D25F9FA00618676 /* LinuxRenderer.cpp */,
 				E38E165C0D25F9FA00618676 /* LinuxRenderer.h */,
-				E38E165D0D25F9FA00618676 /* LinuxRendererATI.cpp */,
-				E38E165E0D25F9FA00618676 /* LinuxRendererATI.h */,
 				E38E165F0D25F9FA00618676 /* LinuxRendererGL.cpp */,
 				E38E16600D25F9FA00618676 /* LinuxRendererGL.h */,
 				E38E16640D25F9FA00618676 /* PixelShaderRenderer.h */,
@@ -6291,7 +6286,6 @@
 				E38E1FE00D25F9FD00618676 /* PlayerCoreFactory.cpp in Sources */,
 				E38E1FE50D25F9FD00618676 /* ssrc.cpp in Sources */,
 				E38E1FE70D25F9FD00618676 /* LinuxRenderer.cpp in Sources */,
-				E38E1FE80D25F9FD00618676 /* LinuxRendererATI.cpp in Sources */,
 				E38E1FE90D25F9FD00618676 /* LinuxRendererGL.cpp in Sources */,
 				E38E1FEC0D25F9FD00618676 /* RenderManager.cpp in Sources */,
 				E38E1FF00D25F9FD00618676 /* VideoFilterShader.cpp in Sources */,
