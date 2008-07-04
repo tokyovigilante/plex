@@ -78,6 +78,7 @@
 #ifdef __APPLE__
 #include "CPortAudio.h"
 #include "XBMCHelper.h"
+#include "CocoaUtils.h"
 #endif
 #ifdef HAS_LINUX_NETWORK
 #include "GUIDialogAccessPoints.h"
@@ -989,10 +990,24 @@ void CGUIWindowSettingsCategory::UpdateSettings()
       if (pControl)
       {
         int value = g_guiSettings.GetInt("videoscreen.resolution");
-        if (strstr(g_settings.m_ResInfo[value].strMode, "Full screen") != 0)
+        //if (strstr(g_settings.m_ResInfo[value].strMode, "Full Screen") != 0)
+        if (g_advancedSettings.m_fullScreen == true)
+        {
           pControl->SetEnabled(true);
+
+          if (g_advancedSettings.m_fakeFullScreen == true)
+          {
+            int value = g_guiSettings.GetInt("videoscreen.displayblanking");
+            if (value == BLANKING_ALL_DISPLAYS && g_advancedSettings.m_fullScreen == true)
+              Cocoa_GL_BlankOtherDisplays(g_settings.m_ResInfo[g_graphicsContext.GetVideoResolution()].iScreen);
+            else
+              Cocoa_GL_UnblankOtherDisplays(g_settings.m_ResInfo[g_graphicsContext.GetVideoResolution()].iScreen);
+          }
+        }
         else
+        {
           pControl->SetEnabled(false);
+        }
       }
     }
     else if (strSetting.Equals("appleremote.mode"))

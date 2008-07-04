@@ -1645,7 +1645,7 @@ CProfile* CApplication::InitDirectoriesOSX()
     str2 = str;
     str2.append("/skin");
     CreateDirectory(str2.c_str(), NULL);
-    str.append("/UserData");
+    str.append("/userdata");
     CreateDirectory(str.c_str(), NULL);
 
     // See if the keymap file exists, and if not, copy it from our "virgin" one.
@@ -1665,7 +1665,7 @@ CProfile* CApplication::InitDirectoriesOSX()
   if (g_settings.m_vecProfiles.size() == 0)
   {
     profile = new CProfile();
-    profile->setDirectory(_P("t:\\UserData"));
+    profile->setDirectory(_P("t:\\userdata"));
   }
 
   return profile;

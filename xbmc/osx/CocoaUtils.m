@@ -20,14 +20,23 @@
 #include <IOKit/IOKitLib.h>
 #include "CocoaUtils.h"
 #import "XBMCMain.h" 
+#include <SDL/SDL.h>
 
 #import <libSmartCrashReports/SmartCrashReportsInstall.h>
 #import <libSmartCrashReports/SmartCrashReportsAPI.h>
+
+#define MAX_DISPLAYS 32
+static NSWindow* blankingWindows[MAX_DISPLAYS];
 
 void Cocoa_Initialize(void* pApplication)
 {
   // Intialize the Apple remote code.
   [[XBMCMain sharedInstance] setApplication: pApplication];
+  
+  // Initialize.
+  int i;
+  for (i=0; i<MAX_DISPLAYS; i++)
+    blankingWindows[i] = 0;
 }
 
 void InstallCrashReporter() 
@@ -69,8 +78,6 @@ void Cocoa_GL_SwapBuffers(void* theContext)
 {
   [ (NSOpenGLContext*)theContext flushBuffer ];
 }
-
-#define MAX_DISPLAYS 32
 
 int Cocoa_GetNumDisplays()
 {
@@ -152,19 +159,67 @@ void Cocoa_GL_ResizeWindow(void *theContext, int w, int h)
   }
 }
 
+void Cocoa_GL_BlankOtherDisplays(int screen)
+{
+  int numDisplays = Cocoa_GetNumDisplays();
+  int i = 0;
+
+  // Blank.
+  for (i=0; i<numDisplays; i++)
+  {
+    if (i != screen && blankingWindows[i] == 0)
+    {
+      // Get the size.
+      NSScreen* pScreen = [[NSScreen screens] objectAtIndex:i];
+      NSRect    screenRect = [pScreen frame];
+          
+      // Build a blanking window.
+      screenRect.origin.x = 0.0;
+      screenRect.origin.y = 0.0;
+      blankingWindows[i] = [[NSWindow alloc] initWithContentRect:screenRect
+                                             styleMask:NSBorderlessWindowMask
+                                             backing:NSBackingStoreBuffered
+                                             defer:NO 
+                                             screen:pScreen];
+                                            
+      [blankingWindows[i] setBackgroundColor:[NSColor blackColor]];
+      [blankingWindows[i] setLevel:CGShieldingWindowLevel()];
+      [blankingWindows[i] makeKeyAndOrderFront:nil];
+    }
+  } 
+}
+
+void Cocoa_GL_UnblankOtherDisplays(int screen)
+{
+  int numDisplays = Cocoa_GetNumDisplays();
+  int i = 0;
+
+  for (i=0; i<numDisplays; i++)
+  {
+    if (blankingWindows[i] != 0)
+    {
+      // Get rid of the blanking window we created.
+      [blankingWindows[i] close];
+      [blankingWindows[i] release];
+      blankingWindows[i] = 0;
+    }
+  }
+}
+
 static NSOpenGLContext* lastOwnedContext = 0;
 
-void Cocoa_GL_SetFullScreen(int screen, int width, int height, bool fs, bool blankOtherDisplays)
+void Cocoa_GL_SetFullScreen(int screen, int width, int height, bool fs, bool blankOtherDisplays, bool fakeFullScreen)
 {
   static NSView* lastView = NULL;
   static int fullScreenDisplay = 0;
   static NSScreen* lastScreen = NULL;
+  static NSWindow* lastWindow = NULL;
 
   // If we're already fullscreen then we must be moving to a different display.
   // Recurse to reset fullscreen mode and then continue.
   //
   if (fs == true && lastScreen != NULL)
-	Cocoa_GL_SetFullScreen(0, 0, 0, false, blankOtherDisplays);
+	Cocoa_GL_SetFullScreen(0, 0, 0, false, blankOtherDisplays, fakeFullScreen);
   
   NSOpenGLContext* context = (NSOpenGLContext*)Cocoa_GL_GetCurrentContext();
   
@@ -173,56 +228,107 @@ void Cocoa_GL_SetFullScreen(int screen, int width, int height, bool fs, bool bla
   
   if (fs)
   {
+    NSScreen* pScreen = [[NSScreen screens] objectAtIndex:screen];
+    NSOpenGLContext* newContext = NULL;
+  
     // Fade to black to hide resolution-switching flicker and garbage.
   	CGDisplayFadeReservationToken fade_token = kCGDisplayFadeReservationInvalidToken;
     if (CGAcquireDisplayFadeReservation (5, &fade_token) == kCGErrorSuccess )
       CGDisplayFade(fade_token, 0.3, kCGDisplayBlendNormal, kCGDisplayBlendSolidColor, 0.0, 0.0, 0.0, TRUE);
-    
-    // obtain fullscreen pixel format
-    NSOpenGLPixelFormat* pixFmt = (NSOpenGLPixelFormat*)Cocoa_GL_GetFullScreenPixelFormat(screen);
-    if (!pixFmt)
-      return;
-    
-    // create our new context (sharing with the current one)
-    NSOpenGLContext* newContext = (NSOpenGLContext*)Cocoa_GL_CreateContext((void*) pixFmt, (void*)context);
-    
-    // release pixelformat
-    [pixFmt release];
-    pixFmt = nil;
-    
-    if (!newContext)
-      return;
-    
-    // Save and make sure the view is on the screen that we're activating (to hide it).
+
+    // Save these values.
     lastView = [context view];
     lastScreen = [[lastView window] screen];
-    NSScreen* pScreen = [[NSScreen screens] objectAtIndex:screen];
-    [[lastView window] setFrameOrigin:[pScreen frame].origin];
     
-    // clear the current context
-    [NSOpenGLContext clearCurrentContext];
-    
-    // Capture the display before going fullscreen.
-    fullScreenDisplay = Cocoa_GetDisplay(screen);
-    if (blankOtherDisplays == true)
-      CGCaptureAllDisplays();
+    if (fakeFullScreen == false)
+    {
+      // obtain fullscreen pixel format
+      NSOpenGLPixelFormat* pixFmt = (NSOpenGLPixelFormat*)Cocoa_GL_GetFullScreenPixelFormat(screen);
+      if (!pixFmt)
+        return;
+      
+      // create our new context (sharing with the current one)
+      newContext = (NSOpenGLContext*)Cocoa_GL_CreateContext((void*) pixFmt, (void*)context);
+      
+      // release pixelformat
+      [pixFmt release];
+      pixFmt = nil;
+      
+      if (!newContext)
+        return;
+      
+      // Make sure the view is on the screen that we're activating (to hide it).
+      NSScreen* pScreen = [[NSScreen screens] objectAtIndex:screen];
+      [[lastView window] setFrameOrigin:[pScreen frame].origin];
+      
+      // clear the current context
+      [NSOpenGLContext clearCurrentContext];
+              
+      // set fullscreen
+      [newContext setFullScreen];
+      
+      // Capture the display before going fullscreen.
+      fullScreenDisplay = Cocoa_GetDisplay(screen);
+      if (blankOtherDisplays == true)
+        CGCaptureAllDisplays();
+      else
+        CGDisplayCapture(fullScreenDisplay);
+
+      // If we don't hide menu bar, it will get events and interrupt the program.
+      if (fullScreenDisplay == kCGDirectMainDisplay)
+        HideMenuBar();
+    }
     else
-      CGDisplayCapture(fullScreenDisplay);
-    
+    {
+      // Get the screen rect of our main display
+      NSRect    screenRect = [pScreen frame];
+      NSWindow* mainWindow = [[NSWindow alloc] initWithContentRect:screenRect
+                                              styleMask:NSBorderlessWindowMask
+                                              backing:NSBackingStoreBuffered
+                                              defer:NO 
+                                              screen:pScreen];
+                                              
+      [mainWindow setBackgroundColor:[NSColor blackColor]];
+      [mainWindow makeKeyAndOrderFront:nil];
+      
+      // Display our window fairly high...
+      [mainWindow setLevel:NSFloatingWindowLevel];
+      
+      // ...and the original one beneath it and on the same screen.
+      [[lastView window] setFrameOrigin:[pScreen frame].origin];
+      [[lastView window] setLevel:NSNormalWindowLevel];
+          
+      NSView* blankView = [[NSView alloc] init];
+      [mainWindow setContentView:blankView];
+      [mainWindow setContentSize:NSMakeSize(width, height)];
+      [mainWindow update];
+      [blankView setFrameSize:NSMakeSize(width, height)];
+      
+      // Obtain windowed pixel format and create a new context.
+      NSOpenGLPixelFormat* pixFmt = (NSOpenGLPixelFormat*)Cocoa_GL_GetWindowPixelFormat();
+      newContext = (NSOpenGLContext*)Cocoa_GL_CreateContext((void* )pixFmt, (void* )context);
+      [pixFmt release];
+      
+      [newContext setView:blankView];
+      
+      // Hide the menu bar.
+      HideMenuBar();
+          
+      // Save the window.
+      lastWindow = mainWindow;
+      
+      // Blank other displays if requested.
+      if (blankOtherDisplays)
+        Cocoa_GL_BlankOtherDisplays(screen);
+    }
+
     // Hide the mouse.
     [NSCursor hide];
-    
-    // If we don't hide menu bar, it will get events and interrupt the program.
-    if (fullScreenDisplay == kCGDirectMainDisplay)
-      HideMenuBar();
-    
-    // set fullscreen
-    [newContext setFullScreen];
     
     // Release old context if we created it.
     if (lastOwnedContext == context)
       Cocoa_GL_ReleaseContext((void*)context);
-    
+
     // activate context
     [newContext makeCurrentContext];
     lastOwnedContext = newContext;
@@ -245,11 +351,27 @@ void Cocoa_GL_SetFullScreen(int screen, int width, int height, bool fs, bool bla
     
     [NSCursor unhide];
     
-    if (fullScreenDisplay == kCGDirectMainDisplay)
+    if (fakeFullScreen == false)
+    {
+      if (fullScreenDisplay == kCGDirectMainDisplay)
+        ShowMenuBar();
+      
+      // release displays
+      CGReleaseAllDisplays();
+    }
+    else
+    {
+      // Show menubar.
       ShowMenuBar();
-    
-    // release displays
-    CGReleaseAllDisplays();
+
+      // Get rid of the new window we created.
+      [lastWindow close];
+      [lastWindow release];
+      
+      // Unblank.
+      if (blankOtherDisplays)
+        Cocoa_GL_UnblankOtherDisplays(screen);
+    }
     
     // obtain windowed pixel format
     NSOpenGLPixelFormat* pixFmt = (NSOpenGLPixelFormat*)Cocoa_GL_GetWindowPixelFormat();
@@ -266,15 +388,15 @@ void Cocoa_GL_SetFullScreen(int screen, int width, int height, bool fs, bool bla
     if (!newContext)
       return;
     
-    // assign view from old context, move back to original screen.
+    // Assign view from old context, move back to original screen.
     [newContext setView:lastView];
     [[lastView window] setFrameOrigin:[lastScreen frame].origin];
     
-    // release the fullscreen context
+    // Release the fullscreen context.
     if (lastOwnedContext == context)
       Cocoa_GL_ReleaseContext((void*)context);
     
-    // activate context
+    // Activate context.
     [newContext makeCurrentContext];
     lastOwnedContext = newContext;
     
