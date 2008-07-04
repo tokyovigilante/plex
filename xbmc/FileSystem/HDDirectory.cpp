@@ -21,6 +21,7 @@
 
 #ifdef __APPLE__
 #include <CoreServices/CoreServices.h>
+#include "CocoaUtils.h"
 #endif
 #include "stdafx.h"
 #include "HDDirectory.h"
@@ -46,10 +47,21 @@ CHDDirectory::~CHDDirectory()
 {}
 
 /////////////////////////////////////////////////////////////////////////////
-bool CHDDirectory::GetDirectory(const CStdString& strPath1, CFileItemList &items)
+bool CHDDirectory::GetDirectory(const CStdString& strPath, CFileItemList &items)
+{
+#ifdef __APPLE__
+  if (CUtil::IsSmartFolder(strPath))
+     return GetSmartFolder(strPath, items);
+  else
+#endif
+    return GetNormalFolder(strPath, items);
+}
+
+/////////////////////////////////////////////////////////////////////////////
+bool CHDDirectory::GetNormalFolder(const CStdString& strPath1, CFileItemList &items)
 {
   WIN32_FIND_DATA wfd;
-  
+
   CStdString strPath=strPath1;
 #ifndef _LINUX
   g_charsetConverter.utf8ToStringCharset(strPath);
@@ -63,7 +75,7 @@ bool CHDDirectory::GetDirectory(const CStdString& strPath1, CFileItemList &items
 
   memset(&wfd, 0, sizeof(wfd));
   if (!CUtil::HasSlashAtEnd(strPath) )
-#ifndef _LINUX  
+#ifndef _LINUX
     strRoot += "\\";
   strRoot.Replace("/", "\\");
 #else
@@ -87,9 +99,9 @@ bool CHDDirectory::GetDirectory(const CStdString& strPath1, CFileItemList &items
 #endif
 
   CAutoPtrFind hFind(FindFirstFile(strSearchMask.c_str(), &wfd));
-  
+
   // On error, check if path exists at all, this will return true if empty folder.
-  if (hFind.isValid() == false) 
+  if (hFind.isValid() == false)
       return Exists(strPath1);
 
   do
@@ -101,7 +113,7 @@ bool CHDDirectory::GetDirectory(const CStdString& strPath1, CFileItemList &items
       {
         // Always add to the cache.
         vecCacheItems.Add(pItem);
-      
+
         // If it's allowed, add it to the list.
         if (IsAllowed(pItem, wfd))
           items.Add(new CFileItem(*pItem));
@@ -109,7 +121,7 @@ bool CHDDirectory::GetDirectory(const CStdString& strPath1, CFileItemList &items
     }
   }
   while (FindNextFile((HANDLE)hFind, &wfd));
-  
+
 #ifdef _XBOX
   // if we use AutoPtrHandle, this auto-closes
   FindClose((HANDLE)hFind); //should be closed
@@ -118,6 +130,70 @@ bool CHDDirectory::GetDirectory(const CStdString& strPath1, CFileItemList &items
   if (m_cacheDirectory)
     g_directoryCache.SetDirectory(strPath1, vecCacheItems);
   return true;
+}
+
+/////////////////////////////////////////////////////////////////////////////
+bool CHDDirectory::GetSmartFolder(const CStdString& strPath, CFileItemList &items)
+{
+#ifdef __APPLE__
+  CStdString strTruePath = strPath;
+
+  // If there's a trailing /, remove it.
+  if (CUtil::HasSlashAtEnd(strTruePath))
+    strTruePath = strTruePath.Left(strTruePath.length()-1);
+
+  // Execute the query.
+  Cocoa_GetSmartFolderResults(strTruePath, HandleSearchResult, this, &items);
+#endif
+
+  return true;
+}
+
+/////////////////////////////////////////////////////////////////////////////
+void CHDDirectory::HandleSearchResult(void* thisPtr, void* itemListPtr, const char* strFilePath)
+{
+  CHDDirectory* me = (CHDDirectory* )thisPtr;
+  CFileItemList* pItemList = (CFileItemList* )itemListPtr;
+
+  // Load up a find data.
+  WIN32_FIND_DATA wfd;
+  memset(&wfd, 0, sizeof(WIN32_FIND_DATA));
+
+  // Filename.
+  CStdString strPath = strFilePath;
+  CStdString strFile = CUtil::GetFileName(strPath);
+
+  strPath = strPath.Left(strPath.length()-strFile.length());
+  strcpy(wfd.cFileName, strFile.c_str());
+
+  // Get the attributes.
+  wfd.dwFileAttributes = FILE_ATTRIBUTE_NORMAL;
+
+  // Is it a directory?
+  if (strPath[0] == '.')
+    wfd.dwFileAttributes |= FILE_ATTRIBUTE_HIDDEN;
+
+  struct stat64 fileStat;
+  if (stat64(strFilePath, &fileStat) != 0)
+  {
+    CLog::Log(LOGERROR, "Error: Smart Folder search, couldn't find file [%s]\n", strFilePath);
+    return;
+  }
+
+  if (S_ISDIR(fileStat.st_mode))
+    wfd.dwFileAttributes |= FILE_ATTRIBUTE_DIRECTORY;
+
+  wfd.nFileSizeHigh = (DWORD)(fileStat.st_size >> 32);
+  wfd.nFileSizeLow  = (DWORD)fileStat.st_size;
+  TimeTToFileTime(fileStat.st_ctime, &wfd.ftCreationTime);
+  TimeTToFileTime(fileStat.st_atime, &wfd.ftLastAccessTime);
+  TimeTToFileTime(fileStat.st_mtime, &wfd.ftLastWriteTime);
+
+  CFileItem* pItem = me->BuildResolvedFileItem(strPath, wfd);
+
+  // If it's allowed, add it to the list.
+  if (pItem && me->IsAllowed(pItem, wfd))
+    pItemList->Add(new CFileItem(*pItem));
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -131,7 +207,7 @@ CFileItem* CHDDirectory::BuildFileItem(const CStdString& strRoot, WIN32_FIND_DAT
 #ifdef __APPLE__
   strLabel.Replace(':', '/');
 #endif
-  
+
   CFileItem *pItem = new CFileItem(strLabel);
   pItem->m_strPath = strRoot;
   pItem->m_strPath += wfd.cFileName;
@@ -139,7 +215,7 @@ CFileItem* CHDDirectory::BuildFileItem(const CStdString& strRoot, WIN32_FIND_DAT
 #ifndef _LINUX
   g_charsetConverter.stringCharsetToUtf8(pItem->m_strPath);
 #endif
-  
+
   if (wfd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
   {
     pItem->m_bIsFolder = true;
@@ -150,7 +226,7 @@ CFileItem* CHDDirectory::BuildFileItem(const CStdString& strRoot, WIN32_FIND_DAT
     pItem->m_bIsFolder = false;
     pItem->m_dwSize = CUtil::ToInt64(wfd.nFileSizeHigh, wfd.nFileSizeLow);
   }
-  
+
   return pItem;
 }
 
@@ -158,12 +234,12 @@ CFileItem* CHDDirectory::BuildFileItem(const CStdString& strRoot, WIN32_FIND_DAT
 bool CHDDirectory::IsAllowed(CFileItem* pItem, WIN32_FIND_DATA& wfd)
 {
   bool isAllowed = true;
-  
+
 #ifdef _LINUX
   if ((wfd.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN) && g_guiSettings.GetBool("filelists.showhidden") == false)
     isAllowed = false;
 #endif
-  
+
   if (isAllowed == true)
   {
     if (pItem->m_bIsFolder)
@@ -180,7 +256,7 @@ bool CHDDirectory::IsAllowed(CFileItem* pItem, WIN32_FIND_DATA& wfd)
         isAllowed = false;
     }
   }
-  
+
   return isAllowed;
 }
 
@@ -188,7 +264,7 @@ bool CHDDirectory::IsAllowed(CFileItem* pItem, WIN32_FIND_DATA& wfd)
 CFileItem* CHDDirectory::BuildResolvedFileItem(const CStdString& strRoot, WIN32_FIND_DATA& wfd)
 {
   CFileItem* pItem = 0;
-  
+
 #ifdef __APPLE__
   // Attempt to resolve aliases.
   FSRef   fsRef;
@@ -196,7 +272,7 @@ CFileItem* CHDDirectory::BuildResolvedFileItem(const CStdString& strRoot, WIN32_
   Boolean isAlias;
   char    resolvedAliasPath[MAX_PATH];
   bool    useAlias = false;
-              
+
   // Convert to FSRef.
   CStdString strPath = strRoot;
   CStdString strFile = strPath + wfd.cFileName;
@@ -217,7 +293,7 @@ CFileItem* CHDDirectory::BuildResolvedFileItem(const CStdString& strRoot, WIN32_
       return 0;
     }
   }
-  
+
   // Compute the *final* name/path of the file.
   if (useAlias)
   {
@@ -229,7 +305,7 @@ CFileItem* CHDDirectory::BuildResolvedFileItem(const CStdString& strRoot, WIN32_
   {
     strFile = wfd.cFileName;
   }
-  
+
   // Check for smart folders.
   if (CUtil::IsSmartFolder(strFile))
   {
@@ -238,10 +314,11 @@ CFileItem* CHDDirectory::BuildResolvedFileItem(const CStdString& strRoot, WIN32_
     int iPos = smartFolder.ReverseFind(".");
     if (iPos > 0)
       smartFolder = smartFolder.Left(iPos);
-    
+
     strFile.Replace(':', '/');
     pItem = new CFileItem(smartFolder);
-    pItem->m_strPath = "smartfolder:/" + strPath + strFile;
+    //pItem->m_strPath = "smartfolder:/" + strPath + strFile;
+    pItem->m_strPath = strPath + strFile;
     pItem->m_bIsFolder = true;
   }
   else if (useAlias)
@@ -251,7 +328,7 @@ CFileItem* CHDDirectory::BuildResolvedFileItem(const CStdString& strRoot, WIN32_
     pItem = new CFileItem(strFile);
     pItem->m_strPath = resolvedAliasPath;
     pItem->m_bIsFolder = isDir ? true : false;
-    
+
     if (isDir == false)
     {
       // Get the size of the file.
@@ -266,12 +343,12 @@ CFileItem* CHDDirectory::BuildResolvedFileItem(const CStdString& strRoot, WIN32_
     // Go the default route.
     pItem = BuildFileItem(strRoot, wfd);
   }
-  
+
   // Save file time.
   FILETIME localTime;
   FileTimeToLocalFileTime(&wfd.ftLastWriteTime, &localTime);
   pItem->m_dateTime = localTime;
-  
+
   return pItem;
 }
 
@@ -282,7 +359,7 @@ bool CHDDirectory::Create(const char* strPath)
   g_charsetConverter.utf8ToStringCharset(strPath1);
 #endif
   if (!CUtil::HasSlashAtEnd(strPath1))
-#ifndef _LINUX  
+#ifndef _LINUX
     strPath1 += '\\';
 #else
     strPath1 += '/';
@@ -328,7 +405,7 @@ bool CHDDirectory::Exists(const char* strPath)
 #endif
   if (!CUtil::HasSlashAtEnd(strReplaced))
     strReplaced += '\\';
-#endif    
+#endif
   DWORD attributes = GetFileAttributes(strReplaced.c_str());
   if(attributes == INVALID_FILE_ATTRIBUTES)
     return false;

@@ -193,7 +193,7 @@ CFileItem::CFileItem(const CStdString& strPath, bool bIsFolder)
   m_bIsFolder = bIsFolder;
 #ifdef DEBUG
   // tuxbox urls cannot have a / at end
-  if (m_bIsFolder && !m_strPath.IsEmpty() && !IsFileFolder() && !CUtil::IsTuxBox(m_strPath) && strPath.Left(14) != "smartfolder://")
+  if (m_bIsFolder && !m_strPath.IsEmpty() && !IsFileFolder() && !CUtil::IsTuxBox(m_strPath))
     ASSERT(CUtil::HasSlashAtEnd(m_strPath));
 #endif
 
@@ -394,14 +394,14 @@ void CFileItem::Serialize(CArchive& ar)
       ar << 1;
       ar << *m_videoInfoTag;
     }
-    else 
+    else
       ar << 0;
     if (m_pictureInfoTag)
     {
       ar << 1;
       ar << *m_pictureInfoTag;
     }
-    else 
+    else
       ar << 0;
   }
   else
@@ -447,8 +447,8 @@ bool CFileItem::IsVideo() const
   /* check preset content type */
   if( m_contenttype.Left(6).Equals("video/") )
     return true;
-  
-  if (m_strPath.Left(7).Equals("tuxbox:")) 
+
+  if (m_strPath.Left(7).Equals("tuxbox:"))
     return true;
 
   if (m_strPath.Left(10).Equals("hdhomerun:"))
@@ -559,7 +559,7 @@ bool CFileItem::IsInternetStream() const
 
   if (IsOnLAN())
     return false;
-  
+
   if (strProtocol == "shout" || strProtocol == "mms" ||
       strProtocol == "http"  || strProtocol == "ftp" ||
       strProtocol == "rtsp"  || strProtocol == "rtp" ||
@@ -1864,7 +1864,7 @@ void CFileItemList::Stack()
         {
           CFileItemList items;
           CDirectory::GetDirectory(item->m_strPath,items,g_stSettings.m_videoExtensions,true);
-          if (items.GetFileCount() == 1)  
+          if (items.GetFileCount() == 1)
           { // only one file in the list, so replace our item with this one
             for (int j = 0; j < items.Size(); j++)
             {

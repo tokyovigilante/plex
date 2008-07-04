@@ -572,6 +572,9 @@ void Cocoa_GetSmartFolderResults(const char* strFile, void (*CallbackFunc)(void*
   NSString*     raw = [doc objectForKey:@"RawQuery"];
   NSArray*      searchPaths = [[doc objectForKey:@"SearchCriteria"] objectForKey:@"FXScopeArrayOfPaths"];
 
+  if (raw == 0)
+    return;
+
   // Ugh, Carbon from now on...
   MDQueryRef query = MDQueryCreate(kCFAllocatorDefault, (CFStringRef)raw, NULL, NULL);
   if (query)
