@@ -25,6 +25,7 @@
  *
  * g++ -o XBMCHelper AppleRemote.cpp -framework CoreFoundation -framework Carbon -framework IOKit -framework ForceFeedback
  */
+#define APPNAME  "OSXBMC.app"
 #define PROGNAME "XBMCHelper"
 #define PROGVERS "1.1.0"
 
@@ -75,9 +76,10 @@ static struct option long_options[] =
 		{ "timeout",    required_argument,   0, 't' },
 		{ "verbose",    no_argument,         0, 'v' },
     { "externalConfig", no_argument,     0, 'x' },
+    { "appLocation", required_argument,  0, 'a' },
     { 0, 0, 0, 0 },
 };
-static const char *options = "hsutvx";
+static const char *options = "hsutvxa";
  
 const int REMOTE_SWITCH_COOKIE = 19;
 const int IGNORE_CODE = 39;
@@ -134,6 +136,7 @@ bool isUniversalMode = false;
 int sequenceTimeout = 500;
 bool verbose = false;
 string serverAddress = "127.0.0.1";
+string appLocation = "/Applications";
 CAddress* pServer = 0;
 int sockfd;
 
@@ -291,11 +294,12 @@ void usage()
     printf("   Copyright (c) 2008 ESC Velocity. All Rights Reserved.\n");
     printf("   Sends Apple Remote events to XBMC.\n\n");
     printf("Usage: %s [OPTIONS...]\n\nOptions:\n", PROGNAME);
-    printf("  -h, --help           print this help message and exit.\n");
-    printf("  -s, --server <addr>  send events to the specified IP.\n");
-    printf("  -u, --universal      runs in Universal Remote mode.\n");
-    printf("  -t, --timeout <ms>   timeout length for sequences (default: 500ms).\n");
-    printf("  -v, --verbose        prints lots of debugging information.\n");
+    printf("  -h, --help               Print this help message and exit.\n");
+    printf("  -s, --server <addr>      Send events to the specified IP.\n");
+    printf("  -u, --universal          Runs in Universal Remote mode.\n");
+    printf("  -t, --timeout <ms>       Timeout length for sequences (default: 500ms).\n");
+    printf("  -v, --verbose            Prints lots of debugging information.\n");
+    printf("  -a, --appLocation <path> The location of the application.\n");
 }
 
 inline void print_errmsg_if_io_err(int expr, char *msg)
@@ -361,36 +365,18 @@ bool isProgramRunning(const char* strProgram, int ignorePid)
 
 void startXBMC()
 {
-	printf("Trying to start XBMC.\n");
+	printf("Trying to start OSXBMC.\n");
 	
-	int      result = -1;
-	char     given_path[2*MAXPATHLEN];
-  uint32_t path_size = 2*MAXPATHLEN;
+	int result = -1;
+  string app = appLocation + "/OSXBMC.app";
+  
+  string strCmd = "open ";
+	strCmd += app;
+	strCmd += "&";
 
-  result = _NSGetExecutablePath(given_path, &path_size);
-  if (result == 0)
-  {
-    char real_path[2*MAXPATHLEN];
-    if (realpath(given_path, real_path) != NULL)
-    {
-  		// Move backwards out to the application.
-  		for (int x=0; x<4; x++)
-  		{
-  	  	for (int n=strlen(real_path)-1; real_path[n] != '/'; n--)
-      		real_path[n] = '\0';
-			
-  			real_path[strlen(real_path)-1] = '\0';
-  		}
-		}
-		
-		string strCmd = "open ";
-		strCmd += real_path;
-		strCmd += "&";
-
-		// Start it in the background.
-		printf("Got path: [%s]\n", real_path);
-		system(strCmd.c_str());
-	}
+	// Start it in the background.
+	printf("Got path: [%s]\n", app.c_str());
+	system(strCmd.c_str());
 }
 
 void QueueCallbackFunction(void *target, IOReturn result, void *refcon, void *sender)
@@ -492,9 +478,8 @@ void doRun(IOHIDDeviceInterface **hidDeviceInterface, CFMutableArrayRef cookies)
   ioReturnValue = (*hidDeviceInterface)->open(hidDeviceInterface, kIOHIDOptionsTypeSeizeDevice);
   if (ioReturnValue == KERN_SUCCESS)
   {
-    // Enable secure input. This ensures we don't lose exclusivity.
-    EnableSecureEventInput();
     processQueue(hidDeviceInterface, cookies);
+    printf("Disabling secure input.\n");
     DisableSecureEventInput();
 
     ioReturnValue = (*hidDeviceInterface)->close(hidDeviceInterface);
@@ -560,6 +545,10 @@ void createHIDDeviceInterface(io_object_t hidDevice, IOHIDDeviceInterface ***hdi
     HRESULT               plugInResult = S_OK;
     SInt32                score = 0;
     IOReturn              ioReturnValue = kIOReturnSuccess;
+
+    // Enable secure input. This ensures we don't lose exclusivity.
+    printf("Enabling secure input.\n");
+    EnableSecureEventInput();
 
     ioReturnValue = IOObjectGetClass(hidDevice, className);
     print_errmsg_if_io_err(ioReturnValue, "Failed to get class name.");
@@ -762,6 +751,9 @@ void parseOptions(int argc, char** argv)
       break;
     case 'x':
       readExternal = true;
+      break;
+    case 'a':
+      appLocation = optarg;
       break;
     default:
       usage();

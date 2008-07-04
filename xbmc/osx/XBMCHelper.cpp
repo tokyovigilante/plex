@@ -23,6 +23,7 @@
 #include <sys/sysctl.h>
 #include <sys/stat.h>
 #include <assert.h>
+#include <mach-o/dyld.h>
 #include <errno.h>
 #include <signal.h>
 #include <iostream>
@@ -172,6 +173,31 @@ void XBMCHelper::Configure()
     sprintf(strDelay, "--timeout %d", m_sequenceDelay);
     strConfig += strDelay;
 
+    // Find out where we're running from.
+    char     given_path[2*MAXPATHLEN];
+    uint32_t path_size = 2*MAXPATHLEN;
+
+    int result = _NSGetExecutablePath(given_path, &path_size);
+    if (result == 0)
+    {
+      char real_path[2*MAXPATHLEN];
+      if (realpath(given_path, real_path) != NULL)
+      {
+        // Move backwards out to the application.
+        for (int x=0; x<4; x++)
+        {
+          for (int n=strlen(real_path)-1; real_path[n] != '/'; n--)
+            real_path[n] = '\0';
+        
+          real_path[strlen(real_path)-1] = '\0';
+        }
+      }
+      
+      strConfig += " --appLocation \"";
+      strConfig += real_path;
+      strConfig += "\"";
+    }
+    
     // Write the new configuration.
     WriteFile(m_configFile.c_str(), strConfig + "\n");
 

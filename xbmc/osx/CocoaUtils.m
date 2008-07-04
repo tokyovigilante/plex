@@ -44,7 +44,12 @@ void InstallCrashReporter()
   Boolean authenticationWillBeRequired = FALSE;
   if (UnsanitySCR_CanInstall(&authenticationWillBeRequired))
   {
+    printf("Attempting to install Smart Crash Reporter.\n");
     UnsanitySCR_Install(authenticationWillBeRequired ? kUnsanitySCR_GlobalInstall : 0);
+  }
+  else
+  {
+    printf("Cannot install Smart Crash Reporter.\n");
   }
 }
 
