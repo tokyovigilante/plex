@@ -21,53 +21,50 @@
  *
  */
 
-#include "DynamicDll.h"
-#include "libfaad/neaacdec.h"
+#include "DVDAudioCodec.h"
+#include "DllLibFaad.h"
 
-class DllLibFaadInterface
+#define LIBFAAD_INPUT_SIZE (FAAD_MIN_STREAMSIZE * 8)   // 6144 bytes / 6k
+#define LIBFAAD_DECODED_SIZE (16 * LIBFAAD_INPUT_SIZE)
+
+class CDVDAudioCodecLibFaad : public CDVDAudioCodec
 	{
 	public:
-		virtual ~DllLibFaadInterface() {}
-		virtual NeAACDecHandle NeAACDecOpen(void)=0;
-		virtual NeAACDecConfigurationPtr NeAACDecGetCurrentConfiguration(NeAACDecHandle hDecoder)=0;
-		virtual unsigned char NeAACDecSetConfiguration(NeAACDecHandle hDecoder, NeAACDecConfigurationPtr config)=0;
-		virtual void NeAACDecClose(NeAACDecHandle hDecoder)=0;
-		virtual void* NeAACDecDecode(NeAACDecHandle hDecoder, NeAACDecFrameInfo *hInfo, unsigned char *buffer, unsigned long buffer_size)=0;
-		virtual long NeAACDecInit(NeAACDecHandle hDecoder, unsigned char *buffer, unsigned long buffer_size, unsigned long *samplerate, unsigned char *channels)=0;
-		virtual char NeAACDecInit2(NeAACDecHandle hDecoder, unsigned char *pBuffer, unsigned long SizeOfDecoderSpecificInfo, unsigned long *samplerate, unsigned char *channels)=0;
-		virtual char* NeAACDecGetErrorMessage(unsigned char errcode)=0;
-		virtual void NeAACDecPostSeekReset(NeAACDecHandle hDecoder, long frame)=0;
+		CDVDAudioCodecLibFaad();
+		virtual ~CDVDAudioCodecLibFaad();
+		virtual bool Open(CDVDStreamInfo &hints, CDVDCodecOptions &options);
+		virtual void Dispose();
+		virtual int Decode(BYTE* pData, int iSize);
+		virtual int GetData(BYTE** dst);
+		virtual void Reset();
+		virtual int GetChannels()      { return m_iSourceChannels; }
+		virtual int GetSampleRate()    { return m_iSourceSampleRate; }
+		virtual int GetBitsPerSample() { return 16; }
+		virtual const char* GetName()  { return "libfaad"; }
+		virtual int GetBufferSize()    { return m_InputBufferSize; }
+		
+	private:
+		
+		void CloseDecoder();
+		bool OpenDecoder();
+		
+		bool SyncStream();
+		
+		int m_iSourceSampleRate;
+		int m_iSourceChannels;
+		int m_iSourceBitrate;
+		
+		bool m_bInitializedDecoder;
+		bool m_bRawAACStream;
+		
+		faacDecHandle m_pHandle;
+		faacDecFrameInfo m_frameInfo;
+		
+		short* m_DecodedData;
+		int   m_DecodedDataSize;
+		
+		BYTE m_InputBuffer[LIBFAAD_INPUT_SIZE];
+		int  m_InputBufferSize;
+		
+		DllLibFaad m_dll;
 	};
-
-class DllLibFaad : public DllDynamic, DllLibFaadInterface
-{
-#ifdef __APPLE__
-	DECLARE_DLL_WRAPPER(DllLibFaad, Q:\\system\\players\\dvdplayer\\libfaad2-osx.so)
-#elif !defined(_LINUX)
-	DECLARE_DLL_WRAPPER(DllLibFaad, Q:\\system\\players\\dvdplayer\\libfaad.dll)
-#elif defined(__x86_64__)
-	DECLARE_DLL_WRAPPER(DllLibFaad, Q:\\system\\players\\dvdplayer\\libfaad-x86_64-linux.so)
-#else
-	DECLARE_DLL_WRAPPER(DllLibFaad, Q:\\system\\players\\dvdplayer\\libfaad-i486-linux.so)
-#endif
-	DEFINE_METHOD0(NeAACDecHandle, NeAACDecOpen)
-	DEFINE_METHOD1(NeAACDecConfigurationPtr, NeAACDecGetCurrentConfiguration, (NeAACDecHandle p1))
-	DEFINE_METHOD2(unsigned char, NeAACDecSetConfiguration, (NeAACDecHandle p1, NeAACDecConfigurationPtr p2))
-	DEFINE_METHOD1(void, NeAACDecClose, (NeAACDecHandle p1))
-	DEFINE_METHOD4(void*, NeAACDecDecode, (NeAACDecHandle p1, NeAACDecFrameInfo *p2, unsigned char *p3, unsigned long p4))
-	DEFINE_METHOD5(long, NeAACDecInit, (NeAACDecHandle p1, unsigned char *p2, unsigned long p3, unsigned long *p4, unsigned char *p5))
-	DEFINE_METHOD5(char, NeAACDecInit2, (NeAACDecHandle p1, unsigned char *p2, unsigned long p3, unsigned long *p4, unsigned char *p5))
-	DEFINE_METHOD1(char*, NeAACDecGetErrorMessage, (unsigned char p1))
-	DEFINE_METHOD2(void, NeAACDecPostSeekReset, (NeAACDecHandle p1, long p2))
-	BEGIN_METHOD_RESOLVE()
-    RESOLVE_METHOD(NeAACDecOpen)
-    RESOLVE_METHOD(NeAACDecGetCurrentConfiguration)
-    RESOLVE_METHOD(NeAACDecSetConfiguration)
-    RESOLVE_METHOD(NeAACDecClose)
-    RESOLVE_METHOD(NeAACDecDecode)
-    RESOLVE_METHOD(NeAACDecInit)
-    RESOLVE_METHOD(NeAACDecInit2)
-    RESOLVE_METHOD(NeAACDecGetErrorMessage)
-    RESOLVE_METHOD(NeAACDecPostSeekReset)
-	END_METHOD_RESOLVE()
-};
