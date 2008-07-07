@@ -640,7 +640,10 @@ const char* Cocoa_GetAppVersion()
   if (versStr != NULL && CFGetTypeID(versStr) == CFStringGetTypeID())
   {
   	const char* vers = CFStringGetCStringPtr(versStr, kCFStringEncodingMacRoman);
-  	strcpy(strVersion, vers);
+    if (vers != 0)
+      strcpy(strVersion, vers);
+    else
+      printf("Error converting version string\n");
   }
   
   return strVersion;
