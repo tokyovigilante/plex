@@ -1292,7 +1292,7 @@
 		E38E15160D25F9F900618676 /* DVDAudioCodecPcm.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DVDAudioCodecPcm.h; sourceTree = "<group>"; };
 		E38E15180D25F9F900618676 /* a52.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = a52.h; sourceTree = "<group>"; };
 		E38E151A0D25F9F900618676 /* dts.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = dts.h; sourceTree = "<group>"; };
-		E38E151C0D25F9F900618676 /* faad.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = faad.h; sourceTree = "<group>"; };
+		E38E151C0D25F9F900618676 /* neaacdec.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = neaacdec.h; sourceTree = "<group>"; };
 		E38E151E0D25F9F900618676 /* mad.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = mad.h; sourceTree = "<group>"; };
 		E38E15210D25F9F900618676 /* DVDCodecs.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DVDCodecs.h; sourceTree = "<group>"; };
 		E38E15220D25F9F900618676 /* DVDCodecUtils.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = DVDCodecUtils.cpp; sourceTree = "<group>"; };
@@ -4039,7 +4039,7 @@
 		E38E151B0D25F9F900618676 /* libfaad */ = {
 			isa = PBXGroup;
 			children = (
-				E38E151C0D25F9F900618676 /* faad.h */,
+				E38E151C0D25F9F900618676 /* neaacdec.h */,
 			);
 			path = libfaad;
 			sourceTree = "<group>";
