@@ -57,6 +57,7 @@
 		8DD76F790486A8DE00D96B5E /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 09AB6884FE841BABC02AAC07 /* CoreFoundation.framework */; };
 		9409C1EE0E01D696001626C3 /* ac3encoder.c in Sources */ = {isa = PBXBuildFile; fileRef = 9409C1E80E01D696001626C3 /* ac3encoder.c */; };
 		9409C1EF0E01D696001626C3 /* ringbuffer.c in Sources */ = {isa = PBXBuildFile; fileRef = 9409C1EC0E01D696001626C3 /* ringbuffer.c */; };
+		94B9CC7E0E201D6200FA073E /* DVDDemuxMPEGTS.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 94B9CC7C0E201D6200FA073E /* DVDDemuxMPEGTS.cpp */; };
 		B1A921F40DF6D14F0024CC4F /* libbz2.1.0.4.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B1A921F30DF6D14F0024CC4F /* libbz2.1.0.4.dylib */; };
 		E306D12E0DDF7B590052C2AD /* XBMCHelper.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E306D12C0DDF7B590052C2AD /* XBMCHelper.cpp */; };
 		E33206380D5070AA00435CE3 /* DVDDemuxVobsub.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E33206370D5070AA00435CE3 /* DVDDemuxVobsub.cpp */; };
@@ -936,6 +937,8 @@
 		9409C1EB0E01D696001626C3 /* aften.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = aften.h; path = ../../lib/libaften/aften.h; sourceTree = "<group>"; };
 		9409C1EC0E01D696001626C3 /* ringbuffer.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ringbuffer.c; path = AC3Encoder/ringbuffer.c; sourceTree = "<group>"; };
 		9409C1ED0E01D696001626C3 /* ringbuffer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ringbuffer.h; path = AC3Encoder/ringbuffer.h; sourceTree = "<group>"; };
+		94B9CC7C0E201D6200FA073E /* DVDDemuxMPEGTS.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = DVDDemuxMPEGTS.cpp; sourceTree = "<group>"; };
+		94B9CC7D0E201D6200FA073E /* DVDDemuxMPEGTS.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DVDDemuxMPEGTS.h; sourceTree = "<group>"; };
 		B1A921F30DF6D14F0024CC4F /* libbz2.1.0.4.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libbz2.1.0.4.dylib; path = /opt/local/lib/libbz2.1.0.4.dylib; sourceTree = "<absolute>"; };
 		E306D12C0DDF7B590052C2AD /* XBMCHelper.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = XBMCHelper.cpp; sourceTree = "<group>"; };
 		E306D12D0DDF7B590052C2AD /* XBMCHelper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = XBMCHelper.h; sourceTree = "<group>"; };
@@ -2919,7 +2922,6 @@
 				EFF0820B0E106C00004114E6 /* SmartCrashReportsAPI.o in Frameworks */,
 				EFF0820C0E106C00004114E6 /* SmartCrashReportsInstall.o in Frameworks */,
 				EFF0820E0E106C11004114E6 /* Security.framework in Frameworks */,
-				94B678B80E18FAF1001443D1 /* libportaudio.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3062,6 +3064,7 @@
 			children = (
 			);
 			name = EyeTVInterface;
+			path = ../cores/dvdplayer;
 			sourceTree = "<group>";
 		};
 		9409C1E50E01D680001626C3 /* AC3Encoder */ = {
@@ -3088,6 +3091,7 @@
 		E37D5CB40D3023BB0081D327 /* osx */ = {
 			isa = PBXGroup;
 			children = (
+				940237D80E1CD94400619E65 /* EyeTVInterface */,
 				EFF083260E11614A004114E6 /* Info.plist */,
 				840A327C0DFBBD2600AA2033 /* KeyboardLayouts.cpp */,
 				840A327D0DFBBD2600AA2033 /* KeyboardLayouts.h */,
@@ -3926,7 +3930,6 @@
 		E38E14F80D25F9F900618676 /* dvdplayer */ = {
 			isa = PBXGroup;
 			children = (
-				940237D80E1CD94400619E65 /* EyeTVInterface */,
 				9409C1E50E01D680001626C3 /* AC3Encoder */,
 				E38E14F90D25F9F900618676 /* ALSADirectSound.cpp */,
 				E38E14FA0D25F9F900618676 /* ALSADirectSound.h */,
@@ -4112,6 +4115,8 @@
 				E38E25BF0D263DC100618676 /* DVDFactoryDemuxer.cpp */,
 				E38E25C20D263DE200618676 /* DVDDemuxFFmpeg.cpp */,
 				E38E154C0D25F9F900618676 /* DVDDemuxFFmpeg.h */,
+				94B9CC7C0E201D6200FA073E /* DVDDemuxMPEGTS.cpp */,
+				94B9CC7D0E201D6200FA073E /* DVDDemuxMPEGTS.h */,
 				E38E15490D25F9F900618676 /* DVDDemux.cpp */,
 				E38E154A0D25F9F900618676 /* DVDDemux.h */,
 				E38E154D0D25F9F900618676 /* DVDDemuxShoutcast.cpp */,
@@ -6868,6 +6873,7 @@
 				E3D4B99B0DF7E39B0092A179 /* XBMSDirectory.cpp in Sources */,
 				9409C1EE0E01D696001626C3 /* ac3encoder.c in Sources */,
 				9409C1EF0E01D696001626C3 /* ringbuffer.c in Sources */,
+				94B9CC7E0E201D6200FA073E /* DVDDemuxMPEGTS.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

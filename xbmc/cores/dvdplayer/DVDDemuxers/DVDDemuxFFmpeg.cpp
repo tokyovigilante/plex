@@ -794,7 +794,7 @@ void CDVDDemuxFFmpeg::UpdateCurrentPTS()
   }
 }
 
-int CDVDDemuxFFmpeg::GetStreamLenght()
+int CDVDDemuxFFmpeg::GetStreamLength()
 {
   if (!m_pFormatContext)
     return 0;

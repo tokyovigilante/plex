@@ -1071,7 +1071,7 @@ int CRegExp::GetSubStart(int iSub)
     return 0;
 }
 
-int CRegExp::GetSubLenght(int iSub)
+int CRegExp::GetSublength(int iSub)
 {
   if( startp[iSub] != NULL && endp[iSub] != NULL )
     return endp[iSub]-startp[iSub];

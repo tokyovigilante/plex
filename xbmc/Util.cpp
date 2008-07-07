@@ -493,15 +493,15 @@ bool CUtil::GetVolumeFromFileName(const CStdString& strFileName, CStdString& str
       else if( iCount > 1 )
       {
         //Second Sub value contains the stacking
-        strVolumeNumber = strFileName.Mid(iFoundToken + reg.GetSubStart(2), reg.GetSubLenght(2));
+        strVolumeNumber = strFileName.Mid(iFoundToken + reg.GetSubStart(2), reg.GetSublength(2));
 
         strFileTitle = strFileName.Left(iFoundToken);
 
         //First Sub value contains prefix
-        strFileTitle += strFileName.Mid(iFoundToken + reg.GetSubStart(1), reg.GetSubLenght(1));
+        strFileTitle += strFileName.Mid(iFoundToken + reg.GetSubStart(1), reg.GetSublength(1));
 
         //Third Sub value contains suffix
-        strFileTitle += strFileName.Mid(iFoundToken + reg.GetSubStart(3), reg.GetSubLenght(3));
+        strFileTitle += strFileName.Mid(iFoundToken + reg.GetSubStart(3), reg.GetSublength(3));
         strFileTitle += strFileNameTemp.Mid(iFoundToken + iRegLength);
         //CLog::Log(LOGNOTICE, "GetVolumeFromFileName : 4 : " + strFileName + " : " + strVolumeNumber + " : " + strFileTitle);
         return true;

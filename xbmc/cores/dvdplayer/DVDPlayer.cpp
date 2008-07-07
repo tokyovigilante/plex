@@ -2696,7 +2696,7 @@ void CDVDPlayer::HandlePlayState(double timeout)
     m_State.chapter_count = m_pDemuxer->GetChapterCount();
 
     m_State.time       = DVD_TIME_TO_MSEC(m_clock.GetClock());
-    m_State.time_total = m_pDemuxer->GetStreamLenght();
+    m_State.time_total = m_pDemuxer->GetStreamLength();
   }
 
   if(m_pInputStream)
@@ -2828,7 +2828,7 @@ void CDVDPlayer::GetFileMetaData(const CStdString &strPath, CFileItem *pItem)
   AVFormatContext *pContext = pDemuxer->m_pFormatContext; 
   if (pContext)
   {
-    int nLenMsec = pDemuxer->GetStreamLenght();
+    int nLenMsec = pDemuxer->GetStreamLength();
     CStdString strDuration;
     int nHours = nLenMsec / 1000 / 60 / 60;
     int nMinutes = ((nLenMsec / 1000) - nHours * 3600) / 60;
@@ -2921,7 +2921,7 @@ bool CDVDPlayer::ExtractThumb(const CStdString &strPath, const CStdString &strTa
     CDVDVideoCodec *pVideoCodec = CDVDFactoryCodec::CreateVideoCodec( hint );
     if (pVideoCodec)
     {
-      int nTotalLen = pDemuxer->GetStreamLenght();
+      int nTotalLen = pDemuxer->GetStreamLength();
       int nSeekTo = nTotalLen / 3;
 
       CLog::Log(LOGDEBUG,"%s - seeking to pos %dms (total: %dms) in %s", __FUNCTION__, nSeekTo, nTotalLen, strPath.c_str());
