@@ -74,6 +74,7 @@ PaStream* CPortAudio::CreateOutputStream(const CStdString& strName, int channels
     CLog::Log(LOGNOTICE, "Asked to create device:   [%s]", strName.c_str());
     CLog::Log(LOGNOTICE, "Device should be digital: [%d]\n", isDigital);
     CLog::Log(LOGNOTICE, "CoreAudio S/PDIF mode:    [%d]\n", useCoreAudio);
+	
     CLog::Log(LOGNOTICE, "Channels:                 [%d]\n", channels);
     CLog::Log(LOGNOTICE, "Sample Rate:              [%d]\n", sampleRate);
     CLog::Log(LOGNOTICE, "BitsPerSample:            [%d]\n", bitsPerSample);
@@ -123,7 +124,14 @@ PaStream* CPortAudio::CreateOutputStream(const CStdString& strName, int channels
       outputParameters.device = pickedDevice;
       outputParameters.hostApiSpecificStreamInfo = NULL;
       outputParameters.sampleFormat = paInt16;
-      outputParameters.suggestedLatency = Pa_GetDeviceInfo(pickedDevice)->defaultLowOutputLatency;
+
+      CLog::Log(LOGINFO, "Portaudio latency range: %fms to %fms\n",
+                Pa_GetDeviceInfo(pickedDevice)->defaultLowOutputLatency*1000.0,
+                Pa_GetDeviceInfo(pickedDevice)->defaultHighOutputLatency*1000.0);
+
+      double latency = (Pa_GetDeviceInfo(pickedDevice)->defaultLowOutputLatency + Pa_GetDeviceInfo(pickedDevice)->defaultHighOutputLatency) / 2.0;
+      CLog::Log(LOGINFO, "Portaudio latency selected: %fms\n", latency*1000.0);
+      outputParameters.suggestedLatency = latency;
 
 #ifdef __APPLE__
       // We want to change sample rates to fit our needs, but only if we're doing digital out.
@@ -132,7 +140,7 @@ PaStream* CPortAudio::CreateOutputStream(const CStdString& strName, int channels
         PaMacCoreStreamInfo macStream;
 		if (useCoreAudio)
 		{
-			PaMacCore_SetupStreamInfo(&macStream, paMacCoreFailIfConversionRequired | paMacCoreFlagRaw);
+			PaMacCore_SetupStreamInfo(&macStream, paMacCoreChangeDeviceParameters | paMacCoreFailIfConversionRequired | paMacCoreFlagRaw);
 		}
 		else
 		{

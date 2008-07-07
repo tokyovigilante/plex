@@ -280,7 +280,7 @@ bool CProgramDatabase::HasTrainer(const CStdString& strTrainerPath)
   }
   catch (...)
   {
-    CLog::Log(LOGERROR,"error checking for trainer existance (%s)",strSQL.c_str());
+    CLog::Log(LOGERROR,"error checking for trainer existence (%s)",strSQL.c_str());
   }
   return false;
 }

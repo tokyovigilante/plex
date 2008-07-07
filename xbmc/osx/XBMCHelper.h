@@ -44,12 +44,15 @@ class XBMCHelper
 
   bool ErrorStarting() { return m_errorStarting; }
 
+  static std::string ReadFile(const char* fileName);
+  static void WriteFile(const char* fileName, const std::string& data);
+
  private:
 
-  int GetProcessPid(const char* processName);
+  bool EnsureLatestHelperInstalled();
 
-  std::string ReadFile(const char* fileName);
-  void WriteFile(const char* fileName, const std::string& data);
+  int GetProcessPid(const char* processName);
+  std::string GetInstalledHelperVersion();
 
   bool m_alwaysOn;
   int  m_mode;
@@ -60,6 +63,8 @@ class XBMCHelper
   std::string m_launchAgentLocalFile;
   std::string m_launchAgentInstallFile;
   std::string m_helperFile;
+  std::string m_helperInstalledFile;
+  std::string m_helperInstalledVersionFile;
 };
 
 extern XBMCHelper g_xbmcHelper;

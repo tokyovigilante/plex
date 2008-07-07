@@ -57,6 +57,7 @@
 		8DD76F790486A8DE00D96B5E /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 09AB6884FE841BABC02AAC07 /* CoreFoundation.framework */; };
 		9409C1EE0E01D696001626C3 /* ac3encoder.c in Sources */ = {isa = PBXBuildFile; fileRef = 9409C1E80E01D696001626C3 /* ac3encoder.c */; };
 		9409C1EF0E01D696001626C3 /* ringbuffer.c in Sources */ = {isa = PBXBuildFile; fileRef = 9409C1EC0E01D696001626C3 /* ringbuffer.c */; };
+		94B9CC7E0E201D6200FA073E /* DVDDemuxMPEGTS.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 94B9CC7C0E201D6200FA073E /* DVDDemuxMPEGTS.cpp */; };
 		B1A921F40DF6D14F0024CC4F /* libbz2.1.0.4.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B1A921F30DF6D14F0024CC4F /* libbz2.1.0.4.dylib */; };
 		E306D12E0DDF7B590052C2AD /* XBMCHelper.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E306D12C0DDF7B590052C2AD /* XBMCHelper.cpp */; };
 		E33206380D5070AA00435CE3 /* DVDDemuxVobsub.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E33206370D5070AA00435CE3 /* DVDDemuxVobsub.cpp */; };
@@ -286,7 +287,6 @@
 		E38E1FE00D25F9FD00618676 /* PlayerCoreFactory.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E38E16430D25F9FA00618676 /* PlayerCoreFactory.cpp */; };
 		E38E1FE50D25F9FD00618676 /* ssrc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E38E16560D25F9FA00618676 /* ssrc.cpp */; };
 		E38E1FE70D25F9FD00618676 /* LinuxRenderer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E38E165B0D25F9FA00618676 /* LinuxRenderer.cpp */; };
-		E38E1FE80D25F9FD00618676 /* LinuxRendererATI.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E38E165D0D25F9FA00618676 /* LinuxRendererATI.cpp */; };
 		E38E1FE90D25F9FD00618676 /* LinuxRendererGL.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E38E165F0D25F9FA00618676 /* LinuxRendererGL.cpp */; };
 		E38E1FEC0D25F9FD00618676 /* RenderManager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E38E16650D25F9FA00618676 /* RenderManager.cpp */; };
 		E38E1FF00D25F9FD00618676 /* VideoFilterShader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E38E166F0D25F9FA00618676 /* VideoFilterShader.cpp */; };
@@ -823,7 +823,6 @@
 		E3D87AEB0D3182F4000CF031 /* XCriticalSection.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E3D87AE90D3182F4000CF031 /* XCriticalSection.cpp */; };
 		E3DAAF8C0D6E1B0500F17647 /* FileSmb.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E3DAAF8A0D6E1B0500F17647 /* FileSmb.cpp */; };
 		E3DAAF8D0D6E1B0500F17647 /* SMBDirectory.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E3DAAF8B0D6E1B0500F17647 /* SMBDirectory.cpp */; };
-		E3E06D860DFB4DA1006329AF /* SmartFolderDirectory.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E3E06D840DFB4DA1006329AF /* SmartFolderDirectory.cpp */; };
 		E3E91FFD0D8C61DF002BF43D /* EventPacket.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E3E91FFA0D8C61DF002BF43D /* EventPacket.cpp */; };
 		E3E91FFE0D8C61DF002BF43D /* EventServer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E3E91FFB0D8C61DF002BF43D /* EventServer.cpp */; };
 		E3E91FFF0D8C61DF002BF43D /* Socket.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E3E91FFC0D8C61DF002BF43D /* Socket.cpp */; };
@@ -834,7 +833,9 @@
 		E3FFF0070D46FD1D003D79C3 /* libavutil-osx.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E3FFF0020D46FD1D003D79C3 /* libavutil-osx.a */; };
 		E3FFF0090D46FD1D003D79C3 /* libavcodec-osx.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E3FFF0040D46FD1D003D79C3 /* libavcodec-osx.a */; };
 		E3FFF02F0D470BD8003D79C3 /* libavformat-osx.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E3FFF02E0D470BD8003D79C3 /* libavformat-osx.a */; };
-		EFD2EF100E0B25A900CE20D7 /* ExceptionHandling.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EFD2EF0F0E0B25A900CE20D7 /* ExceptionHandling.framework */; };
+		EFF0820B0E106C00004114E6 /* SmartCrashReportsAPI.o in Frameworks */ = {isa = PBXBuildFile; fileRef = EFF082090E106C00004114E6 /* SmartCrashReportsAPI.o */; };
+		EFF0820C0E106C00004114E6 /* SmartCrashReportsInstall.o in Frameworks */ = {isa = PBXBuildFile; fileRef = EFF0820A0E106C00004114E6 /* SmartCrashReportsInstall.o */; };
+		EFF0820E0E106C11004114E6 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EFF0820D0E106C11004114E6 /* Security.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -936,6 +937,8 @@
 		9409C1EB0E01D696001626C3 /* aften.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = aften.h; path = ../../lib/libaften/aften.h; sourceTree = "<group>"; };
 		9409C1EC0E01D696001626C3 /* ringbuffer.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ringbuffer.c; path = AC3Encoder/ringbuffer.c; sourceTree = "<group>"; };
 		9409C1ED0E01D696001626C3 /* ringbuffer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ringbuffer.h; path = AC3Encoder/ringbuffer.h; sourceTree = "<group>"; };
+		94B9CC7C0E201D6200FA073E /* DVDDemuxMPEGTS.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = DVDDemuxMPEGTS.cpp; sourceTree = "<group>"; };
+		94B9CC7D0E201D6200FA073E /* DVDDemuxMPEGTS.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DVDDemuxMPEGTS.h; sourceTree = "<group>"; };
 		B1A921F30DF6D14F0024CC4F /* libbz2.1.0.4.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libbz2.1.0.4.dylib; path = /opt/local/lib/libbz2.1.0.4.dylib; sourceTree = "<absolute>"; };
 		E306D12C0DDF7B590052C2AD /* XBMCHelper.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = XBMCHelper.cpp; sourceTree = "<group>"; };
 		E306D12D0DDF7B590052C2AD /* XBMCHelper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = XBMCHelper.h; sourceTree = "<group>"; };
@@ -1289,7 +1292,7 @@
 		E38E15160D25F9F900618676 /* DVDAudioCodecPcm.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DVDAudioCodecPcm.h; sourceTree = "<group>"; };
 		E38E15180D25F9F900618676 /* a52.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = a52.h; sourceTree = "<group>"; };
 		E38E151A0D25F9F900618676 /* dts.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = dts.h; sourceTree = "<group>"; };
-		E38E151C0D25F9F900618676 /* faad.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = faad.h; sourceTree = "<group>"; };
+		E38E151C0D25F9F900618676 /* neaacdec.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = neaacdec.h; sourceTree = "<group>"; };
 		E38E151E0D25F9F900618676 /* mad.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = mad.h; sourceTree = "<group>"; };
 		E38E15210D25F9F900618676 /* DVDCodecs.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DVDCodecs.h; sourceTree = "<group>"; };
 		E38E15220D25F9F900618676 /* DVDCodecUtils.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = DVDCodecUtils.cpp; sourceTree = "<group>"; };
@@ -1505,8 +1508,6 @@
 		E38E165A0D25F9FA00618676 /* ComboRenderer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ComboRenderer.h; sourceTree = "<group>"; };
 		E38E165B0D25F9FA00618676 /* LinuxRenderer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = LinuxRenderer.cpp; sourceTree = "<group>"; };
 		E38E165C0D25F9FA00618676 /* LinuxRenderer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LinuxRenderer.h; sourceTree = "<group>"; };
-		E38E165D0D25F9FA00618676 /* LinuxRendererATI.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = LinuxRendererATI.cpp; sourceTree = "<group>"; };
-		E38E165E0D25F9FA00618676 /* LinuxRendererATI.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LinuxRendererATI.h; sourceTree = "<group>"; };
 		E38E165F0D25F9FA00618676 /* LinuxRendererGL.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = LinuxRendererGL.cpp; sourceTree = "<group>"; };
 		E38E16600D25F9FA00618676 /* LinuxRendererGL.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LinuxRendererGL.h; sourceTree = "<group>"; };
 		E38E16640D25F9FA00618676 /* PixelShaderRenderer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PixelShaderRenderer.h; sourceTree = "<group>"; };
@@ -2849,8 +2850,6 @@
 		E3D87AEA0D3182F4000CF031 /* XCriticalSection.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = XCriticalSection.h; sourceTree = "<group>"; };
 		E3DAAF8A0D6E1B0500F17647 /* FileSmb.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = FileSmb.cpp; sourceTree = "<group>"; };
 		E3DAAF8B0D6E1B0500F17647 /* SMBDirectory.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SMBDirectory.cpp; sourceTree = "<group>"; };
-		E3E06D840DFB4DA1006329AF /* SmartFolderDirectory.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SmartFolderDirectory.cpp; sourceTree = "<group>"; };
-		E3E06D850DFB4DA1006329AF /* SmartFolderDirectory.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SmartFolderDirectory.h; sourceTree = "<group>"; };
 		E3E91FFA0D8C61DF002BF43D /* EventPacket.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = EventPacket.cpp; sourceTree = "<group>"; };
 		E3E91FFB0D8C61DF002BF43D /* EventServer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = EventServer.cpp; sourceTree = "<group>"; };
 		E3E91FFC0D8C61DF002BF43D /* Socket.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Socket.cpp; sourceTree = "<group>"; };
@@ -2861,7 +2860,10 @@
 		E3FFF0020D46FD1D003D79C3 /* libavutil-osx.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libavutil-osx.a"; path = "xbmc/lib/libffmpeg-OSX/libavutil-osx.a"; sourceTree = "<group>"; };
 		E3FFF0040D46FD1D003D79C3 /* libavcodec-osx.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libavcodec-osx.a"; path = "xbmc/lib/libffmpeg-OSX/libavcodec-osx.a"; sourceTree = "<group>"; };
 		E3FFF02E0D470BD8003D79C3 /* libavformat-osx.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libavformat-osx.a"; path = "xbmc/lib/libffmpeg-OSX/libavformat-osx.a"; sourceTree = "<group>"; };
-		EFD2EF0F0E0B25A900CE20D7 /* ExceptionHandling.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ExceptionHandling.framework; path = System/Library/Frameworks/ExceptionHandling.framework; sourceTree = SDKROOT; };
+		EFF082090E106C00004114E6 /* SmartCrashReportsAPI.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = SmartCrashReportsAPI.o; path = xbmc/lib/libSmartCrashReports/SmartCrashReportsAPI.o; sourceTree = "<group>"; };
+		EFF0820A0E106C00004114E6 /* SmartCrashReportsInstall.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = SmartCrashReportsInstall.o; path = xbmc/lib/libSmartCrashReports/SmartCrashReportsInstall.o; sourceTree = "<group>"; };
+		EFF0820D0E106C11004114E6 /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = System/Library/Frameworks/Security.framework; sourceTree = SDKROOT; };
+		EFF083260E11614A004114E6 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -2915,9 +2917,11 @@
 				88ECB6EC0DE07C56003396A7 /* libmysqlclient.a in Frameworks */,
 				B1A921F40DF6D14F0024CC4F /* libbz2.1.0.4.dylib in Frameworks */,
 				E38CB6BA0DF7E5B2002B36E1 /* libXBMS-osx.a in Frameworks */,
-				EFD2EF100E0B25A900CE20D7 /* ExceptionHandling.framework in Frameworks */,
 				E3B578970E0E3CDB002B3B3E /* libaften_pcm.a in Frameworks */,
 				E3B578980E0E3CDB002B3B3E /* libaften_static.a in Frameworks */,
+				EFF0820B0E106C00004114E6 /* SmartCrashReportsAPI.o in Frameworks */,
+				EFF0820C0E106C00004114E6 /* SmartCrashReportsInstall.o in Frameworks */,
+				EFF0820E0E106C11004114E6 /* Security.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2947,10 +2951,12 @@
 		08FB779DFE84155DC02AAC07 /* External Frameworks and Libraries */ = {
 			isa = PBXGroup;
 			children = (
+				EFF0820D0E106C11004114E6 /* Security.framework */,
+				EFF082090E106C00004114E6 /* SmartCrashReportsAPI.o */,
+				EFF0820A0E106C00004114E6 /* SmartCrashReportsInstall.o */,
 				E3B578950E0E3CDB002B3B3E /* libaften_pcm.a */,
 				E3B578960E0E3CDB002B3B3E /* libaften_static.a */,
 				E38CB6B90DF7E5B2002B36E1 /* libXBMS-osx.a */,
-				EFD2EF0F0E0B25A900CE20D7 /* ExceptionHandling.framework */,
 				B1A921F30DF6D14F0024CC4F /* libbz2.1.0.4.dylib */,
 				88ECB6EB0DE07C56003396A7 /* libmysqlclient.a */,
 				88ECB6E90DE07BEE003396A7 /* libogg.a */,
@@ -3053,6 +3059,14 @@
 			path = libcmyth;
 			sourceTree = "<group>";
 		};
+		940237D80E1CD94400619E65 /* EyeTVInterface */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = EyeTVInterface;
+			path = ../cores/dvdplayer;
+			sourceTree = "<group>";
+		};
 		9409C1E50E01D680001626C3 /* AC3Encoder */ = {
 			isa = PBXGroup;
 			children = (
@@ -3077,6 +3091,8 @@
 		E37D5CB40D3023BB0081D327 /* osx */ = {
 			isa = PBXGroup;
 			children = (
+				940237D80E1CD94400619E65 /* EyeTVInterface */,
+				EFF083260E11614A004114E6 /* Info.plist */,
 				840A327C0DFBBD2600AA2033 /* KeyboardLayouts.cpp */,
 				840A327D0DFBBD2600AA2033 /* KeyboardLayouts.h */,
 				E306D12C0DDF7B590052C2AD /* XBMCHelper.cpp */,
@@ -4023,7 +4039,7 @@
 		E38E151B0D25F9F900618676 /* libfaad */ = {
 			isa = PBXGroup;
 			children = (
-				E38E151C0D25F9F900618676 /* faad.h */,
+				E38E151C0D25F9F900618676 /* neaacdec.h */,
 			);
 			path = libfaad;
 			sourceTree = "<group>";
@@ -4099,6 +4115,8 @@
 				E38E25BF0D263DC100618676 /* DVDFactoryDemuxer.cpp */,
 				E38E25C20D263DE200618676 /* DVDDemuxFFmpeg.cpp */,
 				E38E154C0D25F9F900618676 /* DVDDemuxFFmpeg.h */,
+				94B9CC7C0E201D6200FA073E /* DVDDemuxMPEGTS.cpp */,
+				94B9CC7D0E201D6200FA073E /* DVDDemuxMPEGTS.h */,
 				E38E15490D25F9F900618676 /* DVDDemux.cpp */,
 				E38E154A0D25F9F900618676 /* DVDDemux.h */,
 				E38E154D0D25F9F900618676 /* DVDDemuxShoutcast.cpp */,
@@ -4366,8 +4384,6 @@
 				E38E165A0D25F9FA00618676 /* ComboRenderer.h */,
 				E38E165B0D25F9FA00618676 /* LinuxRenderer.cpp */,
 				E38E165C0D25F9FA00618676 /* LinuxRenderer.h */,
-				E38E165D0D25F9FA00618676 /* LinuxRendererATI.cpp */,
-				E38E165E0D25F9FA00618676 /* LinuxRendererATI.h */,
 				E38E165F0D25F9FA00618676 /* LinuxRendererGL.cpp */,
 				E38E16600D25F9FA00618676 /* LinuxRendererGL.h */,
 				E38E16640D25F9FA00618676 /* PixelShaderRenderer.h */,
@@ -4398,8 +4414,6 @@
 		E38E16940D25F9FA00618676 /* FileSystem */ = {
 			isa = PBXGroup;
 			children = (
-				E3E06D840DFB4DA1006329AF /* SmartFolderDirectory.cpp */,
-				E3E06D850DFB4DA1006329AF /* SmartFolderDirectory.h */,
 				E3D4B9950DF7E39B0092A179 /* FileShoutcast.h */,
 				E3D4B9960DF7E39B0092A179 /* FileXBMSP.cpp */,
 				E3D4B9970DF7E39B0092A179 /* FileXBMSP.h */,
@@ -6286,7 +6300,6 @@
 				E38E1FE00D25F9FD00618676 /* PlayerCoreFactory.cpp in Sources */,
 				E38E1FE50D25F9FD00618676 /* ssrc.cpp in Sources */,
 				E38E1FE70D25F9FD00618676 /* LinuxRenderer.cpp in Sources */,
-				E38E1FE80D25F9FD00618676 /* LinuxRendererATI.cpp in Sources */,
 				E38E1FE90D25F9FD00618676 /* LinuxRendererGL.cpp in Sources */,
 				E38E1FEC0D25F9FD00618676 /* RenderManager.cpp in Sources */,
 				E38E1FF00D25F9FD00618676 /* VideoFilterShader.cpp in Sources */,
@@ -6858,9 +6871,9 @@
 				840A327E0DFBBD2600AA2033 /* KeyboardLayouts.cpp in Sources */,
 				E3D4B99A0DF7E39B0092A179 /* FileXBMSP.cpp in Sources */,
 				E3D4B99B0DF7E39B0092A179 /* XBMSDirectory.cpp in Sources */,
-				E3E06D860DFB4DA1006329AF /* SmartFolderDirectory.cpp in Sources */,
 				9409C1EE0E01D696001626C3 /* ac3encoder.c in Sources */,
 				9409C1EF0E01D696001626C3 /* ringbuffer.c in Sources */,
+				94B9CC7E0E201D6200FA073E /* DVDDemuxMPEGTS.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

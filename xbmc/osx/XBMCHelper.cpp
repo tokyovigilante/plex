@@ -21,7 +21,9 @@
 
 #include <sys/types.h>
 #include <sys/sysctl.h>
+#include <sys/stat.h>
 #include <assert.h>
+#include <mach-o/dyld.h>
 #include <errno.h>
 #include <signal.h>
 #include <iostream>
@@ -32,6 +34,7 @@ using namespace std;
 
 #include "XBMCHelper.h"
 
+#include "CocoaUtils.h"
 #include "PlatformDefs.h"
 #include "log.h"
 #include "system.h"
@@ -44,13 +47,14 @@ XBMCHelper g_xbmcHelper;
 #define XBMC_HELPER_PROGRAM "XBMCHelper"
 #define SOFA_CONTROL_PROGRAM "Sofa Control"
 #define XBMC_LAUNCH_PLIST "org.xbmc.helper.plist"
+#define RESOURCES_DIR "/Library/Application Support/XBMC"
 
 static int GetBSDProcessList(kinfo_proc **procList, size_t *procCount);
 
 /////////////////////////////////////////////////////////////////////////////
 XBMCHelper::XBMCHelper()
   : m_errorStarting(false)
-  , m_mode(APPLE_REMOTE_DISABLED) // Shouldn't these values come from somewhere?
+  , m_mode(APPLE_REMOTE_DISABLED)
   , m_alwaysOn(false)
   , m_sequenceDelay(0)
 {
@@ -69,32 +73,67 @@ XBMCHelper::XBMCHelper()
 
   // Compute the configuration file name.
   m_configFile = getenv("HOME");
-  m_configFile += "/Library/Application Support/XBMC/XBMCHelper.conf";
+  m_configFile += RESOURCES_DIR "/XBMCHelper.conf";
+
+  // This is where we install the helper.
+  m_helperInstalledFile = getenv("HOME");
+  m_helperInstalledFile += RESOURCES_DIR "/XBMCHelper";
+
+  // This is where we store the installed version of helper.
+  m_helperInstalledVersionFile = getenv("HOME");
+  m_helperInstalledVersionFile += RESOURCES_DIR "/XBMCHelper.version";
+}
+
+/////////////////////////////////////////////////////////////////////////////
+bool XBMCHelper::EnsureLatestHelperInstalled()
+{
+  std::string appVersion = Cocoa_GetAppVersion();
+  std::string installedVersion = GetInstalledHelperVersion();
+
+  if (/* appVersion.length() > 0 && */ appVersion != installedVersion)
+  {
+    CLog::Log(LOGNOTICE, "Detected change in helper version, it was '%s,' and application version was '%s'.\n", installedVersion.c_str(), appVersion.c_str());
+
+    // Whack old helper.
+    DeleteFile(m_helperInstalledFile.c_str());
+
+    // Copy helper and ensure executable.
+    CopyFile(m_helperFile.c_str(), m_helperInstalledFile.c_str(), FALSE);
+    chmod(m_helperInstalledFile.c_str(), S_IRWXU | S_IRGRP | S_IROTH);
+
+    // Write version file.
+    WriteFile(m_helperInstalledVersionFile.c_str(), appVersion);
+    return true;
+  }
+
+  return false;
 }
 
 /////////////////////////////////////////////////////////////////////////////
 void XBMCHelper::Start()
 {
-  CLog::Log(LOGINFO, "Asking XBMCHelper to start");
+  if (GetProcessPid(XBMC_HELPER_PROGRAM) == -1)
+  {
+    CLog::Log(LOGNOTICE, "Asking XBMCHelper to start.");
 
-  string cmd = m_helperFile + " -x &";
-  system(cmd.c_str());
+    string cmd = "\"" + m_helperInstalledFile + "\" -x &";
+    system(cmd.c_str());
+  }
 }
 
 /////////////////////////////////////////////////////////////////////////////
 void XBMCHelper::Stop(bool hup)
 {
-  CLog::Log(LOGINFO, "Asking XBMCHelper to stop");
-
   // Kill the process.
   int pid = GetProcessPid(XBMC_HELPER_PROGRAM);
   if (pid != -1)
   {
+    CLog::Log(LOGNOTICE, "Asking XBMCHelper to %s.", hup ? "reconfigure" : "stop");
     kill(pid, (hup ? SIGHUP : SIGKILL));
   }
   else
   {
-    CLog::Log(LOGINFO, "XBMCHelper is not running");
+    CLog::Log(LOGNOTICE, "XBMCHelper is not running");
   }
 }
 
@@ -112,7 +151,7 @@ void XBMCHelper::Configure()
   m_alwaysOn = g_guiSettings.GetBool("appleremote.alwayson");
 
   // Don't let it enable if sofa control or remote buddy is around.
-  if (IsRemoteBuddyInstalled() || IsSofaControlRunning())
+  if (/* IsRemoteBuddyInstalled() || */ IsSofaControlRunning())
   {
     // If we were starting then remember error.
     if (oldMode == APPLE_REMOTE_DISABLED && m_mode != APPLE_REMOTE_DISABLED)
@@ -134,11 +173,50 @@ void XBMCHelper::Configure()
     sprintf(strDelay, "--timeout %d", m_sequenceDelay);
     strConfig += strDelay;
 
+    // Find out where we're running from.
+    char     given_path[2*MAXPATHLEN];
+    uint32_t path_size = 2*MAXPATHLEN;
+
+    int result = _NSGetExecutablePath(given_path, &path_size);
+    if (result == 0)
+    {
+      char real_path[2*MAXPATHLEN];
+      if (realpath(given_path, real_path) != NULL)
+      {
+        // Move backwards out to the application.
+        for (int x=0; x<4; x++)
+        {
+          for (int n=strlen(real_path)-1; real_path[n] != '/'; n--)
+            real_path[n] = '\0';
+        
+          real_path[strlen(real_path)-1] = '\0';
+        }
+      }
+      
+      strConfig += " --appLocation \"";
+      strConfig += real_path;
+      strConfig += "\"";
+    }
+    
     // Write the new configuration.
-    WriteFile(m_configFile.c_str(), strConfig);
+    WriteFile(m_configFile.c_str(), strConfig + "\n");
 
     // If process is running, kill -HUP to have it reload settings.
     Stop(TRUE);
+  }
+
+  // Make sure latest helper is installed.
+  if (EnsureLatestHelperInstalled() == true)
+  {
+    CLog::Log(LOGNOTICE, "Version of helper changed, uninstalling and stopping.");
+
+    // Things changed. Uninstall and stop.
+    Uninstall();
+    Stop();
+
+    // Make sure we reinstall/start if needed.
+    oldMode = APPLE_REMOTE_DISABLED;
+    oldAlwaysOn = false;
   }
 
   // Turning off?
@@ -160,50 +238,84 @@ void XBMCHelper::Configure()
 }
 
 /////////////////////////////////////////////////////////////////////////////
+std::string XBMCHelper::GetInstalledHelperVersion()
+{
+  if (::access(m_helperInstalledVersionFile.c_str(), R_OK) == 0)
+    return ReadFile(m_helperInstalledVersionFile.c_str());
+  else
+    return "???";
+}
+
+/////////////////////////////////////////////////////////////////////////////
 void XBMCHelper::Install()
 {
-  CLog::Log(LOGINFO, "Installing XBMCHelper at %s", m_launchAgentInstallFile.c_str());
-  
-  // Make sure directory exists.
-  string strDir = getenv("HOME");
-  strDir += "/Library/LaunchAgents";
-  CreateDirectory(strDir.c_str(), NULL);
+  if (::access(m_launchAgentLocalFile.c_str(), R_OK) == 0 && // Launch agent template exists
+      ::access(m_launchAgentInstallFile.c_str(), R_OK) != 0) // Not already installed.
+  {
+    // Make sure directory exists.
+    string strDir = getenv("HOME");
+    strDir += "/Library/LaunchAgents";
+    CreateDirectory(strDir.c_str(), NULL);
 
-  // Load template.
-  string plistData = ReadFile(m_launchAgentLocalFile.c_str());
+    // Load template.
+    string plistData = ReadFile(m_launchAgentLocalFile.c_str());
 
-  // Replace it in the file.
-  int start = plistData.find("${PATH}");
-  plistData.replace(start, 7, m_helperFile.c_str(), m_helperFile.length());
+    if (plistData != "")
+    {
+      CLog::Log(LOGNOTICE, "Installing XBMCHelper at %s", m_launchAgentInstallFile.c_str());
 
-  // Install it.
-  WriteFile(m_launchAgentInstallFile.c_str(), plistData);
+      // Replace it in the file.
+      int start = plistData.find("${PATH}");
+      plistData.replace(start, 7, m_helperInstalledFile.c_str(), m_helperInstalledFile.length());
 
-  // Load it.
-  string cmd = "/bin/launchctl load ";
-  cmd += m_launchAgentInstallFile;
-  system(cmd.c_str());
+      // Install it.
+      WriteFile(m_launchAgentInstallFile.c_str(), plistData);
+
+      // Load it.
+      string cmd = "/bin/launchctl load ";
+      cmd += m_launchAgentInstallFile;
+      system(cmd.c_str());
+    }
+    else
+    {
+      CLog::Log(LOGERROR, "Unable to install \"%s\". Launch agent template (%s) is corrupted.",
+                XBMC_HELPER_PROGRAM, m_launchAgentLocalFile.c_str());
+    }
+  }
+  else
+  {
+    if (::access(m_launchAgentLocalFile.c_str(), R_OK) != 0)
+      CLog::Log(LOGERROR, "Unable to install \"%s\". Unable to find launch agent template (%s).",
+                 XBMC_HELPER_PROGRAM, m_launchAgentLocalFile.c_str());
+  }
 }
 
 /////////////////////////////////////////////////////////////////////////////
 void XBMCHelper::Uninstall()
 {
-  CLog::Log(LOGINFO, "Uninstalling XBMCHelper from %s", m_launchAgentInstallFile.c_str());
-  
-  // Call the unloader.
-  string cmd = "/bin/launchctl unload ";
-  cmd += m_launchAgentInstallFile;
-  system(cmd.c_str());
+  if (::access(m_launchAgentInstallFile.c_str(), R_OK) == 0)
+  {
+    CLog::Log(LOGNOTICE, "Uninstalling XBMCHelper from %s.", m_launchAgentInstallFile.c_str());
 
-  // Remove the plist file.
-  DeleteFile(m_launchAgentInstallFile.c_str());
+    // Call the unloader.
+    string cmd = "/bin/launchctl unload ";
+    cmd += m_launchAgentInstallFile;
+    system(cmd.c_str());
+
+    // Remove the plist file.
+    DeleteFile(m_launchAgentInstallFile.c_str());
+  }
+  else
+  {
+    CLog::Log(LOGNOTICE, "Asked to uninstalling XBMCHelper, but it wasn't installed.");
+  }
 }
 
 /////////////////////////////////////////////////////////////////////////////
 bool XBMCHelper::IsRemoteBuddyInstalled()
 {
   // Check for existence of kext file.
-  return access("/System/Library/Extensions/RBIOKitHelper.kext", R_OK) != -1;
+  return ::access("/System/Library/Extensions/RBIOKitHelper.kext", R_OK) != -1;
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -218,6 +330,8 @@ std::string XBMCHelper::ReadFile(const char* fileName)
 {
   ifstream is;
   is.open(fileName);
+  if (!is.is_open())
+    return "";
 
   // Get length of file:
   is.seekg (0, ios::end);
@@ -248,7 +362,7 @@ void XBMCHelper::WriteFile(const char* fileName, const std::string& data)
   else
   {
     // Write new configuration.
-    out << data << endl;
+    out << data;
     out.flush();
     out.close();
   }
@@ -272,9 +386,9 @@ int XBMCHelper::GetProcessPid(const char* strProgram)
       //if (ignorePid == 0 || ignorePid != proc->kp_proc.p_pid)
       ret = proc->kp_proc.p_pid;
     }
-    
+
   }
-  
+
   free (mylist);
 
   return ret;

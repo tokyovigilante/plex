@@ -154,7 +154,7 @@ void XBVideoConfig::GetDesktopResolution(int &w, int &h) const
     w = devmode.dmPelsWidth;
     h = devmode.dmPelsHeight;
 #endif
-  
+
 #ifdef HAS_GLX
   Display * pRootDisplay = XOpenDisplay(NULL);
   if (pRootDisplay == NULL)
@@ -266,7 +266,7 @@ void XBVideoConfig::GetModes()
         m_ResInfo[m_iNumResolutions].iHeight = mode.h;
         if (mode.h>0 && mode.w>0 && out.hmm>0 && out.wmm>0)
         {
-          m_ResInfo[m_iNumResolutions].fPixelRatio = 
+          m_ResInfo[m_iNumResolutions].fPixelRatio =
             ((float)out.wmm/(float)mode.w) / (((float)out.hmm/(float)mode.h));
         }
         else
@@ -310,6 +310,8 @@ void XBVideoConfig::GetModes()
 {
    CLog::Log(LOGINFO, "Available videomodes:");
    SDL_Rect        **modes;
+
+#ifndef __APPLE__
 
    /* Get available fullscreen/hardware modes */
 #ifdef HAS_SDL_OPENGL
@@ -361,7 +363,8 @@ void XBVideoConfig::GetModes()
          bHasNTSC = true;
      }
    }
-   
+#endif
+
 #ifdef __APPLE__
    // Add other fullscreen settings for other monitors.
    int numDisplays = Cocoa_GetNumDisplays();
@@ -370,7 +373,7 @@ void XBVideoConfig::GetModes()
      int w, h;
      Cocoa_GetScreenResolutionOfAnotherScreen(i, &w, &h);
      CLog::Log(LOGINFO, "Extra display %d is %dx%d\n", i, w, h);
-     
+
      m_ResInfo[m_iNumResolutions].iScreen = i;
      m_ResInfo[m_iNumResolutions].iWidth = w;
      m_ResInfo[m_iNumResolutions].iHeight = h;
@@ -378,7 +381,7 @@ void XBVideoConfig::GetModes()
      m_ResInfo[m_iNumResolutions].iSubtitles = (int)(0.9*h);
      snprintf(m_ResInfo[m_iNumResolutions].strMode,
                sizeof(m_ResInfo[m_iNumResolutions].strMode),
-               "%d x %d (Full screen #%d)", w, h, i+1);
+               "%d x %d (Full Screen #%d)", w, h, i+1);
      if ((float)w / (float)h >= 1.59)
        m_ResInfo[m_iNumResolutions].dwFlags = D3DPRESENTFLAG_WIDESCREEN;
      else
@@ -392,7 +395,7 @@ void XBVideoConfig::GetModes()
        bHasNTSC = true;
    }
 #endif
-   
+
    g_graphicsContext.ResetScreenParameters(DESKTOP);
    g_graphicsContext.ResetScreenParameters(WINDOW);
 }
@@ -403,18 +406,18 @@ RESOLUTION XBVideoConfig::GetSafeMode() const
   // Get the desktop resolution to see what we're dealing with here.
   int w, h;
   GetDesktopResolution(w, h);
-  
+
   // If we've got quite a few pixels, go with 720p.
   if (w > 1280 && h > 720)
     return HDTV_720p;
-  
+
   // A few less pixels, but still enough for 480p.
   if (w > 854 && h > 420)
     return HDTV_480p_16x9;
-  
-  if (HasPAL()) 
+
+  if (HasPAL())
     return PAL_4x3;
-  
+
   return NTSC_4x3;
 }
 

@@ -115,8 +115,8 @@ CSettings::CSettings(void)
   g_stSettings.m_fPixelRatio = 1.0f;
 
   g_stSettings.m_pictureExtensions = ".png|.jpg|.jpeg|.bmp|.gif|.ico|.tif|.tiff|.tga|.pcx|.cbz|.zip|.cbr|.rar|.m3u|.dng|.nef";
-  g_stSettings.m_musicExtensions = ".nsv|.m4a|.flac|.aac|.strm|.pls|.rm|.rma|.mpa|.wav|.wma|.ogg|.mp3|.mp2|.m3u|.mod|.amf|.669|.dmf|.dsm|.far|.gdm|.imf|.it|.m15|.med|.okt|.s3m|.stm|.sfx|.ult|.uni|.xm|.sid|.ac3|.dts|.cue|.aif|.aiff|.wpl|.ape|.mac|.mpc|.mp+|.mpp|.shn|.zip|.rar|.wv|.nsf|.spc|.gym|.adplug|.adx|.dsp|.adp|.ymf|.ast|.afc|.hps|.xsp|.xwav|.waa|.wvs|.wam|.gcm|.idsp|.mpdsp|.mss|.spt|.rsd|.mid|.kar|.sap|.cmc|.cmr|.dmc|.mpt|.mpd|.rmt|.tmc|.tm8|.tm2";
-  g_stSettings.m_videoExtensions = ".m4v|.3gp|.nsv|.ts|.ty|.strm|.pls|.rm|.rmvb|.m3u|.ifo|.mov|.qt|.divx|.xvid|.bivx|.vob|.nrg|.img|.iso|.pva|.wmv|.asf|.asx|.ogm|.m2v|.avi|.bin|.dat|.mpg|.mpeg|.mp4|.mkv|.avc|.vp3|.svq3|.nuv|.viv|.dv|.fli|.flv|.rar|.001|.wpl|.zip|.vdr|.dvr-ms|.xsp|.m2t|.m2ts|.evo";
+  g_stSettings.m_musicExtensions = ".nsv|.m4a|.flac|.aac|.strm|.pls|.rm|.rma|.mpa|.wav|.wma|.ogg|.mp3|.mp2|.m3u|.mod|.amf|.669|.dmf|.dsm|.far|.gdm|.imf|.it|.m15|.med|.okt|.s3m|.stm|.sfx|.ult|.uni|.xm|.sid|.ac3|.dts|.cue|.aif|.aiff|.wpl|.ape|.mac|.mpc|.mp+|.mpp|.shn|.zip|.rar|.wv|.nsf|.spc|.gym|.adplug|.adx|.dsp|.adp|.ymf|.ast|.afc|.hps|.xsp|.xwav|.waa|.wvs|.wam|.gcm|.idsp|.mpdsp|.mss|.spt|.rsd|.mid|.kar|.sap|.cmc|.cmr|.dmc|.mpt|.mpd|.rmt|.tmc|.tm8|.tm2|.oga";
+  g_stSettings.m_videoExtensions = ".m4v|.3gp|.nsv|.ts|.ty|.strm|.pls|.rm|.rmvb|.m3u|.ifo|.mov|.qt|.divx|.xvid|.bivx|.vob|.nrg|.img|.iso|.pva|.wmv|.asf|.asx|.ogm|.m2v|.avi|.bin|.dat|.mpg|.mpeg|.mp4|.mkv|.avc|.vp3|.svq3|.nuv|.viv|.dv|.fli|.flv|.rar|.001|.wpl|.zip|.vdr|.dvr-ms|.xsp|.m2t|.m2ts|.evo|.ogv";
   // internal music extensions
   g_stSettings.m_musicExtensions += "|.sidstream|.oggstream|.nsfstream|.asapstream|.cdda";
 
@@ -178,7 +178,7 @@ CSettings::CSettings(void)
   g_advancedSettings.m_noDVDROM = false;
   g_advancedSettings.m_cachePath = "Z:\\";
   g_advancedSettings.m_displayRemoteCodes = false;
-  
+
   g_advancedSettings.m_videoStackRegExps.push_back("[ _\\.-]+cd[ _\\.-]*([0-9a-d]+)");
   g_advancedSettings.m_videoStackRegExps.push_back("[ _\\.-]+dvd[ _\\.-]*([0-9a-d]+)");
   g_advancedSettings.m_videoStackRegExps.push_back("[ _\\.-]+part[ _\\.-]*([0-9a-d]+)");
@@ -243,6 +243,7 @@ CSettings::CSettings(void)
 
 #ifdef HAS_SDL
   g_advancedSettings.m_fullScreen = false;
+  g_advancedSettings.m_fakeFullScreen = true;
 #endif
 
   g_advancedSettings.m_playlistRetries = 100;
@@ -294,7 +295,7 @@ bool CSettings::Load(bool& bXboxMediacenter, bool& bSettings)
   CIoSupport::RemapDriveLetter('P', szDevicePath);
 #else
   CIoSupport::RemapDriveLetter('P', (char*) strMnt.c_str());
-#endif  
+#endif
   CLog::Log(LOGNOTICE, "loading %s", GetSettingsFile().c_str());
   CStdString strFile=GetSettingsFile();
   if (!LoadSettings(strFile))
@@ -445,7 +446,7 @@ VECSOURCES *CSettings::GetSourcesFromType(const CStdString &type)
     // this nasty block of code is needed as we have to
     // call getlocaldrives after localize strings has been loaded
     bool bAdded=false;
-    for (unsigned int i=0;i<g_settings.m_fileSources.size();++i) 
+    for (unsigned int i=0;i<g_settings.m_fileSources.size();++i)
     {
       if (g_settings.m_fileSources[i].m_ignore)
       {
@@ -1214,6 +1215,10 @@ void CSettings::LoadAdvancedSettings()
   GetInteger(pRootElement, "busydialogdelay", g_advancedSettings.m_busyDialogDelay, 2000, 0, 5000);
   GetInteger(pRootElement, "playlistretries", g_advancedSettings.m_playlistRetries, 100, -1, 5000);
 
+#ifdef HAS_SDL
+  XMLUtils::GetBoolean(pRootElement, "fakefullscreen", g_advancedSettings.m_fakeFullScreen);
+#endif
+
   XMLUtils::GetBoolean(pRootElement,"rootovershoot",g_advancedSettings.m_bUseEvilB);
 
   //Tuxbox
@@ -1228,7 +1233,7 @@ void CSettings::LoadAdvancedSettings()
     GetInteger(pElement, "defaultsubmenu", g_advancedSettings.m_iTuxBoxDefaultSubMenu, 4, 1, 4);
     GetInteger(pElement, "defaultrootmenu", g_advancedSettings.m_iTuxBoxDefaultRootMenu, 0, 0, 4);
     GetInteger(pElement, "zapwaittime", g_advancedSettings.m_iTuxBoxZapWaitTime, 0, 0, 120);
-    
+
   }
 
   CStdString extraExtensions;
@@ -2172,7 +2177,7 @@ bool CSettings::SaveUPnPXml(const CStdString& strSettingsFile) const
   // create a new Element for UUID
   XMLUtils::SetString(pRoot, "UUID", g_settings.m_UPnPUUID);
   XMLUtils::SetString(pRoot, "UUIDRenderer", g_settings.m_UPnPUUIDRenderer);
-  
+
   VECSOURCES* pShares[3];
   pShares[0] = &g_settings.m_UPnPMusicSources;
   pShares[1] = &g_settings.m_UPnPVideoSources;
@@ -2189,8 +2194,8 @@ bool CSettings::SaveUPnPXml(const CStdString& strSettingsFile) const
       xmlType = TiXmlElement("video");
     if (k==2)
       xmlType = TiXmlElement("pictures");
-    
-    TiXmlNode* pNode = pRoot->InsertEndChild(xmlType);  
+
+    TiXmlNode* pNode = pRoot->InsertEndChild(xmlType);
 
     for (unsigned int j=0;j<(*pShares)[k].size();++j)
     {
@@ -2385,7 +2390,7 @@ bool CSettings::SetSources(TiXmlNode *root, const char *section, const VECSOURCE
         SetString(&source, "thumbnail", share.m_strThumbnailImage);
 
       sectionNode->InsertEndChild(source);
-    } 
+    }
   }
   return true;
 }
