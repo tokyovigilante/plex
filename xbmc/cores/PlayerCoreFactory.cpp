@@ -129,7 +129,9 @@ void CPlayerCoreFactory::GetPlayers( const CFileItem& item, VECPLAYERCORES &vecC
 
   if (url.GetProtocol().Equals("hdhomerun")
   ||  url.GetProtocol().Equals("myth")
-  ||  url.GetProtocol().Equals("cmyth"))
+  ||  url.GetProtocol().Equals("cmyth")
+/*  ||  url.GetProtocol().Equals("rtsp")*/)
+
     vecCores.push_back(EPC_DVDPLAYER);
 
   if (url.GetProtocol().Equals("lastfm") ||

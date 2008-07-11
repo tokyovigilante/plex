@@ -29,6 +29,7 @@
 #include "../../../FileSystem/cdioSupport.h"
 #include "DVDInputStreamTV.h"
 #include "FileItem.h"
+#include "DVDInputStreamRTSP.h"
 
 CDVDInputStream* CDVDFactoryInputStream::CreateInputStream(IDVDPlayer* pPlayer, const std::string& file, const std::string& content)
 {
@@ -49,9 +50,11 @@ CDVDInputStream* CDVDFactoryInputStream::CreateInputStream(IDVDPlayer* pPlayer, 
        || file.substr(0, 6) == "tcp://")
     return new CDVDInputStreamFFmpeg();
   else if(file.substr(0, 7) == "myth://"
-       || file.substr(0, 7) == "cmyth://"
-       || file.substr(0, 7) == "gmyth://")
+       || file.substr(0, 8) == "cmyth://"
+       || file.substr(0, 8) == "gmyth://")
     return new CDVDInputStreamTV();
+//  else if (file.substr(0, 7) == "rtsp://")
+	//return new CDVDInputStreamRTSP();
 
   //else if (item.IsShoutCast())
   //  /* this should be replaced with standard file as soon as ffmpeg can handle raw aac */

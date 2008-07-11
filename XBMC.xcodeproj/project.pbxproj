@@ -57,6 +57,8 @@
 		8DD76F790486A8DE00D96B5E /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 09AB6884FE841BABC02AAC07 /* CoreFoundation.framework */; };
 		9409C1EE0E01D696001626C3 /* ac3encoder.c in Sources */ = {isa = PBXBuildFile; fileRef = 9409C1E80E01D696001626C3 /* ac3encoder.c */; };
 		9409C1EF0E01D696001626C3 /* ringbuffer.c in Sources */ = {isa = PBXBuildFile; fileRef = 9409C1EC0E01D696001626C3 /* ringbuffer.c */; };
+		9443781C0E26DF8900FB8C08 /* DVDInputStreamRTSP.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9443781B0E26DF8900FB8C08 /* DVDInputStreamRTSP.cpp */; };
+		944379680E27096400FB8C08 /* RTSPTVDirectory.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 944379670E27096400FB8C08 /* RTSPTVDirectory.cpp */; };
 		94B9CC7E0E201D6200FA073E /* DVDDemuxMPEGTS.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 94B9CC7C0E201D6200FA073E /* DVDDemuxMPEGTS.cpp */; };
 		B1A921F40DF6D14F0024CC4F /* libbz2.1.0.4.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B1A921F30DF6D14F0024CC4F /* libbz2.1.0.4.dylib */; };
 		E306D12E0DDF7B590052C2AD /* XBMCHelper.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E306D12C0DDF7B590052C2AD /* XBMCHelper.cpp */; };
@@ -937,6 +939,10 @@
 		9409C1EB0E01D696001626C3 /* aften.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = aften.h; path = ../../lib/libaften/aften.h; sourceTree = "<group>"; };
 		9409C1EC0E01D696001626C3 /* ringbuffer.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ringbuffer.c; path = AC3Encoder/ringbuffer.c; sourceTree = "<group>"; };
 		9409C1ED0E01D696001626C3 /* ringbuffer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ringbuffer.h; path = AC3Encoder/ringbuffer.h; sourceTree = "<group>"; };
+		9443781A0E26DF8900FB8C08 /* DVDInputStreamRTSP.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DVDInputStreamRTSP.h; sourceTree = "<group>"; };
+		9443781B0E26DF8900FB8C08 /* DVDInputStreamRTSP.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = DVDInputStreamRTSP.cpp; sourceTree = "<group>"; };
+		944379660E27096400FB8C08 /* RTSPTVDirectory.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RTSPTVDirectory.h; sourceTree = "<group>"; };
+		944379670E27096400FB8C08 /* RTSPTVDirectory.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = RTSPTVDirectory.cpp; sourceTree = "<group>"; };
 		94B9CC7C0E201D6200FA073E /* DVDDemuxMPEGTS.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = DVDDemuxMPEGTS.cpp; sourceTree = "<group>"; };
 		94B9CC7D0E201D6200FA073E /* DVDDemuxMPEGTS.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DVDDemuxMPEGTS.h; sourceTree = "<group>"; };
 		B1A921F30DF6D14F0024CC4F /* libbz2.1.0.4.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libbz2.1.0.4.dylib; path = /opt/local/lib/libbz2.1.0.4.dylib; sourceTree = "<absolute>"; };
@@ -4147,6 +4153,8 @@
 				E38E15640D25F9FA00618676 /* DVDInputStreamMemory.h */,
 				E38E15650D25F9FA00618676 /* DVDInputStreamNavigator.cpp */,
 				E38E15660D25F9FA00618676 /* DVDInputStreamNavigator.h */,
+				9443781A0E26DF8900FB8C08 /* DVDInputStreamRTSP.h */,
+				9443781B0E26DF8900FB8C08 /* DVDInputStreamRTSP.cpp */,
 				E38E15670D25F9FA00618676 /* dvdnav */,
 				E38E15740D25F9FA00618676 /* DVDStateSerializer.cpp */,
 				E38E15750D25F9FA00618676 /* DVDStateSerializer.h */,
@@ -4549,6 +4557,8 @@
 				E38E17560D25F9FA00618676 /* SMBDirectory.h */,
 				E38E17580D25F9FA00618676 /* SndtrkDirectory.h */,
 				E38E17590D25F9FA00618676 /* StackDirectory.cpp */,
+				944379660E27096400FB8C08 /* RTSPTVDirectory.h */,
+				944379670E27096400FB8C08 /* RTSPTVDirectory.cpp */,
 				E38E175A0D25F9FA00618676 /* StackDirectory.h */,
 				E38E175B0D25F9FA00618676 /* UPnPDirectory.cpp */,
 				E38E175C0D25F9FA00618676 /* UPnPDirectory.h */,
@@ -6874,6 +6884,8 @@
 				9409C1EE0E01D696001626C3 /* ac3encoder.c in Sources */,
 				9409C1EF0E01D696001626C3 /* ringbuffer.c in Sources */,
 				94B9CC7E0E201D6200FA073E /* DVDDemuxMPEGTS.cpp in Sources */,
+				9443781C0E26DF8900FB8C08 /* DVDInputStreamRTSP.cpp in Sources */,
+				944379680E27096400FB8C08 /* RTSPTVDirectory.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
