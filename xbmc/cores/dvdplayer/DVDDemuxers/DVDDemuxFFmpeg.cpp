@@ -252,8 +252,8 @@ bool CDVDDemuxFFmpeg::Open(CDVDInputStream* pInput)
 	if (m_pInput->IsStreamType(DVDSTREAM_TYPE_RTSP))
 	{
 		// the actual stream to play is the internal rtspUrl
-		DVDInputStreamRTSP *tvServerFile = static_cast<DVDInputStreamRTSP*>(pInput);
-		strFile = tvServerFile->GetRTSPStream();
+		CDVDInputStreamRTSP *RTSPSource = static_cast<CDVDInputStreamRTSP*>(pInput);
+		strFile = RTSPSource->GetRTSPStream();
 	}
 	
 	if( m_pInput->IsStreamType(DVDSTREAM_TYPE_FFMPEG) || m_pInput->IsStreamType(DVDSTREAM_TYPE_RTSP))

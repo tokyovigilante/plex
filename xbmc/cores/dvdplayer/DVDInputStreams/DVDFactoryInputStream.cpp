@@ -44,7 +44,7 @@ CDVDInputStream* CDVDFactoryInputStream::CreateInputStream(IDVDPlayer* pPlayer, 
     return (new CDVDInputStreamNavigator(pPlayer));
   }
   else if(file.substr(0, 6) == "rtp://"
-       || file.substr(0, 7) == "rtsp://"
+      // || file.substr(0, 7) == "rtsp://"
        || file.substr(0, 6) == "sdp://"
        || file.substr(0, 6) == "udp://"
        || file.substr(0, 6) == "tcp://")
@@ -53,8 +53,8 @@ CDVDInputStream* CDVDFactoryInputStream::CreateInputStream(IDVDPlayer* pPlayer, 
        || file.substr(0, 8) == "cmyth://"
        || file.substr(0, 8) == "gmyth://")
     return new CDVDInputStreamTV();
-//  else if (file.substr(0, 7) == "rtsp://")
-	//return new CDVDInputStreamRTSP();
+  else if (file.substr(0, 7) == "rtsp://")
+	return new CDVDInputStreamRTSP();
 
   //else if (item.IsShoutCast())
   //  /* this should be replaced with standard file as soon as ffmpeg can handle raw aac */

@@ -59,6 +59,9 @@
 		9409C1EF0E01D696001626C3 /* ringbuffer.c in Sources */ = {isa = PBXBuildFile; fileRef = 9409C1EC0E01D696001626C3 /* ringbuffer.c */; };
 		9443781C0E26DF8900FB8C08 /* DVDInputStreamRTSP.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9443781B0E26DF8900FB8C08 /* DVDInputStreamRTSP.cpp */; };
 		944379680E27096400FB8C08 /* RTSPTVDirectory.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 944379670E27096400FB8C08 /* RTSPTVDirectory.cpp */; };
+		94437AFA0E2838E000FB8C08 /* GUIEPGGridContainer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 94437AF90E2838E000FB8C08 /* GUIEPGGridContainer.cpp */; };
+		94437AFF0E28395B00FB8C08 /* GUIEPGGridItem.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 94437AFE0E28395B00FB8C08 /* GUIEPGGridItem.cpp */; };
+		94437B070E283D1900FB8C08 /* GUIWindowEPG.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 94437B060E283D1900FB8C08 /* GUIWindowEPG.cpp */; };
 		94B9CC7E0E201D6200FA073E /* DVDDemuxMPEGTS.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 94B9CC7C0E201D6200FA073E /* DVDDemuxMPEGTS.cpp */; };
 		B1A921F40DF6D14F0024CC4F /* libbz2.1.0.4.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B1A921F30DF6D14F0024CC4F /* libbz2.1.0.4.dylib */; };
 		E306D12E0DDF7B590052C2AD /* XBMCHelper.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E306D12C0DDF7B590052C2AD /* XBMCHelper.cpp */; };
@@ -943,6 +946,12 @@
 		9443781B0E26DF8900FB8C08 /* DVDInputStreamRTSP.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = DVDInputStreamRTSP.cpp; sourceTree = "<group>"; };
 		944379660E27096400FB8C08 /* RTSPTVDirectory.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RTSPTVDirectory.h; sourceTree = "<group>"; };
 		944379670E27096400FB8C08 /* RTSPTVDirectory.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = RTSPTVDirectory.cpp; sourceTree = "<group>"; };
+		94437AF80E2838E000FB8C08 /* GUIEPGGridContainer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GUIEPGGridContainer.h; sourceTree = "<group>"; };
+		94437AF90E2838E000FB8C08 /* GUIEPGGridContainer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = GUIEPGGridContainer.cpp; sourceTree = "<group>"; };
+		94437AFD0E28395B00FB8C08 /* GUIEPGGridItem.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GUIEPGGridItem.h; sourceTree = "<group>"; };
+		94437AFE0E28395B00FB8C08 /* GUIEPGGridItem.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = GUIEPGGridItem.cpp; sourceTree = "<group>"; };
+		94437B050E283D1900FB8C08 /* GUIWindowEPG.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GUIWindowEPG.h; sourceTree = "<group>"; };
+		94437B060E283D1900FB8C08 /* GUIWindowEPG.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = GUIWindowEPG.cpp; sourceTree = "<group>"; };
 		94B9CC7C0E201D6200FA073E /* DVDDemuxMPEGTS.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = DVDDemuxMPEGTS.cpp; sourceTree = "<group>"; };
 		94B9CC7D0E201D6200FA073E /* DVDDemuxMPEGTS.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DVDDemuxMPEGTS.h; sourceTree = "<group>"; };
 		B1A921F30DF6D14F0024CC4F /* libbz2.1.0.4.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libbz2.1.0.4.dylib; path = /opt/local/lib/libbz2.1.0.4.dylib; sourceTree = "<absolute>"; };
@@ -1147,7 +1156,6 @@
 		E38E14400D25F9F900618676 /* LocalizeStrings.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LocalizeStrings.h; sourceTree = "<group>"; };
 		E38E14430D25F9F900618676 /* PackedTexture.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = PackedTexture.cpp; sourceTree = "<group>"; };
 		E38E14440D25F9F900618676 /* PackedTexture.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PackedTexture.h; sourceTree = "<group>"; };
-		E38E14450D25F9F900618676 /* ReadMe.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = ReadMe.txt; sourceTree = "<group>"; };
 		E38E14460D25F9F900618676 /* Shader.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Shader.cpp; sourceTree = "<group>"; };
 		E38E14470D25F9F900618676 /* Shader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Shader.h; sourceTree = "<group>"; };
 		E38E14480D25F9F900618676 /* SkinInfo.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SkinInfo.cpp; sourceTree = "<group>"; };
@@ -3167,6 +3175,10 @@
 				E38E13DF0D25F9F900618676 /* GUIDialog.h */,
 				E38E13E00D25F9F900618676 /* GUIEditControl.cpp */,
 				E38E13E10D25F9F900618676 /* GUIEditControl.h */,
+				94437AF80E2838E000FB8C08 /* GUIEPGGridContainer.h */,
+				94437AF90E2838E000FB8C08 /* GUIEPGGridContainer.cpp */,
+				94437AFD0E28395B00FB8C08 /* GUIEPGGridItem.h */,
+				94437AFE0E28395B00FB8C08 /* GUIEPGGridItem.cpp */,
 				E38E13E20D25F9F900618676 /* GUIFadeLabelControl.cpp */,
 				E38E13E30D25F9F900618676 /* GUIFadeLabelControl.h */,
 				E38E13E40D25F9F900618676 /* GUIFixedListContainer.cpp */,
@@ -3264,7 +3276,6 @@
 				E38E14400D25F9F900618676 /* LocalizeStrings.h */,
 				E38E14430D25F9F900618676 /* PackedTexture.cpp */,
 				E38E14440D25F9F900618676 /* PackedTexture.h */,
-				E38E14450D25F9F900618676 /* ReadMe.txt */,
 				E38E14460D25F9F900618676 /* Shader.cpp */,
 				E38E14470D25F9F900618676 /* Shader.h */,
 				E38E14480D25F9F900618676 /* SkinInfo.cpp */,
@@ -3532,6 +3543,8 @@
 				E38E17FF0D25F9FA00618676 /* GUIViewStateVideo.cpp */,
 				E38E18000D25F9FA00618676 /* GUIViewStateVideo.h */,
 				E38E18020D25F9FA00618676 /* GUIWindowBuddies.h */,
+				94437B050E283D1900FB8C08 /* GUIWindowEPG.h */,
+				94437B060E283D1900FB8C08 /* GUIWindowEPG.cpp */,
 				E38E18030D25F9FA00618676 /* GUIWindowFileManager.cpp */,
 				E38E18040D25F9FA00618676 /* GUIWindowFileManager.h */,
 				E38E18050D25F9FA00618676 /* GUIWindowFullScreen.cpp */,
@@ -6886,6 +6899,9 @@
 				94B9CC7E0E201D6200FA073E /* DVDDemuxMPEGTS.cpp in Sources */,
 				9443781C0E26DF8900FB8C08 /* DVDInputStreamRTSP.cpp in Sources */,
 				944379680E27096400FB8C08 /* RTSPTVDirectory.cpp in Sources */,
+				94437AFA0E2838E000FB8C08 /* GUIEPGGridContainer.cpp in Sources */,
+				94437AFF0E28395B00FB8C08 /* GUIEPGGridItem.cpp in Sources */,
+				94437B070E283D1900FB8C08 /* GUIWindowEPG.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

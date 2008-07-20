@@ -17,43 +17,43 @@
 #define NETWORK_ERROR -1 
 #define NETWORK_OK 0
 
-bool DVDInputStreamRTSP::Open(const char* strFile, const std::string &content)
+bool CDVDInputStreamRTSP::Open(const char* strFile, const std::string &content)
 {
 	Close();
 	
 	CStdString path(strFile);
 	this->RTSPFileUrl = path;
 
-	this->RTSPServerSocket = SocketConnect(path, 8554);
-	if ((this->RTSPServerSocket) < 0)
+	//this->RTSPServerSocket = SocketConnect(path, 8554);
+	//if ((this->RTSPServerSocket) < 0)
 	{
-		return false;
+	//	return false;
 	}
 	return true;
 }
 
-const CStdString DVDInputStreamRTSP::GetRTSPStream()
+const CStdString CDVDInputStreamRTSP::GetRTSPStream()
 {
 	return this->RTSPFileUrl;
 }
 
 
-void DVDInputStreamRTSP::Close()
+void CDVDInputStreamRTSP::Close()
 {
 	
 }
 
-DVDInputStreamRTSP::DVDInputStreamRTSP() : CDVDInputStream(DVDSTREAM_TYPE_RTSP)
+CDVDInputStreamRTSP::CDVDInputStreamRTSP() : CDVDInputStream(DVDSTREAM_TYPE_RTSP)
 {
 	
 }
 
-DVDInputStreamRTSP::~DVDInputStreamRTSP()
+CDVDInputStreamRTSP::~CDVDInputStreamRTSP()
 {
 	Close();
 }
 
-int DVDInputStreamRTSP::Read(BYTE* buf, int buf_size)
+int CDVDInputStreamRTSP::Read(BYTE* buf, int buf_size)
 {
 	unsigned int ret = 0;
 	if (RTSPFileUrl) ret = read(this->RTSPServerSocket, buf, buf_size);
@@ -63,20 +63,30 @@ int DVDInputStreamRTSP::Read(BYTE* buf, int buf_size)
 	return ret;
 }
 
-__int64 DVDInputStreamRTSP::Seek(__int64 offset, int whence)
+__int64 CDVDInputStreamRTSP::Seek(__int64 offset, int whence)
 {
 	return -1;
 }
 
+bool CDVDInputStreamRTSP::IsEOF()
+{
+	return false;
+}
+
+__int64 CDVDInputStreamRTSP::GetLength()
+{
+	return 0;
+}
+
 #pragma Stream Access
 
-int DVDInputStreamRTSP::DVDInputStreamRTSP::InitSocket()
+int CDVDInputStreamRTSP::CDVDInputStreamRTSP::InitSocket()
 {
   assert(this->RTSPServerSocket > 0);
   return 0;
 }
 
-int DVDInputStreamRTSP::SocketConnect(const char *host, int port)
+int CDVDInputStreamRTSP::SocketConnect(const char *host, int port)
 {
 	struct hostent *servhost;
 	struct sockaddr_in server;
@@ -111,7 +121,7 @@ int DVDInputStreamRTSP::SocketConnect(const char *host, int port)
 	return sock;
 }
 
-void DVDInputStreamRTSP::Disconnect()
+void CDVDInputStreamRTSP::Disconnect()
 {
 	//SendCommand("CloseConnection", NULL);
 	// Send/receive, then cleanup:
