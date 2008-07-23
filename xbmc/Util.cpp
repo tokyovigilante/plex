@@ -1757,14 +1757,13 @@ bool CUtil::IsOnLAN(const CStdString& strPath)
   CURL url(strPath);
   if(IsInRAR(strPath) || IsInZIP(strPath))
     return CUtil::IsOnLAN(url.GetHostName());
-
+  
   if(!IsRemote(strPath))
     return false;
 
   CStdString host = url.GetHostName();
   if(host.length() == 0)
     return false;
-
 
   unsigned long address = ntohl(inet_addr(host.c_str()));
   if(address == INADDR_NONE)
@@ -1781,7 +1780,7 @@ bool CUtil::IsOnLAN(const CStdString& strPath)
     if(host.find('.') == string::npos)
       return true;
   }
-  else
+  else if (g_application.getNetwork().GetFirstConnectedInterface() != 0)
   {
     // check if we are on the local subnet
 #ifdef HAS_LINUX_NETWORK

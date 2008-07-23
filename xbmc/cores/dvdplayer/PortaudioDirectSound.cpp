@@ -315,8 +315,6 @@ DWORD PortAudioDirectSound::AddPackets(unsigned char *data, DWORD len)
 	  SAFELY(Pa_WriteStream(m_pStream, pcmPtr, samplesToWrite));	  
 	  return samplesToWrite * m_uiChannels * (m_uiBitsPerSample/8);
   }
-  
-  
 }
 
 //***********************************************************************************************
@@ -325,16 +323,20 @@ FLOAT PortAudioDirectSound::GetDelay()
   if (m_pStream == 0)
     return 0.0;
   
-  const PaStreamInfo* streamInfo = Pa_GetStreamInfo(m_pStream);
-  FLOAT delay = (FLOAT)streamInfo->outputLatency;
+  // This always returns zero, so it's totally useless.
+  //const PaStreamInfo* streamInfo = Pa_GetStreamInfo(m_pStream);
+  //FLOAT delay = (FLOAT)streamInfo->outputLatency;
+  
+  // For now hardwire to about +15ms from "base", which is what we're observing.
+  FLOAT delay = 0.015;
 
   if (g_audioContext.IsAC3EncoderActive())
     delay += 0.049;
   else if (m_bEncodeAC3)
-	delay += 0.072;
+    delay += 0.072; // 3072/48000 = 0.064 (two AC3 packets plus 8ms)
   else
     delay += 0.008;
-
+  
   return delay;
 }
 

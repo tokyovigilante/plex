@@ -58,6 +58,7 @@ class XBMCHelper
   int  m_mode;
   int  m_sequenceDelay;
   bool m_errorStarting;
+  bool m_secureInput;
 
   std::string m_configFile;
   std::string m_launchAgentLocalFile;

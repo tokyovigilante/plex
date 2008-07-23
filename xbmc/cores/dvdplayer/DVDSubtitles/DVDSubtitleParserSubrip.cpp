@@ -101,6 +101,8 @@ int CDVDSubtitleParserSubrip::ParseFile()
 
         while (m_pStream->ReadLine(line, sizeof(line)))
         {
+          pLineStart = line;
+          
           // trim
           while (pLineStart[0] == ' ') pLineStart++;
 
@@ -109,7 +111,7 @@ int CDVDSubtitleParserSubrip::ParseFile()
 
           CStdStringW strUTF16;
           CStdStringA strUTF8;
-          g_charsetConverter.subtitleCharsetToW(line, strUTF16);
+          g_charsetConverter.subtitleCharsetToW(pLineStart, strUTF16);
           g_charsetConverter.wToUTF8(strUTF16, strUTF8);
 
           // add a new text element to our container

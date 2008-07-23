@@ -363,6 +363,11 @@ void CDetectDVDMedia::SetNewDVDShareUrl( const CStdString& strNewUrl, bool bCDDA
 
 DWORD CDetectDVDMedia::GetTrayState()
 {
+#ifdef __APPLE__
+  if (g_advancedSettings.m_enableOpticalMedia == false)
+    return TRAY_CLOSED_NO_MEDIA;
+#endif
+  
 #ifdef HAS_UNDOCUMENTED
   HalReadSMCTrayState(&m_dwTrayState, &m_dwTrayCount);
 #endif

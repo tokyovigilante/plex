@@ -49,6 +49,8 @@ public:
     {
     }
     
+    virtual const char* ToString() { return ""; }
+    
     bool IsElementType(ElementType type) { return (type == m_type); }
     
     CElement* pNext;
@@ -70,6 +72,8 @@ public:
       }
     }
     
+    virtual const char* ToString() { return m_text; }
+    
     virtual ~CElementText()
     {
       if (m_text) free(m_text);
@@ -85,6 +89,8 @@ public:
       bItalic = false;
       bBold = false;
     }
+    
+    virtual const char* ToString() { return "<property>"; }
     
   public:
     bool bItalic;
@@ -123,6 +129,17 @@ public:
       // Next element in list.
       m_pEnd->pNext = pElement;
       m_pEnd = pElement;
+    }
+  }
+  
+  void Dump()
+  {
+    CElement* p = m_pHead;
+    
+    while (p)
+    {
+      printf("  * %s\n", p->ToString());
+      p = p->pNext;
     }
   }
   

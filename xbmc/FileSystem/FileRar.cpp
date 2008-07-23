@@ -18,7 +18,7 @@
  *  http://www.gnu.org/copyleft/gpl.html
  *
  */
-
+#undef SILENT
 #include "stdafx.h"
 #include "FileRar.h"
 #include <sys/stat.h>

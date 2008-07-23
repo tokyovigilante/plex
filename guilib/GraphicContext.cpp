@@ -27,6 +27,7 @@
 #include "Settings.h"
 #include "GUISettings.h"
 #include "XBVideoConfig.h"
+#include "XBPython.h"
 #include "../xbmc/utils/SingleLock.h"
 #include "../xbmc/Application.h"
 #ifdef HAS_XBOX_D3D
@@ -1398,8 +1399,17 @@ bool CGraphicContext::ToggleFullScreenRoot ()
 
   g_fontManager.ReloadTTFFonts();
 
-  if (g_graphicsContext.IsFullScreenVideo() == false)
+  // FIXME: We should always reload the skin, but we can't because a running
+  // Python script doesn't like it. For now, work around by not reloading
+  // if there is a script running. The result: messed up font sizes. There
+  // could be a less drastic solution for this problem.
+  //
+  if (g_graphicsContext.IsFullScreenVideo() == false &&
+      g_pythonParser.ScriptsSize() == 0)
+  {
     g_application.ReloadSkin();
+  }
+  
   return  m_bFullScreenRoot;
 }
 

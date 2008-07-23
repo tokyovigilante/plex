@@ -176,6 +176,7 @@ CSettings::CSettings(void)
   g_advancedSettings.m_cddbAddress = "freedb.freedb.org";
   g_advancedSettings.m_usePCDVDROM = false;
   g_advancedSettings.m_noDVDROM = false;
+  g_advancedSettings.m_enableOpticalMedia = false;
   g_advancedSettings.m_cachePath = "Z:\\";
   g_advancedSettings.m_displayRemoteCodes = false;
 
@@ -1208,6 +1209,7 @@ void CSettings::LoadAdvancedSettings()
 
   XMLUtils::GetBoolean(pRootElement, "usepcdvdrom", g_advancedSettings.m_usePCDVDROM);
   XMLUtils::GetBoolean(pRootElement, "nodvdrom", g_advancedSettings.m_noDVDROM);
+  XMLUtils::GetBoolean(pRootElement, "enableopticalmedia", g_advancedSettings.m_enableOpticalMedia);
   XMLUtils::GetBoolean(pRootElement, "usemultipaths", g_advancedSettings.m_useMultipaths);
   XMLUtils::GetBoolean(pRootElement, "disablemodchipdetection", g_advancedSettings.m_DisableModChipDetection);
 

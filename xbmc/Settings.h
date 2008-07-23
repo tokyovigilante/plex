@@ -172,6 +172,7 @@ public:
     CStdString m_cddbAddress;
     bool m_usePCDVDROM;
     bool m_noDVDROM;
+    bool m_enableOpticalMedia;
     CStdString m_cachePath;
     bool m_displayRemoteCodes;
     CStdStringArray m_videoStackRegExps;

@@ -18,6 +18,7 @@
  *  http://www.gnu.org/copyleft/gpl.html
  *
  */
+#undef SILENT
 
 #include "stdafx.h"
 #include "RarManager.h"

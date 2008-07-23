@@ -44,10 +44,10 @@ using namespace std;
 
 XBMCHelper g_xbmcHelper;
 
-#define XBMC_HELPER_PROGRAM "XBMCHelper"
+#define PLEX_HELPER_PROGRAM "PlexHelper"
 #define SOFA_CONTROL_PROGRAM "Sofa Control"
-#define XBMC_LAUNCH_PLIST "org.xbmc.helper.plist"
-#define RESOURCES_DIR "/Library/Application Support/XBMC"
+#define XBMC_LAUNCH_PLIST "com.plexapp.helper.plist"
+#define RESOURCES_DIR "/Library/Application Support/Plex"
 
 static int GetBSDProcessList(kinfo_proc **procList, size_t *procCount);
 
@@ -62,7 +62,7 @@ XBMCHelper::XBMCHelper()
   CUtil::GetHomePath(homePath);
 
   // Compute the helper filename.
-  m_helperFile = homePath + "/XBMCHelper";
+  m_helperFile = homePath + "/" PLEX_HELPER_PROGRAM;
 
   // Compute the local (pristine) launch agent filename.
   m_launchAgentLocalFile = homePath + "/" XBMC_LAUNCH_PLIST;
@@ -73,15 +73,15 @@ XBMCHelper::XBMCHelper()
 
   // Compute the configuration file name.
   m_configFile = getenv("HOME");
-  m_configFile += RESOURCES_DIR "/XBMCHelper.conf";
+  m_configFile += RESOURCES_DIR "/" PLEX_HELPER_PROGRAM ".conf";
 
   // This is where we install the helper.
   m_helperInstalledFile = getenv("HOME");
-  m_helperInstalledFile += RESOURCES_DIR "/XBMCHelper";
+  m_helperInstalledFile += RESOURCES_DIR "/" PLEX_HELPER_PROGRAM;
 
   // This is where we store the installed version of helper.
   m_helperInstalledVersionFile = getenv("HOME");
-  m_helperInstalledVersionFile += RESOURCES_DIR "/XBMCHelper.version";
+  m_helperInstalledVersionFile += RESOURCES_DIR "/" PLEX_HELPER_PROGRAM ".version";
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -90,7 +90,8 @@ bool XBMCHelper::EnsureLatestHelperInstalled()
   std::string appVersion = Cocoa_GetAppVersion();
   std::string installedVersion = GetInstalledHelperVersion();
 
-  if (/* appVersion.length() > 0 && */ appVersion != installedVersion)
+  if (/* appVersion.length() > 0 && */ appVersion != installedVersion ||
+      ::access(m_helperInstalledFile.c_str(), R_OK) != 0)
   {
     CLog::Log(LOGNOTICE, "Detected change in helper version, it was '%s,' and application version was '%s'.\n", installedVersion.c_str(), appVersion.c_str());
 
@@ -112,9 +113,9 @@ bool XBMCHelper::EnsureLatestHelperInstalled()
 /////////////////////////////////////////////////////////////////////////////
 void XBMCHelper::Start()
 {
-  if (GetProcessPid(XBMC_HELPER_PROGRAM) == -1)
+  if (GetProcessPid(PLEX_HELPER_PROGRAM) == -1)
   {
-    CLog::Log(LOGNOTICE, "Asking XBMCHelper to start.");
+    CLog::Log(LOGNOTICE, "Asking PlexHelper to start.");
 
     string cmd = "\"" + m_helperInstalledFile + "\" -x &";
     system(cmd.c_str());
@@ -125,15 +126,15 @@ void XBMCHelper::Start()
 void XBMCHelper::Stop(bool hup)
 {
   // Kill the process.
-  int pid = GetProcessPid(XBMC_HELPER_PROGRAM);
+  int pid = GetProcessPid(PLEX_HELPER_PROGRAM);
   if (pid != -1)
   {
-    CLog::Log(LOGNOTICE, "Asking XBMCHelper to %s.", hup ? "reconfigure" : "stop");
+    CLog::Log(LOGNOTICE, "Asking PlexHelper to %s.", hup ? "reconfigure" : "stop");
     kill(pid, (hup ? SIGHUP : SIGKILL));
   }
   else
   {
-    CLog::Log(LOGNOTICE, "XBMCHelper is not running");
+    CLog::Log(LOGNOTICE, "PlexHelper is not running");
   }
 }
 
@@ -143,12 +144,14 @@ void XBMCHelper::Configure()
   int oldMode = m_mode;
   int oldDelay = m_sequenceDelay;
   int oldAlwaysOn = m_alwaysOn;
+  int oldSecureInput = m_secureInput;
 
   // Read the new configuration.
   m_errorStarting = false;
   m_mode = g_guiSettings.GetInt("appleremote.mode");
   m_sequenceDelay = g_guiSettings.GetInt("appleremote.sequencetime");
   m_alwaysOn = g_guiSettings.GetBool("appleremote.alwayson");
+  m_secureInput = g_guiSettings.GetBool("appleremote.secureinput");
 
   // Don't let it enable if sofa control or remote buddy is around.
   if (/* IsRemoteBuddyInstalled() || */ IsSofaControlRunning())
@@ -162,17 +165,23 @@ void XBMCHelper::Configure()
   }
 
   // New configuration.
-  if (oldMode != m_mode || oldDelay != m_sequenceDelay)
+  if (oldMode != m_mode || oldDelay != m_sequenceDelay || oldSecureInput != m_secureInput)
   {
     // Build a new config string.
     std::string strConfig;
     if (m_mode == APPLE_REMOTE_UNIVERSAL)
       strConfig = "--universal ";
 
+    // Delay.
     char strDelay[64];
-    sprintf(strDelay, "--timeout %d", m_sequenceDelay);
+    sprintf(strDelay, "--timeout %d ", m_sequenceDelay);
     strConfig += strDelay;
 
+    // Secure input.
+    char strSecure[64];
+    sprintf(strDelay, "--secureInput %d ", m_secureInput ? 1 : 0);
+    strConfig += strDelay;
+    
     // Find out where we're running from.
     char     given_path[2*MAXPATHLEN];
     uint32_t path_size = 2*MAXPATHLEN;
@@ -193,7 +202,7 @@ void XBMCHelper::Configure()
         }
       }
       
-      strConfig += " --appLocation \"";
+      strConfig += "--appLocation \"";
       strConfig += real_path;
       strConfig += "\"";
     }
@@ -262,7 +271,7 @@ void XBMCHelper::Install()
 
     if (plistData != "")
     {
-      CLog::Log(LOGNOTICE, "Installing XBMCHelper at %s", m_launchAgentInstallFile.c_str());
+      CLog::Log(LOGNOTICE, "Installing PlexHelper at %s", m_launchAgentInstallFile.c_str());
 
       // Replace it in the file.
       int start = plistData.find("${PATH}");
@@ -279,14 +288,14 @@ void XBMCHelper::Install()
     else
     {
       CLog::Log(LOGERROR, "Unable to install \"%s\". Launch agent template (%s) is corrupted.",
-                XBMC_HELPER_PROGRAM, m_launchAgentLocalFile.c_str());
+                PLEX_HELPER_PROGRAM, m_launchAgentLocalFile.c_str());
     }
   }
   else
   {
     if (::access(m_launchAgentLocalFile.c_str(), R_OK) != 0)
       CLog::Log(LOGERROR, "Unable to install \"%s\". Unable to find launch agent template (%s).",
-                 XBMC_HELPER_PROGRAM, m_launchAgentLocalFile.c_str());
+                 PLEX_HELPER_PROGRAM, m_launchAgentLocalFile.c_str());
   }
 }
 
@@ -295,7 +304,7 @@ void XBMCHelper::Uninstall()
 {
   if (::access(m_launchAgentInstallFile.c_str(), R_OK) == 0)
   {
-    CLog::Log(LOGNOTICE, "Uninstalling XBMCHelper from %s.", m_launchAgentInstallFile.c_str());
+    CLog::Log(LOGNOTICE, "Uninstalling PlexHelper from %s.", m_launchAgentInstallFile.c_str());
 
     // Call the unloader.
     string cmd = "/bin/launchctl unload ";
@@ -307,7 +316,7 @@ void XBMCHelper::Uninstall()
   }
   else
   {
-    CLog::Log(LOGNOTICE, "Asked to uninstalling XBMCHelper, but it wasn't installed.");
+    CLog::Log(LOGNOTICE, "Asked to uninstalling PlexHelper, but it wasn't installed.");
   }
 }
 
@@ -357,7 +366,7 @@ void XBMCHelper::WriteFile(const char* fileName, const std::string& data)
   ofstream out(fileName);
   if (!out)
   {
-    CLog::Log(LOGERROR, "XBMCHelper: Unable to open file '%s'", fileName);
+    CLog::Log(LOGERROR, "PlexHelper: Unable to open file '%s'", fileName);
   }
   else
   {

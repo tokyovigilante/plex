@@ -23,11 +23,11 @@
  *  OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  *  SUCH DAMAGE.
  *
- * g++ -o XBMCHelper AppleRemote.cpp -framework CoreFoundation -framework Carbon -framework IOKit -framework ForceFeedback
  */
-#define APPNAME  "OSXBMC.app"
-#define PROGNAME "XBMCHelper"
-#define PROGVERS "1.1.0"
+#define BINARY_NAME   "Plex"
+#define APPNAME       "Plex.app"
+#define PROGNAME      "PlexHelper"
+#define PROGVERS      "1.1.1"
 
 #include <stdio.h>
 #include <getopt.h>
@@ -71,15 +71,16 @@ using namespace std;
 static struct option long_options[] = 
 {
     { "help",       no_argument,         0, 'h' },
-		{ "server",     required_argument,   0, 's' },
-		{ "universal",  no_argument,         0, 'u' },
-		{ "timeout",    required_argument,   0, 't' },
-		{ "verbose",    no_argument,         0, 'v' },
+    { "server",     required_argument,   0, 's' },
+    { "universal",  no_argument,         0, 'u' },
+    { "timeout",    required_argument,   0, 't' },
+    { "verbose",    no_argument,         0, 'v' },
     { "externalConfig", no_argument,     0, 'x' },
     { "appLocation", required_argument,  0, 'a' },
+    { "secureInput", required_argument,  0, 'i' },
     { 0, 0, 0, 0 },
 };
-static const char *options = "hsutvxa";
+static const char *options = "hsutvxai";
  
 const int REMOTE_SWITCH_COOKIE = 19;
 const int IGNORE_CODE = 39;
@@ -137,6 +138,7 @@ int sequenceTimeout = 500;
 bool verbose = false;
 string serverAddress = "127.0.0.1";
 string appLocation = "/Applications";
+bool secureInput = false;
 CAddress* pServer = 0;
 int sockfd;
 
@@ -161,7 +163,6 @@ class ReactorAppleRemote : public Reactor
   virtual void onCmd(int data)
   { 
     ButtonConfig   config = buttonConfigMap[data & kButtonMask];
-    CPacketBUTTON* pButton = 0;
     char           strButton[16];
     int            button = data & kButtonMask;
 
@@ -170,7 +171,7 @@ class ReactorAppleRemote : public Reactor
     if (button == kRemoteButtonMenu)
 		{
 			// Make sure XBMC is running.
-			if (isProgramRunning("XBMC") == false && serverAddress == "127.0.0.1")
+			if (isProgramRunning(BINARY_NAME) == false && serverAddress == "127.0.0.1")
 			{
 				startXBMC();
         return;
@@ -291,8 +292,8 @@ void            setupAndRun();
 void usage()
 {
     printf("%s (version %s)\n", PROGNAME, PROGVERS);
-    printf("   Copyright (c) 2008 ESC Velocity. All Rights Reserved.\n");
-    printf("   Sends Apple Remote events to XBMC.\n\n");
+    printf("   Copyright (c) 2008 Plex. All Rights Reserved.\n");
+    printf("   Sends controller events to Plex.\n\n");
     printf("Usage: %s [OPTIONS...]\n\nOptions:\n", PROGNAME);
     printf("  -h, --help               Print this help message and exit.\n");
     printf("  -s, --server <addr>      Send events to the specified IP.\n");
@@ -365,11 +366,9 @@ bool isProgramRunning(const char* strProgram, int ignorePid)
 
 void startXBMC()
 {
-	printf("Trying to start OSXBMC.\n");
+	printf("Trying to start Plex.\n");
 	
-	int result = -1;
-  string app = appLocation + "/OSXBMC.app";
-  
+  string app = appLocation + "/" APPNAME;
   string strCmd = "open ";
 	strCmd += app;
 	strCmd += "&";
@@ -479,8 +478,12 @@ void doRun(IOHIDDeviceInterface **hidDeviceInterface, CFMutableArrayRef cookies)
   if (ioReturnValue == KERN_SUCCESS)
   {
     processQueue(hidDeviceInterface, cookies);
-    printf("Disabling secure input.\n");
-    DisableSecureEventInput();
+    
+    if (secureInput == true)
+    {
+      DisableSecureEventInput();
+      printf("Disabling secure input.\n");
+    }
 
     ioReturnValue = (*hidDeviceInterface)->close(hidDeviceInterface);
   }
@@ -547,11 +550,14 @@ void createHIDDeviceInterface(io_object_t hidDevice, IOHIDDeviceInterface ***hdi
     IOReturn              ioReturnValue = kIOReturnSuccess;
 
     // Enable secure input. This ensures we don't lose exclusivity.
-    printf("Enabling secure input.\n");
-    EnableSecureEventInput();
+    if (secureInput)
+    {
+      printf("Enabling secure input.\n");
+      EnableSecureEventInput();
+    }
 
     ioReturnValue = IOObjectGetClass(hidDevice, className);
-    print_errmsg_if_io_err(ioReturnValue, "Failed to get class name.");
+    print_errmsg_if_io_err(ioReturnValue, (char* )"Failed to get class name.");
 
     ioReturnValue = IOCreatePlugInInterfaceForService(
                         hidDevice,
@@ -567,7 +573,7 @@ void createHIDDeviceInterface(io_object_t hidDevice, IOHIDDeviceInterface ***hdi
                         plugInInterface,
                         CFUUIDGetUUIDBytes(kIOHIDDeviceInterfaceID),
                         (LPVOID*)hdi);
-    print_errmsg_if_err(plugInResult != S_OK, "Failed to create device interface.\n");
+    print_errmsg_if_err(plugInResult != S_OK, (char* )"Failed to create device interface.\n");
 
     (*plugInInterface)->Release(plugInInterface);
 }
@@ -592,7 +598,7 @@ void setupAndRun()
       createHIDDeviceInterface(hidDevice, &hidDeviceInterface);
       cookies = getHIDCookies((IOHIDDeviceInterface122 **)hidDeviceInterface);
       ioReturnValue = IOObjectRelease(hidDevice);
-      print_errmsg_if_io_err(ioReturnValue, "Failed to release HID.");
+      print_errmsg_if_io_err(ioReturnValue, (char* )"Failed to release HID.");
 
       if (hidDeviceInterface == NULL) 
       {
@@ -755,6 +761,22 @@ void parseOptions(int argc, char** argv)
     case 'a':
       appLocation = optarg;
       break;
+    case 'i':
+    {
+      bool newSecure = (atoi(optarg) == 1) ? true : false;
+      if (secureInput == true && newSecure == false)
+      {
+        printf("Disabling secure event input.\n");
+        DisableSecureEventInput(); 
+      }
+      else if (secureInput == false && newSecure == true)
+      {
+        printf("Enabling secure event input.\n");
+        EnableSecureEventInput(); 
+      }
+      secureInput = newSecure;
+      break;
+    }
     default:
       usage();
       exit(1);
@@ -770,7 +792,7 @@ void readConfig()
 {
   // Compute filename.
   string strFile = getenv("HOME");
-  strFile += "/Library/Application Support/XBMC/XBMCHelper.conf";
+  strFile += "/Library/Application Support/" BINARY_NAME "/" PROGNAME ".conf";
 
   // Open file.
   ifstream ifs(strFile.c_str());
@@ -793,7 +815,7 @@ void readConfig()
   int argc = args.size() + 1;
   char** argv = new char*[argc + 1];
   int i = 0;
-  argv[i++] = "XBMCHelper";
+  argv[i++] = (char* )PROGNAME;
   
   for (vector<string>::iterator it = args.begin(); it != args.end(); )
     argv[i++] = (char* )(*it++).c_str();
