@@ -824,7 +824,7 @@
 		E3BBB7A20D7EA8B200CAAFD3 /* libpcre.0.0.1.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = E3BBB7A10D7EA8B200CAAFD3 /* libpcre.0.0.1.dylib */; };
 		E3D4B99A0DF7E39B0092A179 /* FileXBMSP.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E3D4B9960DF7E39B0092A179 /* FileXBMSP.cpp */; };
 		E3D4B99B0DF7E39B0092A179 /* XBMSDirectory.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E3D4B9980DF7E39B0092A179 /* XBMSDirectory.cpp */; };
-		E3D547960D723EFD00F36320 /* libsmbclient.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = E3D547950D723EFD00F36320 /* libsmbclient.dylib */; };
+		E3D547960D723EFD00F36320 /* libsmbclient.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = E3D547950D723EFD00F36320 /* libsmbclient.dylib */; settings = {ATTRIBUTES = (Required, ); }; };
 		E3D87AEB0D3182F4000CF031 /* XCriticalSection.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E3D87AE90D3182F4000CF031 /* XCriticalSection.cpp */; };
 		E3DAAF8C0D6E1B0500F17647 /* FileSmb.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E3DAAF8A0D6E1B0500F17647 /* FileSmb.cpp */; };
 		E3DAAF8D0D6E1B0500F17647 /* SMBDirectory.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E3DAAF8B0D6E1B0500F17647 /* SMBDirectory.cpp */; };
