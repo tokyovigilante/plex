@@ -38,6 +38,10 @@ public:
   virtual bool Exists(const char* strPath);
   virtual bool Remove(const char* strPath);
 protected:
+  bool GetNormalFolder(const CStdString& strPath, CFileItemList &items);
+  bool GetSmartFolder(const CStdString& strPath, CFileItemList &items);
+  static void HandleSearchResult(void* thisPtr, void* itemListPtr, const char* strFilePath);
+
   bool       IsAllowed(CFileItem* pItem, WIN32_FIND_DATA& wfd);
   CFileItem* BuildFileItem(const CStdString& strRoot, WIN32_FIND_DATA& wfd);
   CFileItem* BuildResolvedFileItem(const CStdString& strRoot, WIN32_FIND_DATA& wfd);

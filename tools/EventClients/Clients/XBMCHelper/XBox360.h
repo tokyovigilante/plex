@@ -30,7 +30,7 @@ class XBox360Controller
 {
  public:
   
-  static XBox360Controller* XBox360Controller::Create(io_service_t device, int deviceNum, bool deviceWireless)
+  static XBox360Controller* Create(io_service_t device, int deviceNum, bool deviceWireless)
   {
     XBox360Controller* controller = new XBox360Controller();
     IOReturn ret;
@@ -72,7 +72,6 @@ class XBox360Controller
   {
     int i,j;
     CFRunLoopSourceRef eventSource;
-    IOReturn ret;
 
     // Get serial.
     FFEFFESCAPE escape;
@@ -88,7 +87,7 @@ class XBox360Controller
     for(i=0; i<CFArrayGetCount(elements); i++) 
     {
       CFDictionaryRef element = (CFDictionaryRef)CFArrayGetValueAtIndex(elements, i);
-      long number, usage, usagePage, longCookie;
+      long usage, usagePage, longCookie;
       
       // Get cookie.
       if (getVal(element, CFSTR(kIOHIDElementCookieKey), longCookie) &&
@@ -457,6 +456,7 @@ class XBox360
   static void* Run(void* param)
   {
     ((XBox360* )param)->run();
+    return 0;
   }
   
   void run()

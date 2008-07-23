@@ -271,8 +271,8 @@ CStdString CSMB::URLEncode(const CStdString &value)
 {  
   int buffer_len = value.length()*3+1;
   char* buffer = (char*)malloc(buffer_len);
-
-  smbc_urlencode(buffer, (char*)value.c_str(), buffer_len);
+#warning disabled
+  //smbc_urlencode(buffer, (char*)value.c_str(), buffer_len);
 
   CStdString encoded = buffer;
   free(buffer);

@@ -922,20 +922,20 @@ bool PAPlayer::AddPacketsToStream(int stream, CAudioDecoder &dec)
 
     if (m_resampler[stream].GetData(pcmPtr))
     {
-        // Got some data from our resampler - construct audio packet
-        m_packet[stream][0].length = PACKET_SIZE;
-        m_packet[stream][0].stream = stream;
+      // Got some data from our resampler - construct audio packet
+      m_packet[stream][0].length = PACKET_SIZE;
+      m_packet[stream][0].stream = stream;
+
+      StreamCallback(&m_packet[stream][0]);
 
       // Handle volume de-amp
       m_amp[stream].DeAmplify((short *)pcmPtr, m_packet[stream][0].length / 2);
 
-        StreamCallback(&m_packet[stream][0]);
+      // Write the data.
+      SAFELY(Pa_WriteStream(m_pStream[stream], pcmPtr, PACKET_SIZE/(m_Channels*2)));
 
-        // Write the data.
-        SAFELY(Pa_WriteStream(m_pStream[stream], pcmPtr, PACKET_SIZE/(m_Channels*2)));
-
-        // something done
-        ret = true;
+      // something done
+      ret = true;
     }
     else
     {

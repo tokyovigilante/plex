@@ -33,7 +33,6 @@
 #include "ShoutcastDirectory.h"
 #include "LastFMDirectory.h"
 #include "FTPDirectory.h"
-#include "SmartFolderDirectory.h"
 #include "Application.h"
 
 #ifdef HAS_FILESYSTEM_SMB
@@ -73,6 +72,7 @@
 #include "CMythDirectory.h"
 #include "FileItem.h"
 #include "URL.h"
+#include "RTSPTVDirectory.h"
 
 using namespace DIRECTORY;
 
@@ -114,7 +114,7 @@ IDirectory* CFactoryDirectory::Create(const CStdString& strPath)
   if (strProtocol == "musicdb") return new CMusicDatabaseDirectory();
   if (strProtocol == "musicsearch") return new CMusicSearchDirectory();
   if (strProtocol == "videodb") return new CVideoDatabaseDirectory();
-  if (strProtocol == "filereader") 
+  if (strProtocol == "filereader")
     return CFactoryDirectory::Create(url.GetFileName());
 #ifdef HAS_XBOX_HARDWARE
   if (strProtocol.Left(3) == "mem") return new CMemUnitDirectory();
@@ -125,7 +125,7 @@ IDirectory* CFactoryDirectory::Create(const CStdString& strPath)
     if (strProtocol == "shout") return new CShoutcastDirectory();
     if (strProtocol == "lastfm") return new CLastFMDirectory();
     if (strProtocol == "tuxbox") return new CDirectoryTuxBox();
-    if (strProtocol == "ftp" 
+    if (strProtocol == "ftp"
     ||  strProtocol == "ftpx"
     ||  strProtocol == "ftps") return new CFTPDirectory();
 #ifdef HAS_FILESYSTEM_SMB
@@ -148,9 +148,8 @@ IDirectory* CFactoryDirectory::Create(const CStdString& strPath)
     if (strProtocol == "hdhomerun") return new CDirectoryHomeRun();
     if (strProtocol == "myth") return new CCMythDirectory();
     if (strProtocol == "cmyth") return new CCMythDirectory();
-#ifdef __APPLE__
-    if (strProtocol == "smartfolder") return new CSmartFolderDirectory();
-#endif
+    if (strProtocol == "rtsp") return new RTSPTVDirectory();
+
   }
 
  return NULL;

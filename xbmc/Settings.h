@@ -64,8 +64,8 @@
 #ifdef _XBOX
 #define PROFILES_FILE "q:\\system\\profiles.xml"
 #else
-/* FIXME: eventaully the profile should dictate where t:\ is but for now it 
-   makes sense to leave all the profile settings in a user writeable location 
+/* FIXME: eventaully the profile should dictate where t:\ is but for now it
+   makes sense to leave all the profile settings in a user writeable location
    like t:\ */
 #define PROFILES_FILE "t:\\profiles.xml"
 #endif
@@ -172,6 +172,7 @@ public:
     CStdString m_cddbAddress;
     bool m_usePCDVDROM;
     bool m_noDVDROM;
+    bool m_enableOpticalMedia;
     CStdString m_cachePath;
     bool m_displayRemoteCodes;
     CStdStringArray m_videoStackRegExps;
@@ -221,9 +222,10 @@ public:
     bool m_bTuxBoxSendAllAPids;
 
     int m_curlclienttimeout;
-    
+
 #ifdef HAS_SDL
     bool m_fullScreen;
+    bool m_fakeFullScreen;
 #endif
     int m_playlistRetries;
   };
@@ -364,7 +366,7 @@ public:
 
   bool LoadUPnPXml(const CStdString& strSettingsFile);
   bool SaveUPnPXml(const CStdString& strSettingsFile) const;
-  
+
   bool LoadProfiles(const CStdString& strSettingsFile);
   bool SaveProfiles(const CStdString& strSettingsFile) const;
 

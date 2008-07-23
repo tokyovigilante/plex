@@ -38,6 +38,7 @@ CApplication g_application;
 int main(int argc, char* argv[])
 {
 #ifdef __APPLE__
+  InstallCrashReporter();
   void* pool = InitializeAutoReleasePool();
 #endif
 

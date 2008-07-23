@@ -334,6 +334,8 @@ void CXBApplicationEx::ReadInput()
 
   // Read the input from the mouse
   g_Mouse.Update();
+  
+  static int lastKeyDown = 0;
 
   SDL_Event event;
   while (SDL_PollEvent(&event))
@@ -365,8 +367,18 @@ void CXBApplicationEx::ReadInput()
       break;
 #endif
     case SDL_KEYDOWN:
-      g_Keyboard.Update(event);
+      // Ignore repeat of TAB.
+      if (lastKeyDown != event.key.keysym.unicode || lastKeyDown != 9)
+      {
+        lastKeyDown = event.key.keysym.unicode;
+        g_Keyboard.Update(event);
+      }
       break;
+      
+    case SDL_KEYUP:
+      lastKeyDown = 0;
+      break;
+      
     case SDL_ACTIVEEVENT:
       //If the window was inconified or restored
       if( event.active.state & SDL_APPACTIVE )

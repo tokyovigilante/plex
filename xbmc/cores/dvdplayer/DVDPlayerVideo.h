@@ -84,6 +84,8 @@ public:
   double GetSubtitleDelay()                                { return m_iSubtitleDelay; }
   void SetSubtitleDelay(double delay)                      { m_iSubtitleDelay = delay; }
 
+  float GetFrameRate()                              { return m_fFrameRate; }
+  
   bool IsStalled()                                  { return m_stalled;  }
   int GetNrOfDroppedFrames()                        { return m_iDroppedFrames; }
 

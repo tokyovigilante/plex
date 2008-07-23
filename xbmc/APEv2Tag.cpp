@@ -108,6 +108,8 @@ void CAPEv2Tag::GetReplayGainFromTag(IAPETag *tag)
   if (!tag) return;
   char buffer[16];
   int chars = 16;
+  
+  buffer[0] = '\0';
 
   //  foobar2000 saves gain info as lowercase key items
   if (tag->GetFieldString(L"replaygain_track_gain", buffer, &chars, TRUE) != -1)
@@ -116,18 +118,21 @@ void CAPEv2Tag::GetReplayGainFromTag(IAPETag *tag)
     m_replayGain.iHasGainInfo |= REPLAY_GAIN_HAS_TRACK_INFO;
   }
   chars = 16;
+  buffer[0] = '\0';
   if (tag->GetFieldString(L"replaygain_track_peak", buffer, &chars, TRUE) != -1)
   {
     m_replayGain.fTrackPeak = (float)atof(buffer);
     m_replayGain.iHasGainInfo |= REPLAY_GAIN_HAS_TRACK_PEAK;
   }
   chars = 16;
+  buffer[0] = '\0';
   if (tag->GetFieldString(L"replaygain_album_gain", buffer, &chars, TRUE) != -1)
   {
     m_replayGain.iAlbumGain = (int)(atof(buffer)*100 + 0.5);
     m_replayGain.iHasGainInfo |= REPLAY_GAIN_HAS_ALBUM_INFO;
   }
   chars = 16;
+  buffer[0] = '\0';
   if (tag->GetFieldString(L"replaygain_album_peak", buffer, &chars, TRUE) != -1)
   {
     m_replayGain.fAlbumPeak = (float)atof(buffer);
@@ -136,24 +141,28 @@ void CAPEv2Tag::GetReplayGainFromTag(IAPETag *tag)
 
   // MP3GAIN saves gain info as uppercase key items
   chars = 16;
+  buffer[0] = '\0';
   if (tag->GetFieldString(L"REPLAYGAIN_TRACK_GAIN", buffer, &chars, TRUE) != -1)
   {
     m_replayGain.iTrackGain = (int)(atof(buffer)*100 + 0.5);
     m_replayGain.iHasGainInfo |= REPLAY_GAIN_HAS_TRACK_INFO;
   }
   chars = 16;
+  buffer[0] = '\0';
   if (tag->GetFieldString(L"REPLAYGAIN_TRACK_PEAK", buffer, &chars, TRUE) != -1)
   {
     m_replayGain.fTrackPeak = (float)atof(buffer);
     m_replayGain.iHasGainInfo |= REPLAY_GAIN_HAS_TRACK_PEAK;
   }
   chars = 16;
+  buffer[0] = '\0';
   if (tag->GetFieldString(L"REPLAYGAIN_ALBUM_GAIN", buffer, &chars, TRUE) != -1)
   {
     m_replayGain.iAlbumGain = (int)(atof(buffer)*100 + 0.5);
     m_replayGain.iHasGainInfo |= REPLAY_GAIN_HAS_ALBUM_INFO;
   }
   chars = 16;
+  buffer[0] = '\0';
   if (tag->GetFieldString(L"REPLAYGAIN_ALBUM_PEAK", buffer, &chars, TRUE) != -1)
   {
     m_replayGain.fAlbumPeak = (float)atof(buffer);

@@ -44,7 +44,9 @@ public:
 
 class DllHdHomeRun : public DllDynamic, public DllHdHomeRunInterface
 {
-#ifdef _LINUX
+#ifdef __APPLE__
+  DECLARE_DLL_WRAPPER(DllHdHomeRun, Q:\\system\\hdhomerun-osx.so)
+#elif defined(_LINUX)
   DECLARE_DLL_WRAPPER(DllHdHomeRun, Q:\\system\\hdhomerun-i486-linux.so)
 #else
   DECLARE_DLL_WRAPPER(DllHdHomeRun, Q:\\system\\hdhomerun.dll)

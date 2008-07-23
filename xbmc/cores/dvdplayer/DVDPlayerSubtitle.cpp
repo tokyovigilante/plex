@@ -43,6 +43,7 @@ CDVDPlayerSubtitle::CDVDPlayerSubtitle(CDVDOverlayContainer* pOverlayContainer)
   m_pSubtitleFileParser = NULL;
   m_pSubtitleStream = NULL;
   m_pOverlayCodec = NULL;
+  m_lastPts = 0.0;
 }
 
 CDVDPlayerSubtitle::~CDVDPlayerSubtitle()
@@ -133,6 +134,8 @@ void CDVDPlayerSubtitle::SendMessage(CDVDMsg* pMsg)
 
     if (m_pOverlayCodec)
       m_pOverlayCodec->Flush();
+    
+    m_lastPts = 0.0;
   }
 
   pMsg->Release();
@@ -142,6 +145,7 @@ bool CDVDPlayerSubtitle::OpenStream(CDVDStreamInfo &hints, string &filename)
 {
   CloseStream(false);
   m_streaminfo = hints;
+  m_lastPts = 0.0;
 
   // okey check if this is a filesubtitle
   if(filename.size() && filename != "dvd" )
@@ -197,12 +201,30 @@ void CDVDPlayerSubtitle::Process(double pts)
   if(!AcceptsData())
     return;
 
+  // Clear the container if we're moving backwards in time.
+  if (pts < m_lastPts)
+    m_pOverlayContainer->Clear();
+  
   if (m_pSubtitleFileParser)
   {
     CDVDOverlay* pOverlay = m_pSubtitleFileParser->Parse(pts);
     if (pOverlay)
       m_pOverlayContainer->Add(pOverlay);
   }
+  
+  m_lastPts = pts;
+
+#if 0
+  printf("===================================================\n");
+  printf("Asked for %d, have %d subtitles\n", (int)(pts/1000), m_pOverlayContainer->GetOverlays()->size());
+  for (int i=0; i<m_pOverlayContainer->GetOverlays()->size(); i++)
+  {
+    CDVDOverlayText* text = (CDVDOverlayText* )m_pOverlayContainer->GetOverlays()->at(i);
+    printf(" Overlay [%d - %d]:\n", (int)(text->iPTSStartTime/1000), (int)(text->iPTSStopTime/1000));
+    text->Dump();
+  }
+  printf("---------------------------------------------------\n");
+#endif
 }
 
 bool CDVDPlayerSubtitle::AcceptsData()

@@ -102,7 +102,7 @@ public:
   };
   int GetSubCount() { return m_iMatchCount; }
   int GetSubStart(int iSub) { return m_iOvector[iSub*2]; }
-  int GetSubLenght(int iSub) { return (m_iOvector[iSub*2+1] - m_iOvector[iSub*2+1]); }
+  int GetSublength(int iSub) { return (m_iOvector[iSub*2+1] - m_iOvector[iSub*2+1]); }
 
 private:
   void Cleanup() { if (m_re) { PCRE::pcre_free(m_re); m_re = NULL; } }
@@ -136,7 +136,7 @@ public:
   };
   int GetSubCount();
   int GetSubStart(int iSub);
-  int GetSubLenght(int iSub);
+  int GetSublength(int iSub);
 
 private:
   char *regnext(char *node);

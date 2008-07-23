@@ -104,7 +104,7 @@ bool CVirtualDirectory::GetDirectory(const CStdString& strPath, CFileItemList &i
       // Only cache directory we are getting now
       g_directoryCache.Clear();
       CLog::Log(LOGDEBUG,"CVirtualDirectory... FOUND MATCH [%s]", share.strPath.c_str());
-      
+
       return CDirectory::GetDirectory(strPath, items, m_strFileMask);
     }
   }
@@ -119,20 +119,17 @@ bool CVirtualDirectory::GetDirectory(const CStdString& strPath, CFileItemList &i
     // added exception for various local hd items
     // function doesn't work for http/shout streams with options..
 #ifdef _LINUX
-    if (iIndex > -1 || strPath.Mid(0, 1) == "/" || strPath.Mid(1, 1) == ":" 
+    if (iIndex > -1 || strPath.Mid(0, 1) == "/" || strPath.Mid(1, 1) == ":"
 #else
-    if (iIndex > -1 || strPath.Mid(1, 1) == ":" 
+    if (iIndex > -1 || strPath.Mid(1, 1) == ":"
 #endif
-      || strPath.Left(8).Equals("shout://") 
-      || strPath.Left(8).Equals("https://") 
-      || strPath.Left(7).Equals("http://") 
+      || strPath.Left(8).Equals("shout://")
+      || strPath.Left(8).Equals("https://")
+      || strPath.Left(7).Equals("http://")
       || strPath.Left(7).Equals("daap://")
       || strPath.Left(9).Equals("tuxbox://")
       || strPath.Left(7).Equals("upnp://")
       || strPath.Left(10).Equals("musicdb://")
-#ifdef __APPLE__
-      || strPath.Left(14).Equals("smartfolder://")
-#endif
       || strPath.Left(14).Equals("musicsearch://"))
     {
       // Only cache directory we are getting now

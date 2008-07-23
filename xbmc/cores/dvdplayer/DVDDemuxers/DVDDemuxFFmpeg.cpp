@@ -39,6 +39,8 @@
 #include "FileSystem/File.h"
 #include "Util.h"
 
+#include "DVDInputStreams/DVDInputStreamRTSP.h" 
+
 void CDemuxStreamAudioFFmpeg::GetStreamInfo(std::string& strInfo)
 {
   if(!m_stream) return;
@@ -246,8 +248,16 @@ bool CDVDDemuxFFmpeg::Open(CDVDInputStream* pInput)
       streaminfo = false;
   }
 
-  if( m_pInput->IsStreamType(DVDSTREAM_TYPE_FFMPEG) )
-  {
+
+	if (m_pInput->IsStreamType(DVDSTREAM_TYPE_RTSP))
+	{
+		// the actual stream to play is the internal rtspUrl
+		CDVDInputStreamRTSP *RTSPSource = static_cast<CDVDInputStreamRTSP*>(pInput);
+		strFile = RTSPSource->GetRTSPStream();
+	}
+	
+	if( m_pInput->IsStreamType(DVDSTREAM_TYPE_FFMPEG) || m_pInput->IsStreamType(DVDSTREAM_TYPE_RTSP))
+	{
     g_urltimeout = GetTickCount() + 10000;
 
     // special stream type that makes avformat handle file opening
@@ -794,7 +804,7 @@ void CDVDDemuxFFmpeg::UpdateCurrentPTS()
   }
 }
 
-int CDVDDemuxFFmpeg::GetStreamLenght()
+int CDVDDemuxFFmpeg::GetStreamLength()
 {
   if (!m_pFormatContext)
     return 0;

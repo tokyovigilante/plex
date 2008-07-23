@@ -1,10 +1,5 @@
-#ifndef fft_hh
-#define fft_hh
-/*
- *                            COPYRIGHT
- *
- *  XAnalyser, frequence spectrum analyser for X Window
- *  Copyright (C) 1998 Arvin Schnell
+/* fft.h: Header for iterative implementation of a FFT
+ * Copyright (C) 1999 Richard Boulton <richard@tartarus.org>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -18,35 +13,32 @@
  *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- *
- *  Contact addresses:
- *  arvin@informatik.uni-bremen.de
- *  Arvin Schnell, Am Heidberg 8, 28865 Lilienthal, Germany
- *
+ *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
-static __inline long double sqr( long double arg )
-{
-  return arg * arg;
-}
 
+#ifndef _FFT_H_
+#define _FFT_H_
 
-static __inline void swap( float &a, float &b )
-{
-  float t = a; a = b; b = t;
-}
+#define FFT_BUFFER_SIZE_LOG 10
+#define FFT_BUFFER_SIZE (1 << FFT_BUFFER_SIZE_LOG)
 
-// (complex) fast fourier transformation
-// Based on four1() in Numerical Recipes in C, Page 507-508.
+/* sound sample - should be an signed 16 bit value */
+typedef short int sound_sample;
 
-// The input in data[1..2*nn] is replaced by its fft or inverse fft, depending
-// only on isign (+1 for fft, -1 for inverse fft). The number of complex numbers
-// n must be a power of 2 (which is not checked).
-
-void fft( float data[], int nn, int isign );
-
-void twochannelrfft(float data[], int n);
-void twochanwithwindow(float data[], int n); // test
-
-
+#ifdef __cplusplus
+extern "C" {
 #endif
+
+/* FFT library */
+typedef struct _struct_fft_state fft_state;
+
+fft_state* fft_init();
+void       fft_perform (const sound_sample *input, float *output, fft_state *state);
+void       fft_perform_stereo(const sound_sample* input, float* output, fft_state *state);
+void       fft_close (fft_state *state);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif /* _FFT_H_ */

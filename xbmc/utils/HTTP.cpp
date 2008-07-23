@@ -1153,6 +1153,8 @@ void CHTTP::ParseHeaders()
 {
   string::size_type nStart, nColon, nEnd;
   string::size_type i;
+  
+  CLog::Log(LOGDEBUG, "CHTTP::ParseHeaders(headers=%s)", m_strHeaders.c_str());
 
   nStart = nColon = nEnd = 0;
   for (i = 0; i < m_strHeaders.length(); i++)
@@ -1191,6 +1193,8 @@ void CHTTP::ParseHeaders()
 
 void CHTTP::ParseHeader(string::size_type start, string::size_type colon, string::size_type end)
 {
+  CLog::Log(LOGDEBUG, "CHTTP::ParseHeader(start=%d, colon=%d, end=%d)", start, colon, end);
+  
   // If colon or end are 0, bail
   if (colon == 0 || end == 0)
   {

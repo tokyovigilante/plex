@@ -183,6 +183,7 @@ class Reactor
   static void* Run(void* param)
   {
     ((Reactor* )param)->run();
+    return 0;
   }
 
   fd_set    _itsReadSet;

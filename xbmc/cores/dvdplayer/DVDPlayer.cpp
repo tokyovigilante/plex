@@ -261,6 +261,7 @@ CDVDPlayer::CDVDPlayer(IPlayerCallback& callback)
   m_UpdateApplication = 0;
 
   m_bAbortRequest = false;
+  m_bPlayingNewFile = false;
   m_errorCount = 0;
   m_playSpeed = DVD_PLAYSPEED_NORMAL;
   m_caching = false;
@@ -306,7 +307,11 @@ bool CDVDPlayer::OpenFile(const CFileItem& file, const CPlayerOptions &options)
     // if playing a file close it first
     // this has to be changed so we won't have to close it.
     if(ThreadHandle())
+    {
+      m_bPlayingNewFile = true;
       CloseFile();
+      m_bPlayingNewFile = false;
+    }
 
     m_bAbortRequest = false;
     SetPlaySpeed(DVD_PLAYSPEED_NORMAL);
@@ -1393,7 +1398,12 @@ void CDVDPlayer::OnExit()
     m_SelectionStreams.Clear(STREAM_NONE, STREAM_SOURCE_NONE);
 
     // if we didn't stop playing, advance to the next item in xbmc's playlist
-    if (!m_bAbortRequest) m_callback.OnPlayBackEnded();
+    // N.B. We need to call this if we aborted too, otherwise the application
+    // doesn't know that we're done with the full screen view and video playing!
+    //
+    //printf("Aborted: %d\n", m_bAbortRequest);
+    if (/* !m_bAbortRequest && */ m_bPlayingNewFile == false)
+      m_callback.OnPlayBackEnded();
 
     m_messenger.End();
 
@@ -2692,7 +2702,7 @@ void CDVDPlayer::HandlePlayState(double timeout)
     m_State.chapter_count = m_pDemuxer->GetChapterCount();
 
     m_State.time       = DVD_TIME_TO_MSEC(m_clock.GetClock());
-    m_State.time_total = m_pDemuxer->GetStreamLenght();
+    m_State.time_total = m_pDemuxer->GetStreamLength();
   }
 
   if(m_pInputStream)
@@ -2824,7 +2834,7 @@ void CDVDPlayer::GetFileMetaData(const CStdString &strPath, CFileItem *pItem)
   AVFormatContext *pContext = pDemuxer->m_pFormatContext; 
   if (pContext)
   {
-    int nLenMsec = pDemuxer->GetStreamLenght();
+    int nLenMsec = pDemuxer->GetStreamLength();
     CStdString strDuration;
     int nHours = nLenMsec / 1000 / 60 / 60;
     int nMinutes = ((nLenMsec / 1000) - nHours * 3600) / 60;
@@ -2917,7 +2927,7 @@ bool CDVDPlayer::ExtractThumb(const CStdString &strPath, const CStdString &strTa
     CDVDVideoCodec *pVideoCodec = CDVDFactoryCodec::CreateVideoCodec( hint );
     if (pVideoCodec)
     {
-      int nTotalLen = pDemuxer->GetStreamLenght();
+      int nTotalLen = pDemuxer->GetStreamLength();
       int nSeekTo = nTotalLen / 3;
 
       CLog::Log(LOGDEBUG,"%s - seeking to pos %dms (total: %dms) in %s", __FUNCTION__, nSeekTo, nTotalLen, strPath.c_str());
