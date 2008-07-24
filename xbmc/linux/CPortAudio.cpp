@@ -74,10 +74,6 @@ PaStream* CPortAudio::CreateOutputStream(const CStdString& strName, int channels
     CLog::Log(LOGNOTICE, "Asked to create device:   [%s]", strName.c_str());
     CLog::Log(LOGNOTICE, "Device should be digital: [%d]\n", isDigital);
     CLog::Log(LOGNOTICE, "CoreAudio S/PDIF mode:    [%d]\n", useCoreAudio);
-<<<<<<< HEAD:xbmc/linux/CPortAudio.cpp
-=======
-	
->>>>>>> eyetv:xbmc/linux/CPortAudio.cpp
     CLog::Log(LOGNOTICE, "Channels:                 [%d]\n", channels);
     CLog::Log(LOGNOTICE, "Sample Rate:              [%d]\n", sampleRate);
     CLog::Log(LOGNOTICE, "BitsPerSample:            [%d]\n", bitsPerSample);

@@ -111,14 +111,14 @@ bool CSMBDirectory::GetDirectory(const CStdString& strPath, CFileItemList &items
   struct smbc_dirent* dirEnt;
 
   lock.Enter(); 
-  while ((dirEnt = smbc_readdir(fd)))
+  //while ((dirEnt = smbc_readdir(fd)))
   {
     CachedDirEntry aDir;
     aDir.type = dirEnt->smbc_type;
     aDir.name = dirEnt->name;
     vecEntries.push_back(aDir);
   }
-  smbc_closedir(fd);
+  //smbc_closedir(fd);
   lock.Leave();
 
   for (size_t i=0; i<vecEntries.size(); i++)
@@ -157,7 +157,7 @@ bool CSMBDirectory::GetDirectory(const CStdString& strPath, CFileItemList &items
  
         lock.Enter();
 
-        if( smbc_stat(strFullName.c_str(), &info) == 0 )
+        if  (0)//( smbc_stat(strFullName.c_str(), &info) == 0 )
         {
 #ifndef _LINUX
           if ((info.st_mode & S_IXOTH) && !g_guiSettings.GetBool("filelists.showhidden"))
@@ -298,7 +298,7 @@ int CSMBDirectory::OpenDir(const CURL& url, CStdString& strAuth)
     
     CLog::Log(LOGDEBUG, "%s - Using authentication url %s", __FUNCTION__, s.c_str());
     { CSingleLock lock(smb);      
-      fd = smbc_opendir(s.c_str());
+      //fd = smbc_opendir(s.c_str());
     }
     
     if (fd < 0)
@@ -395,7 +395,7 @@ bool CSMBDirectory::Create(const char* strPath)
   CStdString strFileName = smb.URLEncode(url);
   strFileName = g_passwordManager.GetSMBAuthFilename(strFileName);
 
-  int result = smbc_mkdir(strFileName.c_str(), 0);
+	int result = 0;//smbc_mkdir(strFileName.c_str(), 0);
 
   if(result != 0)
 #ifndef _LINUX
@@ -416,7 +416,7 @@ bool CSMBDirectory::Remove(const char* strPath)
   CStdString strFileName = smb.URLEncode(url);
   strFileName = g_passwordManager.GetSMBAuthFilename(strFileName);
 
-  int result = smbc_rmdir(strFileName.c_str());
+	int result = 0;//smbc_rmdir(strFileName.c_str());
 
   if(result != 0)
 #ifndef _LINUX
@@ -442,7 +442,7 @@ bool CSMBDirectory::Exists(const char* strPath)
 #else
   struct stat info;
 #endif
-  if (smbc_stat(strFileName.c_str(), &info) != 0)
+//  if (smbc_stat(strFileName.c_str(), &info) != 0)
     return false;
 
   return (info.st_mode & S_IFDIR) ? true : false;

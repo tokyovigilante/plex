@@ -80,8 +80,8 @@ void CSMB::Deinit()
   {
     try
     {
-      smbc_set_context(NULL);
-      smbc_free_context(m_context, 1);
+      //smbc_set_context(NULL);
+      //smbc_free_context(m_context, 1);
     }
 #ifndef _LINUX
     catch(win32_exception e)
@@ -114,7 +114,7 @@ void CSMB::Init()
 #endif
 
     // setup our context
-    m_context = smbc_new_context();
+    //m_context = smbc_new_context();
     m_context->debug = g_advancedSettings.m_logLevel == LOG_LEVEL_DEBUG_SAMBA ? 10 : 0;
     m_context->callbacks.auth_fn = xb_smbc_auth;
     orig_cache = m_context->callbacks.get_cached_srv_fn;
@@ -155,10 +155,10 @@ void CSMB::Init()
 #endif
     
     // initialize samba and do some hacking into the settings
-    if (smbc_init_context(m_context))
+    if (0)//(smbc_init_context(m_context))
     {
       /* setup old interface to use this context */
-      smbc_set_context(m_context);
+//      smbc_set_context(m_context);
 
 #ifndef _LINUX
       // if a wins-server is set, we have to change name resolve order to
@@ -178,7 +178,7 @@ void CSMB::Init()
     }
     else
     {
-      smbc_free_context(m_context, 1);
+     // smbc_free_context(m_context, 1);
       m_context = NULL;
     }
   }
@@ -354,7 +354,7 @@ __int64 CFileSMB::GetPosition()
   if (m_fd == -1) return 0;
   smb.Init();
   CSingleLock lock(smb);
-  __int64 pos = smbc_lseek(m_fd, 0, SEEK_CUR);
+	__int64 pos = 0;//smbc_lseek(m_fd, 0, SEEK_CUR);
   if ( pos < 0 )
     return 0;
   return pos;
@@ -407,19 +407,19 @@ bool CFileSMB::Open(const CURL& url, bool bBinary)
 #else
   struct stat tmpBuffer;
 #endif
-  if (smbc_stat(strFileName, &tmpBuffer) < 0)
+  //if (smbc_stat(strFileName, &tmpBuffer) < 0)
   {
-    smbc_close(m_fd);
+    //smbc_close(m_fd);
     m_fd = -1;    
     return false;
   }
   
   m_fileSize = tmpBuffer.st_size;
 
-  __int64 ret = smbc_lseek(m_fd, 0, SEEK_SET);
+	__int64 ret = 0;//smbc_lseek(m_fd, 0, SEEK_SET);
   if ( ret < 0 )
   {
-    smbc_close(m_fd);
+    //smbc_close(m_fd);
     m_fd = -1;    
     return false;
   }
@@ -463,7 +463,7 @@ int CFileSMB::OpenFile(const CURL &url, CStdString& strAuth)
   CStdString strPath = g_passwordManager.GetSMBAuthFilename(strAuth);
 
   { CSingleLock lock(smb);
-    fd = smbc_open(strPath.c_str(), O_RDONLY, 0);
+   // fd = smbc_open(strPath.c_str(), O_RDONLY, 0);
   }
 
   // file open failed, try to open the directory to force authentication
@@ -490,11 +490,11 @@ int CFileSMB::OpenFile(const CURL &url, CStdString& strAuth)
       CSingleLock lock(smb);
       // close current directory filehandle
       // dont need to purge since its the same server and share
-      smbc_closedir(fd);
+     // smbc_closedir(fd);
 
       // set up new filehandle (as CFileSMB::Open does)
       strPath = g_passwordManager.GetSMBAuthFilename(strPath);
-      fd = smbc_open(strPath.c_str(), O_RDONLY, 0);
+      //fd = smbc_open(strPath.c_str(), O_RDONLY, 0);
     }
   }
 
@@ -521,7 +521,7 @@ bool CFileSMB::Exists(const CURL& url)
 #endif
 
   CSingleLock lock(smb);
-  int iResult = smbc_stat(strFileName, &info);
+	int iResult = 0;//smbc_stat(strFileName, &info);
 
   if (iResult < 0) return false;
   return true;
@@ -540,7 +540,7 @@ int CFileSMB::Stat(const CURL& url, struct __stat64* buffer)
 #else
   struct stat tmpBuffer;
 #endif
-  int iResult = smbc_stat(strFileName, &tmpBuffer);
+	int iResult = 0;//smbc_stat(strFileName, &tmpBuffer);
 
   buffer->st_dev = tmpBuffer.st_dev;
   buffer->st_ino = tmpBuffer.st_ino;  
@@ -580,7 +580,7 @@ unsigned int CFileSMB::Read(void *lpBuf, __int64 uiBufSize)
   if( uiBufSize >= 64*1024-2 )
     uiBufSize = 64*1024-2;
 
-  int bytesRead = smbc_read(m_fd, lpBuf, (int)uiBufSize);
+	int bytesRead = 0;// smbc_read(m_fd, lpBuf, (int)uiBufSize);
 
   if ( bytesRead < 0 )
   {
@@ -605,7 +605,7 @@ __int64 CFileSMB::Seek(__int64 iFilePosition, int iWhence)
 #ifdef _LINUX
   smb.SetActivityTime();
 #endif
-  INT64 pos = smbc_lseek(m_fd, iFilePosition, iWhence);
+	INT64 pos = 0;//smbc_lseek(m_fd, iFilePosition, iWhence);
 
   if ( pos < 0 )
   {
@@ -626,7 +626,7 @@ void CFileSMB::Close()
   {
     CLog::Log(LOGDEBUG,"CFileSMB::Close closing fd %d", m_fd);
     CSingleLock lock(smb);
-    smbc_close(m_fd);
+    //smbc_close(m_fd);
   }
   m_fd = -1;
 }
@@ -639,7 +639,7 @@ int CFileSMB::Write(const void* lpBuf, __int64 uiBufSize)
   // lpBuf can be safely casted to void* since xmbc_write will only read from it.
   smb.Init();
   CSingleLock lock(smb);
-  dwNumberOfBytesWritten = smbc_write(m_fd, (void*)lpBuf, (DWORD)uiBufSize);
+	dwNumberOfBytesWritten = 0;//smbc_write(m_fd, (void*)lpBuf, (DWORD)uiBufSize);
 
   return (int)dwNumberOfBytesWritten;
 }
@@ -651,7 +651,7 @@ bool CFileSMB::Delete(const CURL& url)
 
   CSingleLock lock(smb);
 
-  int result = smbc_unlink(strFile.c_str());
+	int result = 0;// smbc_unlink(strFile.c_str());
 
   if(result != 0)
 #ifndef _LINUX
@@ -671,7 +671,7 @@ bool CFileSMB::Rename(const CURL& url, const CURL& urlnew)
 
   CSingleLock lock(smb);
 
-  int result = smbc_rename(strFile.c_str(), strFileNew.c_str());
+	int result = 0;//smbc_rename(strFile.c_str(), strFileNew.c_str());
 
   if(result != 0)
 #ifndef _LINUX
@@ -702,11 +702,11 @@ bool CFileSMB::OpenForWrite(const CURL& url, bool bBinary, bool bOverWrite)
   if (bOverWrite)
   {
     CLog::Log(LOGWARNING, "FileSmb::OpenForWrite() called with overwriting enabled! - %s", strFileName.c_str());
-    m_fd = smbc_creat(strFileName.c_str(), 0);
+    //m_fd = smbc_creat(strFileName.c_str(), 0);
   }
   else
   {
-    m_fd = smbc_open(strFileName.c_str(), O_RDWR, 0);
+    //m_fd = smbc_open(strFileName.c_str(), O_RDWR, 0);
   }
 
   if (m_fd == -1)
