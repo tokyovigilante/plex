@@ -404,7 +404,7 @@ CGUISettings::CGUISettings(void)
 #endif
 
   AddCategory(4, "cache", 439);
-  AddInt(1, "cache.harddisk", 14025, 1024, 1024, 1024, 8096, SPIN_CONTROL_INT_PLUS, MASK_KB);
+  AddInt(1, "cache.harddisk", 14025, 2048, 1024, 1024, 8096, SPIN_CONTROL_INT_PLUS, MASK_KB);
   AddSeparator(2, "cache.sep1");
   AddInt(3, "cachevideo.dvdrom", 14026, 2048, 1024, 1024, 16384, SPIN_CONTROL_INT_PLUS, MASK_KB);
   AddInt(4, "cachevideo.lan", 14027, 2048, 1024, 1024, 32768, SPIN_CONTROL_INT_PLUS, MASK_KB);

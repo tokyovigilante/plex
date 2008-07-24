@@ -2,6 +2,7 @@
 #include "GUIVisualisationControl.h"
 #include "GUIUserMessages.h"
 #include "Application.h"
+#include "MusicInfoTag.h"
 #include "visualizations/Visualisation.h"
 #include "visualizations/VisualisationFactory.h"
 #include "visualizations/fft.h"
@@ -13,6 +14,9 @@
 #include "utils/SingleLock.h"
 #include "utils/GUIInfoManager.h"
 #include "GUISettings.h"
+#ifdef __APPLE__
+#include "CocoaUtils.h"
+#endif
 
 using namespace std;
 
@@ -80,17 +84,20 @@ CGUIVisualisationControl::CGUIVisualisationControl(DWORD dwParentID, DWORD dwCon
   m_bInitialized = false;
   m_iNumBuffers = 0;
   m_currentVis = "";
+  m_fftState = fft_init();
   ControlType = GUICONTROL_VISUALISATION;
 }
 
 CGUIVisualisationControl::~CGUIVisualisationControl(void)
 {
+  fft_close(m_fftState);
 }
 
 void CGUIVisualisationControl::FreeVisualisation()
 {
   if (!m_bInitialized) return;
   m_bInitialized = false;
+  
   // tell our app that we're going
   CGUIMessage msg(GUI_MSG_VISUALISATION_UNLOADING, 0, 0);
   g_graphicsContext.SendMessage(msg);
@@ -108,8 +115,12 @@ void CGUIVisualisationControl::FreeVisualisation()
     OutputDebugString("delete Visualisation()\n");
     delete m_pVisualisation;
 
+#ifdef __APPLE__
+    //Cocoa_DestroyChildWindow();
+#endif
+
     g_graphicsContext.ApplyStateBlock();
-    
+
     /* we released the global vis spot */
     m_globalvis = false;
   }
@@ -144,7 +155,7 @@ void CGUIVisualisationControl::LoadVisualisation()
       g_application.m_pCdgParser->SetBGTransparent(true);
   }
 #endif
-
+  
   if (m_currentVis.Equals("None"))
     return;
   strVisz.Format("Q:\\visualisations\\%s", m_currentVis.c_str());
@@ -161,6 +172,10 @@ void CGUIVisualisationControl::LoadVisualisation()
     if (x + w > g_graphicsContext.GetWidth()) w = g_graphicsContext.GetWidth() - x;
     if (y + h > g_graphicsContext.GetHeight()) h = g_graphicsContext.GetHeight() - y;
 
+#ifdef __APPLE__
+    //Cocoa_MakeChildWindow();
+#endif
+    
     m_pVisualisation->Create((int)(x+0.5f), (int)(y+0.5f), (int)(w+0.5f), (int)(h+0.5f));
     if (g_application.m_pPlayer)
       g_application.m_pPlayer->RegisterAudioCallback(this);
@@ -201,7 +216,8 @@ void CGUIVisualisationControl::Render()
     return;
   }
   else
-  { // check if we need to unload
+  {
+    // check if we need to unload
     if (!g_application.IsPlayingAudio())
     { // deinit
       FreeVisualisation();
@@ -252,7 +268,6 @@ void CGUIVisualisationControl::Render()
   CGUIControl::Render();
 }
 
-
 void CGUIVisualisationControl::OnInitialize(int iChannels, int iSamplesPerSec, int iBitsPerSample)
 {
   CSingleLock lock (m_critSection);
@@ -268,6 +283,14 @@ void CGUIVisualisationControl::OnInitialize(int iChannels, int iSamplesPerSec, i
   CStdString strFile = CUtil::GetFileName(g_application.CurrentFile());
   OutputDebugString("Visualisation::Start()\n");
   m_pVisualisation->Start(m_iChannels, m_iSamplesPerSec, m_iBitsPerSample, strFile);
+  
+  const MUSIC_INFO::CMusicInfoTag* tag = g_infoManager.GetCurrentSongTag();
+  if (tag != 0)
+  {
+    m_pVisualisation->SetTrackInfo(tag->GetArtist().c_str(), tag->GetAlbum().c_str(), tag->GetTitle().c_str(),
+                                   tag->GetTrackNumber(), tag->GetDiscNumber(), tag->GetYear(), tag->GetDuration());
+  }
+    
   if (!m_bInitialized)
   {
     UpdateAlbumArt();
@@ -282,11 +305,11 @@ void CGUIVisualisationControl::OnAudioData(const unsigned char* pAudioData, int 
   if (!m_pVisualisation)
     return ;
   if (!m_bInitialized) return ;
-
+  
   // FIXME: iAudioDataLength should never be less than 0
   if (iAudioDataLength<0)
     return;
-
+  
   // Save our audio data in the buffers
   auto_ptr<CAudioBuffer> pBuffer ( new CAudioBuffer(2*AUDIO_BUFFER_SIZE) );
   pBuffer->Set(pAudioData, iAudioDataLength, m_iBitsPerSample);
@@ -299,23 +322,10 @@ void CGUIVisualisationControl::OnAudioData(const unsigned char* pAudioData, int 
   // Fourier transform the data if the vis wants it...
   if (m_bWantsFreq)
   {
-    // Convert to floats
     const short* psAudioData = ptrAudioBuffer->Get();
-    for (int i = 0; i < 2*AUDIO_BUFFER_SIZE; i++)
-    {
-      m_fFreq[i] = (float)psAudioData[i];
-    }
 
     // FFT the data
-    twochanwithwindow(m_fFreq, AUDIO_BUFFER_SIZE);
-
-    // Normalize the data
-    float fMinData = (float)AUDIO_BUFFER_SIZE * AUDIO_BUFFER_SIZE * 3 / 8 * 0.5 * 0.5; // 3/8 for the Hann window, 0.5 as minimum amplitude
-    float fInvMinData = 1.0f/fMinData;
-    for (int i = 0; i < AUDIO_BUFFER_SIZE + 2; i++)
-    {
-      m_fFreq[i] *= fInvMinData;
-    }
+    fft_perform_stereo(psAudioData, m_fFreq, m_fftState);
 
     // Transfer data to our visualisation
     try
@@ -415,7 +425,7 @@ void CGUIVisualisationControl::ClearBuffers()
   CSingleLock lock (m_critSection);
   m_bWantsFreq = false;
   m_iNumBuffers = 0;
-
+  
   while (m_vecBuffers.size() > 0)
   {
     CAudioBuffer* pAudioBuffer = m_vecBuffers.front();

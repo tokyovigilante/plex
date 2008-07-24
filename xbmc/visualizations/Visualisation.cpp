@@ -22,7 +22,9 @@
 // Visualisation.cpp: implementation of the CVisualisation class.
 //
 //////////////////////////////////////////////////////////////////////
-
+#ifdef __APPLE__
+#include "CocoaUtils.h"
+#endif
 #include "Visualisation.h" 
 #include "Settings.h"
 
@@ -56,7 +58,14 @@ void CVisualisation::Create(int posx, int posy, int width, int height)
   // TODO LINUX this is obviously not good, but until we have visualization sorted out, this will have to do
   m_pVisz->Create (g_graphicsContext.Get3DDevice(), posx, posy, width, height, m_strVisualisationName.c_str(), pixelRatio);
 #else
-  m_pVisz->Create (0, posx, posy, width, height, m_strVisualisationName.c_str(), pixelRatio);
+
+#ifdef __APPLE__
+  void* dev = Cocoa_GetDisplayPort();
+#else
+  void* dev = 0;
+#endif
+  
+  m_pVisz->Create (dev, posx, posy, width, height, m_strVisualisationName.c_str(), pixelRatio);
 #endif
 }
 
@@ -90,7 +99,6 @@ void CVisualisation::Stop()
   // ask visz. to cleanup
   m_pVisz->Stop();
 }
-
 
 void CVisualisation::GetInfo(VIS_INFO *info)
 {
@@ -139,6 +147,12 @@ void CVisualisation::GetCurrentPreset(char **pPreset, bool *locked)
     if (presets && currentPreset < numPresets)
       *pPreset = presets[currentPreset];
   }
+}
+
+void CVisualisation::SetTrackInfo(const char* artist, const char* album, const char* track, int trackNumber, int discNumber, int year, int duration)
+{
+  if (m_pVisz->SetTrackInfo != 0)
+    m_pVisz->SetTrackInfo(artist, album, track, trackNumber, discNumber, year, duration);
 }
 
 bool CVisualisation::IsLocked()

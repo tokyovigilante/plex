@@ -23,6 +23,7 @@
 
 #include "GUIControl.h"
 #include "cores/IAudioCallback.h"
+#include "fft.h"
 
 // forward definitions
 class CVisualisation;
@@ -76,8 +77,8 @@ private:
   std::list<CAudioBuffer*> m_vecBuffers;
   int m_iNumBuffers;        // Number of Audio buffers
   bool m_bWantsFreq;
-  float m_fFreq[2*AUDIO_BUFFER_SIZE];         // Frequency data
-  bool m_bCalculate_Freq;       // True if the vis wants freq data
+  fft_state* m_fftState;
+  float m_fFreq[2*AUDIO_BUFFER_SIZE+2];         // Frequency data
   bool m_bInitialized;
   CStdString m_AlbumThumb;
 };

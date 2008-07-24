@@ -1639,7 +1639,7 @@ CProfile* CApplication::InitDirectoriesOSX()
 
     str.append("/Library/Application Support");
     CreateDirectory(str.c_str(), NULL);
-    str.append("/XBMC");
+    str.append("/Plex");
     CreateDirectory(str.c_str(), NULL);
     CStdString str2 = str;
     str2.append("/Mounts");
@@ -1680,7 +1680,7 @@ CProfile* CApplication::InitDirectoriesOSX()
 
     // Put the user data folder somewhere standard for the platform.
     str = getenv("HOME");
-    str.append("/Library/Application Support/XBMC");
+    str.append("/Library/Application Support/Plex");
     CIoSupport::RemapDriveLetter('T', str.c_str());
     CIoSupport::RemapDriveLetter('U', str.c_str());
   }
@@ -3056,7 +3056,12 @@ void CApplication::SetQuiet(bool bQuiet)
 #ifndef HAS_XBOX_D3D
 void CApplication::Render()
 {
-  if (!m_AppActive && !m_bStop) {Sleep(1); ResetScreenSaver(); return;}
+  if (!m_AppActive && !m_bStop && (IsPlaying() == false || IsPaused() == true))
+  {
+    Sleep(1); 
+    ResetScreenSaver(); 
+    return;
+  }
 
 #ifdef __APPLE__
   // Make sure the system mouse cursor is hidden. I'm not sure if this

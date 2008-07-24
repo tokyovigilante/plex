@@ -82,6 +82,14 @@ extern "C"
   // Version.
   //
   const char* Cocoa_GetAppVersion();
+  
+  //
+  // Get display port.
+  //
+  void* Cocoa_GetDisplayPort();
+  
+  void  Cocoa_MakeChildWindow();
+  void  Cocoa_DestroyChildWindow();
 
 #ifdef __cplusplus
 }

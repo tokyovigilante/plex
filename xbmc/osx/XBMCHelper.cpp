@@ -82,6 +82,21 @@ XBMCHelper::XBMCHelper()
   // This is where we store the installed version of helper.
   m_helperInstalledVersionFile = getenv("HOME");
   m_helperInstalledVersionFile += RESOURCES_DIR "/" PLEX_HELPER_PROGRAM ".version";
+  
+  ////// ONLY ONCE - uninstall and delete old helper, stop.
+  CStdString oldHelper = getenv("HOME");
+  oldHelper += "/Library/LaunchAgents/";
+  oldHelper += "org.xbmc.helper.plist";
+  
+  string cmd = "/bin/launchctl unload ";
+  cmd += oldHelper;
+  system(cmd.c_str());
+  DeleteFile(oldHelper.c_str());
+  
+  int pid = GetProcessPid("XBMCHelper");
+  if (pid != -1)
+    kill(pid, SIGKILL);
+  //////
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -180,7 +195,7 @@ void XBMCHelper::Configure()
     // Secure input.
     char strSecure[64];
     sprintf(strDelay, "--secureInput %d ", m_secureInput ? 1 : 0);
-    strConfig += strDelay;
+    strConfig += strSecure;
     
     // Find out where we're running from.
     char     given_path[2*MAXPATHLEN];

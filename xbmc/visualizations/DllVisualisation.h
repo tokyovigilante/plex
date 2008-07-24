@@ -69,6 +69,9 @@ public:
   void (__cdecl *GetSettings)(std::vector<VisSetting> **vecSettings);
   void (__cdecl *UpdateSetting)(int num);
   void (__cdecl *GetPresets)(char ***pPresets, int *currentPreset, int *numPresets, bool *locked);
+  
+  // Enhanced visualization API:
+  void (__cdecl *SetTrackInfo)(const char* artist, const char* album, const char* track, int trackNumber, int discNumber, int year, int duration);  
 } ;
 
 class DllVisualisationInterface
