@@ -964,8 +964,8 @@ HRESULT CApplication::Create(HWND hWnd)
 #if defined(_LINUX) && !defined(__APPLE__)
   CLog::Log(LOGNOTICE, "Starting XBMC, Platform: GNU/Linux.  Built on %s (SVN:%s)", __DATE__, SVN_REV);
 #elif defined(__APPLE__)
-  CLog::Log(LOGNOTICE, "Starting XBMC, Platform: Mac OS X.  Built on %s", __DATE__);
-  CLog::Log(LOGNOTICE, "XBMC version %s.", Cocoa_GetAppVersion());
+  CLog::Log(LOGNOTICE, "Starting Plex, Platform: Mac OS X.  Built on %s", __DATE__);
+  CLog::Log(LOGNOTICE, "Plex version %s.", Cocoa_GetAppVersion());
 #elif defined(_WIN32) && !defined(HAS_XBOX_HARDWARE)
   CLog::Log(LOGNOTICE, "Starting XBMC, Platform: Windows.  Built on %s (compiler %i)", __DATE__, _MSC_VER);
 #else
@@ -975,9 +975,9 @@ HRESULT CApplication::Create(HWND hWnd)
   char szXBEFileName[1024];
   CIoSupport::GetXbePath(szXBEFileName);
   CStdString strLogFile;
-  strLogFile.Format("%sxbmc.log", _P(g_stSettings.m_logFolder).c_str());
+  strLogFile.Format("%splex.log", _P(g_stSettings.m_logFolder).c_str());
 
-  CLog::Log(LOGNOTICE, "The executeable running is: %s", szXBEFileName);
+  CLog::Log(LOGNOTICE, "The executable running is: %s", szXBEFileName);
   CLog::Log(LOGNOTICE, "Log File is located: %s", strLogFile.c_str());
   CLog::Log(LOGNOTICE, "-----------------------------------------------------------------------");
 
@@ -1073,6 +1073,9 @@ HRESULT CApplication::Create(HWND hWnd)
   //init the present parameters with values that are supported
   RESOLUTION initialResolution = g_videoConfig.GetInitialMode();
 #endif
+  
+  // Reset FPS to the display FPS. 
+  g_infoManager.ResetFPS(g_graphicsContext.GetFPS());
 
 #ifndef __APPLE__
   // Transfer the resolution information to our graphics context
@@ -3078,12 +3081,12 @@ void CApplication::Render()
   MEASURE_FUNCTION;
 
   {
-    // Frame rate limiter (really bad, but it does the trick :p)
-    const static unsigned int singleFrameTime = 10; // default limit 100 fps
+    // Frame rate limiter.
+    unsigned int singleFrameTime = 1000 / (g_graphicsContext.GetFPS() != 0 ? g_graphicsContext.GetFPS() : 75); // Default limit ~77 FPS
     static unsigned int lastFrameTime = 0;
     unsigned int currentTime = timeGetTime();
     int nDelayTime = 0;
-
+    
 #ifdef HAS_SDL
     m_bPresentFrame = false;
     if (g_graphicsContext.IsFullScreenVideo() && !IsPaused())
@@ -3103,15 +3106,18 @@ void CApplication::Render()
       // only "limit frames" if we are not using vsync.
       double graphicsFPS = (double)g_infoManager.GetFPS();
       double screenFPS = (double)g_graphicsContext.GetFPS();
-      
+
       if (g_videoConfig.GetVSyncMode() != VSYNC_ALWAYS ||
           (graphicsFPS > screenFPS + 10) && graphicsFPS > 1000/singleFrameTime)
       {
         if (lastFrameTime + singleFrameTime > currentTime)
           nDelayTime = lastFrameTime + singleFrameTime - currentTime;
-
-        if (screenFPS > 0 && g_videoConfig.GetVSyncMode() == VSYNC_ALWAYS)
-          CLog::Log(LOGWARNING, "VSYNC ignored by driver (FPS=%.0f) enabling framerate limiter to sleep (%d)", graphicsFPS, nDelayTime);
+        
+        // This doesn't reliably work, since on NVidia hardware screenFPS != 0 and vsync stops working when the 
+        // application is hidden. Since the frame rate limiter now works really well, it's not a big deal.
+        //
+        //if (screenFPS > 0 && g_videoConfig.GetVSyncMode() == VSYNC_ALWAYS)
+        //  CLog::Log(LOGWARNING, "VSYNC ignored by driver (FPS=%.0f) enabling framerate limiter to sleep (%d)", graphicsFPS, nDelayTime);
 
         Sleep(nDelayTime);
       }
@@ -5041,6 +5047,9 @@ void CApplication::OnPlayBackEnded()
 
 void CApplication::OnPlayBackStarted()
 {
+  // Reset to the claimed video FPS.
+  g_infoManager.ResetFPS(m_pPlayer->GetActualFPS());
+  
 #ifdef HAS_PYTHON
   // informs python script currently running playback has started
   // (does nothing if python is not loaded)
@@ -5087,6 +5096,9 @@ void CApplication::OnQueueNextItem()
 
 void CApplication::OnPlayBackStopped()
 {
+  // Reset FPS to the display FPS. 
+  g_infoManager.ResetFPS(g_graphicsContext.GetFPS());
+  
   // informs python script currently running playback has ended
   // (does nothing if python is not loaded)
 #ifdef HAS_PYTHON

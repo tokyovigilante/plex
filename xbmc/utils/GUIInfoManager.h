@@ -570,6 +570,7 @@ public:
 
   std::string GetSystemHeatInfo(int info);
 
+  void ResetFPS(float value) { m_frameCounter = 0; m_frameClumpTime = 0; m_fps = value; }
   void UpdateFPS();
   inline float GetFPS() const { return m_fps; };
 
@@ -644,6 +645,7 @@ protected:
   float m_fps;
   unsigned int m_frameCounter;
   unsigned int m_lastFPSTime;
+  unsigned int m_frameClumpTime;
 
   CStdString m_launchingXBE;
 

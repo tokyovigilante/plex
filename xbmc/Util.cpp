@@ -1641,7 +1641,7 @@ void CUtil::GetHomePath(CStdString& strPath)
         given_path[n] = '\0';
 
       // Assume local path inside application bundle.
-      strcat(given_path, "../Resources/XBMC/");
+      strcat(given_path, "../Resources/Plex/");
 
       // Convert to real path.
       char real_path[2*MAXPATHLEN];

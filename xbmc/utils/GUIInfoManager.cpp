@@ -101,6 +101,10 @@ CGUIInfoManager::CGUIInfoManager(void)
   m_stringParameters.push_back("__ZZZZ__");   // to offset the string parameters by 1 to assure that all entries are non-zero
   m_currentFile = new CFileItem;
   m_currentSlide = new CFileItem;
+  m_lastFPSTime = 0;
+  m_frameCounter = 0;
+  m_frameClumpTime = 0;
+  m_fps = 0.0;
 }
 
 CGUIInfoManager::~CGUIInfoManager(void)
@@ -3381,17 +3385,30 @@ void CGUIInfoManager::Clear()
   m_CombinedValues.clear();
 }
 
+#define FRAME_CLUMP_SIZE 3
+
 void CGUIInfoManager::UpdateFPS()
 {
-  m_frameCounter++;
-  float fTimeSpan = (float)(timeGetTime() - m_lastFPSTime);
-  if (fTimeSpan >= 1000.0f)
+  int now = timeGetTime();
+  
+  if (m_frameCounter % FRAME_CLUMP_SIZE == 0 && m_frameCounter != 0)
   {
-    fTimeSpan /= 1000.0f;
-    m_fps = m_frameCounter / fTimeSpan;
-    m_lastFPSTime = timeGetTime();
-    m_frameCounter = 0;
+    // Compute averaged FPS.
+    float fps = (FRAME_CLUMP_SIZE-1) / (float)(m_frameClumpTime) * 1000.0;
+
+    // Compute weighted running average.
+    m_fps = 0.05 * fps + 0.95 * m_fps;
+  
+    m_frameClumpTime = 0;
   }
+  else
+  {
+    // We're clumping together frames, add the time.
+    m_frameClumpTime += (now - m_lastFPSTime);
+  }
+  
+  m_frameCounter++;
+  m_lastFPSTime = now;
 }
 
 int CGUIInfoManager::AddListItemProp(const CStdString &str)

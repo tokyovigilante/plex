@@ -1,6 +1,7 @@
 build/
-XBMC.xcodeproj/*.mode1v3
-XBMC.xcodeproj/*.pbxuser
+Plex.xcodeproj/*.mode1v3
+Plex.xcodeproj/*.pbxuser
 .firstrun
 .settings/
 tools/EventClients/Clients/XBMCHelper/XBMCHelper
+Edit/

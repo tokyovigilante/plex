@@ -67,8 +67,13 @@ void CLog::Log(int loglevel, const char *format, ... )
       // and if we are running from DVD, it's changed to T: in CApplication::Create()
       CStdString strLogFile, strLogFileOld;
 
+#ifdef __APPLE__
+      strLogFile.Format("%sPlex.log", _P(g_stSettings.m_logFolder).c_str());
+      strLogFileOld.Format("%sPlex.old.log", _P(g_stSettings.m_logFolder).c_str());
+#else
       strLogFile.Format("%sxbmc.log", _P(g_stSettings.m_logFolder).c_str());
       strLogFileOld.Format("%sxbmc.old.log", _P(g_stSettings.m_logFolder).c_str());
+#endif
 
 #ifndef _LINUX
       ::DeleteFile(strLogFileOld.c_str());

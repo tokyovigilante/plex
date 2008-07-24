@@ -1827,7 +1827,7 @@
 		E36C29E70DA72486001F0C9D /* ScraperUrl.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ScraperUrl.cpp; sourceTree = "<group>"; };
 		E36C29E80DA72486001F0C9D /* MusicArtistInfo.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = MusicArtistInfo.cpp; sourceTree = "<group>"; };
 		E36C29E90DA72486001F0C9D /* Fanart.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Fanart.cpp; sourceTree = "<group>"; };
-		E371C1160E2F130900FBF841 /* Plex.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Plex.xib; path = ../../../Java/XBMC/xbmc/osx/Plex.xib; sourceTree = SOURCE_ROOT; };
+		E371C1160E2F130900FBF841 /* Plex.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Plex.xib; path = xbmc/osx/Plex.xib; sourceTree = "<group>"; };
 		E371C1390E2F151A00FBF841 /* PlexApplication.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PlexApplication.h; sourceTree = "<group>"; };
 		E371C13A0E2F151A00FBF841 /* PlexApplication.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PlexApplication.m; sourceTree = "<group>"; };
 		E371C1DF0E2F2AC300FBF841 /* Plex.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Plex.app; sourceTree = BUILT_PRODUCTS_DIR; };
