@@ -564,7 +564,8 @@ bool CFileItem::IsInternetStream() const
       strProtocol == "http"  || strProtocol == "ftp" ||
       strProtocol == "rtsp"  || strProtocol == "rtp" ||
       strProtocol == "udp"   || strProtocol == "lastfm" ||
-      strProtocol == "https" || strProtocol == "xbms")
+      strProtocol == "https" || strProtocol == "xbms" ||
+      strProtocol == "rtmp")
     return true;
 
   return false;
@@ -2385,6 +2386,14 @@ void CFileItem::SetUserVideoThumb()
 /// and cache that image as our fanart.
 void CFileItem::CacheVideoFanart() const
 {
+  if (IsVideoDb())
+  {
+    if (!HasVideoInfoTag())
+      return; // nothing can be done
+    CFileItem dbItem(m_bIsFolder ? GetVideoInfoTag()->m_strPath : GetVideoInfoTag()->m_strFileNameAndPath, m_bIsFolder);
+    return dbItem.CacheVideoFanart();
+  }
+
   CStdString cachedFanart(GetCachedVideoFanart());
   // First check for an already cached fanart image
   if (CFile::Exists(cachedFanart))
@@ -2404,6 +2413,12 @@ void CFileItem::CacheVideoFanart() const
 CStdString CFileItem::GetCachedVideoFanart() const
 {
   // get the locally cached thumb
+  if (IsVideoDb())
+  {
+    if (!HasVideoInfoTag())
+      return "";
+    return CFileItem::GetCachedVideoFanart(m_bIsFolder ? GetVideoInfoTag()->m_strPath : GetVideoInfoTag()->m_strFileNameAndPath);
+  }
   return CFileItem::GetCachedVideoFanart(m_strPath);
 }
 

@@ -975,7 +975,7 @@ HRESULT CApplication::Create(HWND hWnd)
   char szXBEFileName[1024];
   CIoSupport::GetXbePath(szXBEFileName);
   CStdString strLogFile;
-  strLogFile.Format("%splex.log", _P(g_stSettings.m_logFolder).c_str());
+  strLogFile.Format("%sPlex.log", _P(g_stSettings.m_logFolder).c_str());
 
   CLog::Log(LOGNOTICE, "The executable running is: %s", szXBEFileName);
   CLog::Log(LOGNOTICE, "Log File is located: %s", strLogFile.c_str());
@@ -1624,10 +1624,10 @@ CProfile* CApplication::InitDirectoriesOSX()
 
   CStdString strExecutablePath;
   CUtil::GetHomePath(strExecutablePath);
-  setenv("XBMC_HOME", strExecutablePath.c_str(), 0);
+  setenv("PLEX_HOME", strExecutablePath.c_str(), 0);
 
   // Z: common for both
-  CIoSupport::RemapDriveLetter('Z',"/tmp/xbmc");
+  CIoSupport::RemapDriveLetter('Z',"/tmp/plex");
   CreateDirectory(_P("Z:\\"), NULL);
 
   CStdString home = getenv("HOME");

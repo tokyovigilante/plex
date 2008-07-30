@@ -73,6 +73,7 @@
 #include "FileItem.h"
 #include "URL.h"
 #include "RTSPTVDirectory.h"
+#include "RSSDirectory.h"
 
 using namespace DIRECTORY;
 
@@ -149,7 +150,7 @@ IDirectory* CFactoryDirectory::Create(const CStdString& strPath)
     if (strProtocol == "myth") return new CCMythDirectory();
     if (strProtocol == "cmyth") return new CCMythDirectory();
     if (strProtocol == "rtsp") return new RTSPTVDirectory();
-
+    if (strProtocol == "rss") return new CRSSDirectory();
   }
 
  return NULL;

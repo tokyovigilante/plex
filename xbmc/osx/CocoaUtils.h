@@ -46,7 +46,7 @@ extern "C"
   void* Cocoa_GL_GetFullScreenPixelFormat(int screen);
   void* Cocoa_GL_GetCurrentContext();
   void* Cocoa_GL_CreateContext(void* pixFmt, void* shareCtx);
-  void  Cocoa_GL_ResizeWindow(void *theContext, int w, int h);
+  void* Cocoa_GL_ResizeWindow(void *theContext, int w, int h);
   void  Cocoa_GL_SetFullScreen(int screen, int width, int height, bool fs, bool blankOtherDisplay, bool fakeFullScreen);
   void  Cocoa_GL_EnableVSync(bool enable);
 
@@ -59,7 +59,7 @@ extern "C"
   //
   // SDL Hack
   //
-  void Cocoa_GL_ReplaceSDLWindowContext();
+  void* Cocoa_GL_ReplaceSDLWindowContext();
 
   //
   // Power and Screen

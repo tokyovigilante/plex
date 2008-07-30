@@ -171,30 +171,61 @@ double Cocoa_GetScreenRefreshRate(int screen)
   // Figure out the refresh rate.
   CFDictionaryRef mode = CGDisplayCurrentMode(Cocoa_GetDisplay(screen));
   return (mode != NULL) ? getDictDouble(mode, kCGDisplayRefreshRate) : 0.0f;
- }
+}
 
-void Cocoa_GL_ResizeWindow(void *theContext, int w, int h)
+void QZ_ChangeWindowSize(int w, int h);
+
+static NSView* windowedView = 0;
+
+void* Cocoa_GL_ResizeWindow(void *theContext, int w, int h)
 {
   if (!theContext)
-    return;
+    return 0;
   
   NSOpenGLContext* context = Cocoa_GL_GetCurrentContext();
   NSView* view;
   NSWindow* window;
   
   view = [context view];
+  
+  // If we're moving to full-screen, we've probably changed contexts already,
+  // so it's better to grab the view from the saved one.
+  //
+  if (windowedView != 0)
+  {
+    // First, resize that view, though.
+    if (view)
+    {
+       window = [view window];
+
+      [window setContentSize:NSMakeSize(w, h)];
+      [window update];
+      [view setFrameSize:NSMakeSize(w, h)];
+      [context update];
+      [window center];
+    }
+  
+    view = windowedView;
+    window = [view window];
+  }
+  
   if (view && w>0 && h>0)
   {
     window = [view window];
     if (window)
     {
-      [window setContentSize:NSMakeSize(w,h)];
+      [window setContentSize:NSMakeSize(w, h)];
       [window update];
       [view setFrameSize:NSMakeSize(w, h)];
       [context update];
       [window center];
     }
   }
+  
+  // HACK to make sure SDL realizes the window size changed to help with mouse pointers.
+  QZ_ChangeWindowSize(w, h);  
+
+  return context;
 }
 
 void Cocoa_GL_BlankOtherDisplays(int screen)
@@ -277,6 +308,7 @@ void Cocoa_GL_SetFullScreen(int screen, int width, int height, bool fs, bool bla
     // Save these values.
     lastView = [context view];
     lastScreen = [[lastView window] screen];
+    windowedView = lastView;
     
     if (fakeFullScreen == false)
     {
@@ -451,6 +483,7 @@ void Cocoa_GL_SetFullScreen(int screen, int width, int height, bool fs, bool bla
     lastView = NULL;
     lastScreen = NULL;
     fullScreenDisplay = 0;
+    windowedView = 0;
   }
 }
 
@@ -461,7 +494,7 @@ void Cocoa_GL_EnableVSync(bool enable)
   
   // Flush synchronised with vertical retrace                       
   GLint theOpenGLCPSwapInterval = enable ? 1 : 0;
-  [context setValues:(const GLint*)&theOpenGLCPSwapInterval forParameter:(NSOpenGLContextParameter) NSOpenGLCPSwapInterval];
+  [context setValues:&theOpenGLCPSwapInterval forParameter:NSOpenGLCPSwapInterval];
   
 #else
 
@@ -538,13 +571,13 @@ void* Cocoa_GL_CreateContext(void* pixFmt, void* shareCtx)
   return newContext;
 }
 
-void Cocoa_GL_ReplaceSDLWindowContext()
+void* Cocoa_GL_ReplaceSDLWindowContext()
 {
   NSOpenGLContext* context = (NSOpenGLContext*)Cocoa_GL_GetCurrentContext();
   NSView* view = [context view];
   
   if (!view)
-    return;
+    return 0;
   
   // disassociate view from context
   [context clearDrawable];
@@ -556,18 +589,20 @@ void Cocoa_GL_ReplaceSDLWindowContext()
   // obtain window pixelformat
   NSOpenGLPixelFormat* pixFmt = (NSOpenGLPixelFormat*)Cocoa_GL_GetWindowPixelFormat();
   if (!pixFmt)
-    return;
+    return 0;
   
   NSOpenGLContext* newContext = (NSOpenGLContext*)Cocoa_GL_CreateContext((void*)pixFmt, nil);
   [pixFmt release];
   
   if (!newContext)
-    return;
+    return 0;
   
   // associate with current view
   [newContext setView:view];
   [newContext makeCurrentContext];
   lastOwnedContext = newContext;
+  
+  return newContext;
 }
 
 int Cocoa_DimDisplayNow()
@@ -693,5 +728,5 @@ void* Cocoa_GetDisplayPort()
   //return GetWindowPort(refWindow);
   
   WindowRef refWindow = [childWindow windowRef];
-  return GetWindowPort(refWindow);
+  return (void* )GetWindowPort(refWindow);
 }

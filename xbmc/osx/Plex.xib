@@ -8,8 +8,8 @@
 		<string key="IBDocument.HIToolboxVersion">352.00</string>
 		<object class="NSMutableArray" key="IBDocument.EditedObjectIDs">
 			<bool key="EncodedWithXMLCoder">YES</bool>
-			<integer value="455"/>
 			<integer value="296"/>
+			<integer value="455"/>
 		</object>
 		<object class="NSArray" key="IBDocument.PluginDependencies">
 			<bool key="EncodedWithXMLCoder">YES</bool>
@@ -182,8 +182,8 @@
 			<object class="NSWindowTemplate" id="681736944">
 				<int key="NSWindowStyleMask">7</int>
 				<int key="NSWindowBacking">2</int>
-				<string key="NSWindowRect">{{196, 255}, {297, 255}}</string>
-				<int key="NSWTFlags">1677721600</int>
+				<string key="NSWindowRect">{{771, 469}, {297, 255}}</string>
+				<int key="NSWTFlags">1685585920</int>
 				<string key="NSWindowTitle">About</string>
 				<string key="NSWindowClass">NSWindow</string>
 				<nil key="NSViewClass"/>
@@ -518,7 +518,7 @@
 							<reference key="NSSuperview" ref="862728437"/>
 							<bool key="NSEnabled">YES</bool>
 							<object class="NSTextFieldCell" key="NSCell" id="768952906">
-								<int key="NSCellFlags">68288064</int>
+								<int key="NSCellFlags">70385217</int>
 								<int key="NSCellFlags2">138413056</int>
 								<string key="NSContents">Version</string>
 								<reference key="NSSupport" ref="594557995"/>
@@ -538,10 +538,6 @@
 				<string key="NSClassName">PlexDelegate</string>
 			</object>
 			<object class="NSUserDefaultsController" id="566704104">
-				<object class="NSMutableArray" key="NSDeclaredKeys">
-					<bool key="EncodedWithXMLCoder">YES</bool>
-					<string>self</string>
-				</object>
 				<bool key="NSSharedInstance">YES</bool>
 			</object>
 		</object>
@@ -663,6 +659,22 @@
 						<reference key="destination" ref="102151532"/>
 					</object>
 					<int key="connectionID">475</int>
+				</object>
+				<object class="IBConnectionRecord">
+					<object class="IBBindingConnection" key="connection">
+						<string key="label">value: versionString</string>
+						<reference key="source" ref="350042516"/>
+						<reference key="destination" ref="908504182"/>
+						<object class="NSNibBindingConnector" key="connector">
+							<reference key="NSSource" ref="350042516"/>
+							<reference key="NSDestination" ref="908504182"/>
+							<string key="NSLabel">value: versionString</string>
+							<string key="NSBinding">value</string>
+							<string key="NSKeyPath">versionString</string>
+							<int key="NSNibBindingConnectorVersion">2</int>
+						</object>
+					</object>
+					<int key="connectionID">478</int>
 				</object>
 			</object>
 			<object class="IBMutableOrderedSet" key="objectRecords">
@@ -993,12 +1005,12 @@
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>{{475, 832}, {234, 43}}</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
-					<string>{{43, 270}, {297, 255}}</string>
+					<string>{{27, 280}, {297, 255}}</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<integer value="0" id="6"/>
 					<reference ref="6"/>
-					<string>{{43, 270}, {297, 255}}</string>
-					<integer value="0"/>
+					<string>{{27, 280}, {297, 255}}</string>
+					<reference ref="6"/>
 					<string>{3.40282e+38, 3.40282e+38}</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
@@ -1038,7 +1050,7 @@
 				</object>
 			</object>
 			<nil key="sourceID"/>
-			<int key="maxID">475</int>
+			<int key="maxID">478</int>
 		</object>
 		<object class="IBClassDescriber" key="IBDocument.Classes">
 			<object class="NSMutableArray" key="referencedPartialClassDescriptions">
@@ -1082,7 +1094,7 @@
 			</object>
 		</object>
 		<int key="IBDocument.localizationMode">0</int>
-		<string key="IBDocument.LastKnownRelativeProjectPath">../../../../C++/Eclipse/XBMC-Fork/XBMC.xcodeproj</string>
+		<string key="IBDocument.LastKnownRelativeProjectPath">../../Plex.xcodeproj</string>
 		<int key="IBDocument.defaultPropertyAccessControl">3</int>
 	</data>
 </archive>

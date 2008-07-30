@@ -1,8 +1,7 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?>
-<!--Language file translated with Team XBMC Translator-->
-<!--Translator: jutski (->7/2006) Mikko70 (1/2007->)-->
-<!--Date of translation: 27/5/2008-->
-<!--Finnish strings based on English strings version 13245-->
+﻿<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<!--Finnish strings based on English strings version 14051-->
+<!--Date of translation: 14/7/2008-->
+<!--Translator: jutski (->7/2006) Mika Pirinen (1/2007->)-->
 <strings>
   <string id="0">Ohjelmat</string>
   <string id="1">Kuvat</string>
@@ -206,10 +205,10 @@
   <string id="269">Järjestä: Esittäjä</string>
   <string id="270">Järjestä: Albumi</string>
   <string id="271">100 suosituinta</string>
-  <string id="272">Määritä kuvan vasen yläkulma</string>
-  <string id="273">Määritä kuvan oikea alakulma</string>
-  <string id="274">Määritä tekstityksen sijainti</string>
-  <string id="275">Määritä pikselin muoto</string>
+  <string id="272">Aseta kuvan vasen yläkulma</string>
+  <string id="273">Aseta kuvan oikea alakulma</string>
+  <string id="274">Aseta tekstityksen sijainti</string>
+  <string id="275">Aseta pikselimuoto</string>
   <string id="276">Siirtämällä nuolta voit määrittää näkyvän kuva-alan</string>
   <string id="277">Siirtämällä palkkia voit määrittää tekstityksen sijainnin kuvaruudulla</string>
   <string id="278">Muuta laatikon sivujen suhdetta siten, että laatikosta tulee täysin neliö</string>
@@ -353,16 +352,16 @@
   <string id="425">Albumin tietoja ei löytynyt.</string>
   <string id="426">CD-tietokannasta ei löytynyt tietoja.</string>
   <string id="427">Levy</string>
-  <string id="428">Aseta oikea CD/DVD</string>
+  <string id="428">Aseta oikea CD/DVD-levy</string>
   <string id="429">Aseta seuraava CD/DVD-levy</string>
   <string id="430">Järjestä: DVD nro</string>
   <string id="431">Ei välimuistia</string>
   <string id="432">Poista elokuva tietokannasta</string>
   <string id="433">Haluatko varmasti poistaa '%sin'?</string>
   <string id="434"></string>
-  <string id="435">Raita</string>
-  <string id="436">Valmistusvuosi</string>
-  <string id="437">Kesto</string>
+  <string id="435"></string>
+  <string id="436"></string>
+  <string id="437">Siirrettävä levy</string>
   <string id="438">Avataan tiedosto</string>
   <string id="439">Välimuistit</string>
   <string id="440">Kiintolevy</string>
@@ -773,25 +772,25 @@
   <string id="10005">Musiikki</string>
   <string id="10006">Videot</string>
   <string id="10007">Järjestelmän tiedot</string>
-  <string id="10008">Asetukset-&gt;Yleiset</string>
-  <string id="10009">Asetukset-&gt;Näyttö</string>
-  <string id="10010">Asetukset-&gt;Ulkoasu-&gt;Käyttöliittymän kalibrointi</string>
-  <string id="10011">Asetukset-&gt;Videot-&gt;Kuvaruudun kalibrointi</string>
-  <string id="10012">Asetukset-&gt;Kuvat</string>
-  <string id="10013">Asetukset-&gt;Ohjelmat</string>
-  <string id="10014">Asetukset-&gt;Sää</string>
-  <string id="10015">Asetukset-&gt;Musiikki</string>
-  <string id="10016">Asetukset-&gt;Järjestelmä</string>
-  <string id="10017">Asetukset-&gt;Videot</string>
-  <string id="10018">Asetukset-&gt;Verkko</string>
-  <string id="10019">Asetukset-&gt;Ulkoasu</string>
+  <string id="10008">Asetukset - Yleiset</string>
+  <string id="10009">Asetukset - Näyttö</string>
+  <string id="10010">Asetukset - Ulkoasu - Käyttöliittymän kalibrointi</string>
+  <string id="10011">Asetukset - Videot - Kuvaruudun kalibrointi</string>
+  <string id="10012">Asetukset - Kuvat</string>
+  <string id="10013">Asetukset - Ohjelmat</string>
+  <string id="10014">Asetukset - Sää</string>
+  <string id="10015">Asetukset - Musiikki</string>
+  <string id="10016">Asetukset - Järjestelmä</string>
+  <string id="10017">Asetukset - Videot</string>
+  <string id="10018">Asetukset - Verkko</string>
+  <string id="10019">Asetukset - Ulkoasu</string>
   <string id="10020">Skriptit</string>
   <string id="10021"></string>
   <string id="10022"></string>
   <string id="10023"></string>
   <string id="10025"></string>
   <string id="10028">Videot/Soittolista</string>
-  <string id="10034">Asetukset-&gt;Profiilit</string>
+  <string id="10034">Asetukset - Profiilit</string>
   
   <string id="10100">Kyllä/ei -dialogi</string>
   <string id="10101">Tila-dialogi</string>
@@ -1698,12 +1697,18 @@
   <string id="20409">Luetaan tiedot TV-ohjelmasta</string>
   <string id="20410">Esittely</string>
   <string id="20411">Kutista</string>
-  <string id="20412">Kutista vain yhden kauden TV-ohjelmat</string>
+  <string id="20412">Kutista TV-ohjelmat</string>
   <string id="20413">Nouda Fanikuvat</string>
   <string id="20414">Näytä Fanikuvat videokirjastossa</string>
   <string id="20415">Hae uusien sisältö</string>
   <string id="20416">Ensimmäinen esitys</string>
   <string id="20417">Käsikirjoittaja</string>
+  <string id="20418">Siivoa tiedostonimet</string>
+  <string id="20419">Yhdistä samannimiset TV-ohjelmat</string>
+  <string id="20420">Ei koskaan</string>
+  <string id="20421">Jos samalla tuotantokaudella</string>
+  <string id="20422">Aina</string>
+
   <!-- up to 21329 is reserved for the video db !! !-->
 
   <string id="21330">Näytä piilotetut tiedostot ja kansiot</string>
@@ -1717,9 +1722,9 @@
   <string id="21337">TuxBox laite</string>
   <!-- up to 21355 is reserved for the TuxBox Client!! !-->
 
-  <string id="21356">UPnP musiikki</string>
-  <string id="21357">UPnP video</string>
-  <string id="21358">UPnP kuvat</string>
+  <string id="21356">UPnP-musiikki</string>
+  <string id="21357">UPnP-video</string>
+  <string id="21358">UPnP-kuvat</string>
   <string id="21359">Lisää sijainti</string>
   <string id="21360">UPnP-palvelin käytössä</string>
   <string id="21361">Muokkaa UPnP-musiikin sijaintia</string>
@@ -1747,11 +1752,11 @@
   <string id="21383">Vierityspalkit käytössä</string>
   <string id="21384">Videokirjastossa piilota katsotut</string> 
   <string id="21385">Avaa</string> 
-  <string id="21386">Äänekkyyden asetukset</string>
+  <string id="21386">Äänekkyyden säädöt</string>
   <string id="21387">Nopea</string>
   <string id="21388">Hiljainen</string>
   <string id="21389">Omavalintainen tausta käytössä</string>
-  <string id="21390">Sähkönkulutuksen asetukset</string>
+  <string id="21390">Energiatehokkuuden säädöt</string>
   <string id="21391">Normaalitila</string>
   <string id="21392">Tehonsäästötila</string>
   <string id="21393">Normaali valmiustila</string>
@@ -1879,12 +1884,13 @@
 
   <string id="22000">Päivitä kirjasto ohjelman käynnistyessä</string>
   <string id="22001">Suorita päivitys taustalla</string>
-  <string id="22002">DNS loppupääte</string>
+  <string id="22002">DNS-loppupääte</string>
   <string id="22003">EDl-leikkaustieto luettelo käytössä</string>
 
   <string id="29999">Näytön välkynnän poisto</string>
 
   <!-- strings 30000 thru 31000 reserved for plugin settings -->
   <!-- strings 31000 thru 31999 reserved for skins -->
+  <!-- strings 32000 thru 32999 reserved for scripts -->
 
 </strings>

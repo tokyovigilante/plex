@@ -1,10 +1,10 @@
 ﻿<?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <!--Language file translated with Team XBMC Translator-->
-<!--Translator: MsG-->
+<!--Translator: Mathijs Groothuis-->
 <!--Email: mathijs.groothuis@gmail.com-->
-<!--Date of translation: 05/09/2008-->
+<!--Date of translation: 07/22/2008-->
 <!--$Revision$-->
-<!--Based on english strings version 12748-->
+<!--Based on english strings version 14051-->
 <strings>
   <string id="0">Programma's</string>
   <string id="1">Afbeeldingen</string>
@@ -454,6 +454,8 @@
   <string id="542">DVD-iconen</string>
   <string id="543">DVD</string>
   <string id="544">Media-info</string>
+  <string id="545">Geluidsuitvoerapparaat</string>
+  <string id="547">Geen biografie beschikbaar voor artiest</string>
   <string id="550">Sorteer: %s</string>
   <string id="551">Naam</string>
   <string id="552">Datum</string>
@@ -506,6 +508,7 @@
   <string id="608">Kopiëren van CD of nummer mislukt</string>
   <string id="609">CDDA-doelmap is niet ingegeven.</string>
   <string id="610">Audiotrack rippen</string>
+  <string id="611">Voer nummer in</string>
   <string id="620">CD's kopiëren</string>
   <string id="621">Encoder</string>
   <string id="622">Kwaliteit</string>
@@ -1229,7 +1232,7 @@ voor deze visualisatie</string>
   <string id="15268">Populairste artiesten van %name%</string>
   <string id="15269">Populairste albums van %name%</string>
   <string id="15270">Populairste muzieknummers van %name%</string>
-  <string id="15271">Populairste van %name%</string>
+  <string id="15271">Vrienden van %name%</string>
   <string id="15272">Buren van %name%</string>
   <string id="15273">Wekelijkse artiestenhitlijst voor %name%</string>
   <string id="15274">Wekelijkse albumhitlijst voor %name%</string>

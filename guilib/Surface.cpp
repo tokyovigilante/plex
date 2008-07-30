@@ -334,7 +334,7 @@ CSurface::CSurface(int width, int height, bool doublebuffer, CSurface* shared,
     m_SDLSurface = SDL_SetVideoMode(m_iWidth, m_iHeight, 0, SDL_OPENGL);
 
     // the context SDL creates isn't full screen compatible, so we create new one
-    Cocoa_GL_ReplaceSDLWindowContext();
+    m_glContext = Cocoa_GL_ReplaceSDLWindowContext();
 #else
     int options = SDL_OPENGL | (fullscreen?SDL_FULLSCREEN:0);
     m_SDLSurface = SDL_SetVideoMode(m_iWidth, m_iHeight, 0, options);
@@ -363,8 +363,6 @@ CSurface::CSurface(int width, int height, bool doublebuffer, CSurface* shared,
     }
 
 #ifdef __APPLE__
-    // Get the context.
-    m_glContext = Cocoa_GL_GetCurrentContext();
   }
   else
   {
@@ -558,17 +556,12 @@ void CSurface::EnableVSync(bool enable)
 #endif
 
 #ifdef __APPLE__
-  if (enable == true && m_bVSync == false)
+  if (enable != m_bVSync)
   {
-    CLog::Log(LOGINFO, "GL: Enabling VSYNC");
-    Cocoa_GL_EnableVSync(true);
+    CLog::Log(LOGINFO, "GL: %s VSYNC", (enable ? "Enabling" : "Disabling"));
+    Cocoa_GL_EnableVSync(enable);
+    m_bVSync = enable;
   }
-  else if (enable == false && m_bVSync == true)
-  {
-    CLog::Log(LOGINFO, "GL: Disabling VSYNC");
-    Cocoa_GL_EnableVSync(false);
-  }
-  m_bVSync = enable;
   return;
 #else
   if (enable)
@@ -768,7 +761,14 @@ bool CSurface::MakeCurrent()
 #endif
 
 #ifdef __APPLE__
-  if (m_glContext)
+  if (m_pShared)
+  {
+    // Use the shared context, because ours might not be up to date (e.g. if
+    // a transition from windowed to full-screen took place).
+    //
+    m_pShared->MakeCurrent();
+  }
+  else if (m_glContext)
   {
     Cocoa_GL_MakeCurrentContext(m_glContext);
     return true;
@@ -797,7 +797,7 @@ void CSurface::ReleaseContext()
 #endif
 }
 
-bool CSurface::ResizeSurface(int newWidth, int newHeight)
+bool CSurface::ResizeSurface(int newWidth, int newHeight, bool useNewContext)
 {
   CLog::Log(LOGDEBUG, "Asking to resize surface to %d x %d", newWidth, newHeight);
 #ifdef HAS_GLX
@@ -809,9 +809,13 @@ bool CSurface::ResizeSurface(int newWidth, int newHeight)
   }
 #endif
 #ifdef __APPLE__
-  Cocoa_GL_ResizeWindow(m_glContext, newWidth, newHeight);
 
-  // If we've resize, we likely lose the vsync settings.
+  void* newContext = Cocoa_GL_ResizeWindow(m_glContext, newWidth, newHeight);
+  
+  if (useNewContext)
+    m_glContext = newContext; 
+  
+  // If we've resized, we likely lose the vsync settings.
   m_bVSync = false;
 #endif
 

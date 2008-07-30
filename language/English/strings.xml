@@ -10,7 +10,7 @@
   <string id="6">XBMC SVN</string>
   <string id="7">Filemanager</string>
   <string id="8">Weather</string>
-  <string id="9">xbmc</string>
+  <string id="9">Plex</string>
 
   <string id="11">Monday</string>
   <string id="12">Tuesday</string>
@@ -779,6 +779,8 @@
   <string id="1412">windy</string>
   <string id="1413">drizzle</string>
   <string id="1414">T-Storm</string>
+  <string id="1415">Drizzle</string>
+  <string id="1416">Foggy</string>
 
   <!-- strings through to 1450 reserved for weather translation -->
 
@@ -819,8 +821,8 @@
 
   <string id="10210">Looking for subtitles...</string>
   <string id="10211">Caching subtitles...</string>
-  <string id="10212">terminating</string>
-  <string id="10213">buffering</string>
+  <string id="10212">Terminating</string>
+  <string id="10213">Buffering</string>
   <string id="10214">Opening Stream</string>
 
   <string id="10500">Music/Playlist</string>
@@ -1154,11 +1156,11 @@
   <string id="13411">Minimum fanspeed</string>
   
   <string id="13600">Remote Helper</string>
-  <string id="13601">Apple Remote Mode</string>
+  <string id="13601">Apple Remote Mode</string>  
   <string id="13602">Always Running</string>
   <string id="13603">Sequence Delay Time</string>
-  <string id="13604">Enable Secure Input</string>
-  
+  <string id="13604">Enable Secure Input</string>  
+
   <string id="13610">Disabled</string>
   <string id="13611">Standard</string>
   <string id="13612">Universal Remote</string>
@@ -1426,6 +1428,7 @@
   <string id="16025">Enter the Artist Name</string>
   <string id="16026">Playlist playback aborted</string>
   <string id="16027">Too many consecutive failed items</string>
+  <string id="16028">Enter value</string>
 
   <string id="16030">Party Mode mode aborted.</string>
   <string id="16031">No matching songs in the Library.</string>
@@ -1780,12 +1783,20 @@
   <string id="20409">Downloading TV Show information</string>
   <string id="20410">Trailer</string>
   <string id="20411">Flatten</string>
-  <string id="20412">Flatten TV Show if only a single season</string>
+  <string id="20412">Flatten TV Show</string>
   <string id="20413">Get FanArt</string>
   <string id="20414">Show Fanart in Video Library</string>
   <string id="20415">Scanning for new content</string>
   <string id="20416">First Aired</string>
   <string id="20417">Writer</string>
+  <string id="20418">Clean filenames</string>
+  <string id="20419">Stack Duplicate TV Shows</string>
+  <string id="20420">Never</string>
+  <string id="20421">If Only One Season</string>
+  <string id="20422">Always</string>
+  <string id="20423">Has Trailer</string>
+  <string id="20424">False</string>
+  
   <!-- up to 21329 is reserved for the video db !! !-->
 
   <string id="21330">Show hidden files and directories</string>
@@ -1968,4 +1979,5 @@
 
   <!-- strings 30000 thru 30999 reserved for plugins and plugin settings -->
   <!-- strings 31000 thru 31999 reserved for skins -->
+  <!-- strings 32000 thru 32999 reserved for scripts -->
 </strings>

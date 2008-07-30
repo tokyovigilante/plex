@@ -46,6 +46,7 @@ public:
   bool IsConstant() const;
   bool IsEmpty() const;
 
+  const CStdString GetFallback() const { return m_fallback; };
 private:
   void Parse(const CStdString &label);
 
@@ -82,7 +83,7 @@ public:
   void SetCursorPos(int iPos);
   int GetCursorPos() const { return m_iCursorPos;};
   void SetInfo(const CGUIInfoLabel&labelInfo);
-  void SetWidthControl(bool bScroll);
+  void SetWidthControl(bool bScroll, int scrollSpeed);
   void SetTruncate(bool bTruncate);
   void SetAlignment(DWORD align);
   void SetHighlight(unsigned int start, unsigned int end);

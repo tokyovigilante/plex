@@ -220,7 +220,7 @@ bool CGUIControlFactory::GetTexture(const TiXmlNode* pRootNode, const char* strT
   if (flipY && strcmpi(flipY, "true") == 0) image.orientation = 3 - image.orientation;  // either 3 or 2
   image.diffuse = pNode->Attribute("diffuse");
   CStdString fallback = pNode->Attribute("fallback");
-  CStdString file = pNode->FirstChild() ? pNode->FirstChild()->Value() : "";
+  CStdString file = (pNode->FirstChild() && pNode->FirstChild()->ValueStr() != "-") ? pNode->FirstChild()->Value() : "";
   image.diffuse.Replace("/", "\\");
   file.Replace("/", "\\");
   fallback.Replace("/", "\\");
@@ -591,6 +591,7 @@ CGUIControl* CGUIControlFactory::Create(DWORD dwParentId, const FRECT &rect, TiX
   CImage textureAltFocus, textureAltNoFocus;
   CImage textureRadioFocus, textureRadioNoFocus;
   CImage imageNoFocus, imageFocus;
+  CImage texturePath;
   DWORD dwColorKey = 0;
   CStdString strSuffix = "";
   FRECT borderSize = { 0, 0, 0, 0};
@@ -685,6 +686,7 @@ CGUIControl* CGUIControlFactory::Create(DWORD dwParentId, const FRECT &rect, TiX
   CRect hitRect;
   CPoint camera;
   bool   hasCamera = false;
+  int scrollSpeed = CScrollInfo::defaultSpeed;
 
   /////////////////////////////////////////////////////////////////////////////
   // Read control properties from XML
@@ -964,8 +966,9 @@ CGUIControl* CGUIControlFactory::Create(DWORD dwParentId, const FRECT &rect, TiX
   XMLUtils::GetBoolean(pControlNode, "scroll", bScrollLabel);
   XMLUtils::GetBoolean(pControlNode,"pulseonselect", bPulse);
 
-  CGUIInfoLabel texturePath;
-  GetInfoLabel(pControlNode,"imagepath", texturePath);
+  GetTexture(pControlNode, "imagepath", texturePath);
+  if (texturePath.file.IsConstant())
+    GetInfoLabel(pControlNode, "imagepath", texturePath.file);
   XMLUtils::GetDWORD(pControlNode,"timeperimage", timePerImage);
   XMLUtils::GetDWORD(pControlNode,"fadetime", fadeTime);
   XMLUtils::GetDWORD(pControlNode,"pauseatend", timeToPauseAtEnd);
@@ -1040,6 +1043,8 @@ CGUIControl* CGUIControlFactory::Create(DWORD dwParentId, const FRECT &rect, TiX
     g_SkinInfo.ResolveConstant(cam->Attribute("y"), camera.y);
   }
 
+  XMLUtils::GetInt(pControlNode, "scrollspeed", scrollSpeed);
+
   /////////////////////////////////////////////////////////////////////////////
   // Instantiate a new control using the properties gathered above
   //
@@ -1065,7 +1070,7 @@ CGUIControl* CGUIControlFactory::Create(DWORD dwParentId, const FRECT &rect, TiX
       labelInfo, wrapMultiLine, bHasPath);
     if (infoLabels.size())
       ((CGUILabelControl *)control)->SetInfo(infoLabels[0]);
-    ((CGUILabelControl *)control)->SetWidthControl(bScrollLabel);
+    ((CGUILabelControl *)control)->SetWidthControl(bScrollLabel, scrollSpeed);
   }
   else if (strType == "edit")
   {
@@ -1082,7 +1087,7 @@ CGUIControl* CGUIControlFactory::Create(DWORD dwParentId, const FRECT &rect, TiX
   {
     control = new CGUIFadeLabelControl(
       dwParentId, id, posX, posY, width, height,
-      labelInfo, scrollOut, timeToPauseAtEnd);
+      labelInfo, scrollOut, scrollSpeed, timeToPauseAtEnd);
 
     ((CGUIFadeLabelControl *)control)->SetInfo(infoLabels);
   }
@@ -1090,7 +1095,7 @@ CGUIControl* CGUIControlFactory::Create(DWORD dwParentId, const FRECT &rect, TiX
   {
     control = new CGUIRSSControl(
       dwParentId, id, posX, posY, width, height,
-      labelInfo, textColor3, labelInfo2.textColor, strRSSTags);
+      labelInfo, textColor3, labelInfo2.textColor, strRSSTags, scrollSpeed);
 
     std::map<int, std::pair<std::vector<int>,std::vector<string> > >::iterator iter=g_settings.m_mapRssUrls.find(iUrlSet);
     if (iter != g_settings.m_mapRssUrls.end())

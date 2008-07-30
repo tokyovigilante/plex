@@ -463,6 +463,8 @@ void CXbmcHttp::AddItemToPlayList(const CFileItem* pItem, int playList, int sort
     CStdString strDirectory=pItem->m_strPath;
     CFileItemList items;
     IDirectory *pDirectory = CFactoryDirectory::Create(strDirectory);
+    if (!pDirectory)
+      return;
     if (mask!="")
       pDirectory->SetMask(mask);
     pDirectory->GetDirectory(strDirectory, items);
@@ -684,7 +686,7 @@ int CXbmcHttp::xbmcGetMediaLocation(int numParas, CStdString paras[])
 	//	When I added this function, it was meant to behave more like Xbmc internally.
 	//	This code emulates the CVirtualDirectory class which does not allow arbitrary
 	//	fetching of directories. (nor does ActivateWindow for that matter.)
-	//	You can still use the older "getDirectory" command which is unnounded and will
+	//	You can still use the older "getDirectory" command which is unbounded and will
 	//	fetch any old folder.
 
   // special locations
@@ -716,7 +718,7 @@ int CXbmcHttp::xbmcGetMediaLocation(int numParas, CStdString paras[])
     VECSOURCES VECSOURCES = *pShares;
     bool bIsShareName = false;
     int iIndex = CUtil::GetMatchingSource(strLocation, VECSOURCES, bIsShareName);
-    if (iIndex < 0)
+    if (iIndex < 0 || iIndex >= (int)VECSOURCES.size())
     {
       CStdString strError = "Error: invalid location, " + strLocation;
       return SetResponse(openTag+strError);
@@ -1558,6 +1560,8 @@ int CXbmcHttp::xbmcAddToSlideshow(int numParas, CStdString paras[])
     CFileItem *pItem = new CFileItem(paras[0]);
     pItem->m_strPath=paras[0].c_str();
     IDirectory *pDirectory = CFactoryDirectory::Create(pItem->m_strPath);
+    if (!pDirectory)
+      return SetResponse(openTag+"Error");  
     if (mask!="")
       pDirectory->SetMask(mask);
     bool bResult=pDirectory->Exists(pItem->m_strPath);

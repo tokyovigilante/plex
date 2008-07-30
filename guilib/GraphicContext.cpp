@@ -686,16 +686,18 @@ void CGraphicContext::SetVideoResolution(RESOLUTION &res, BOOL NeedZ, bool force
 
     if (g_advancedSettings.m_fullScreen)
     {
+      needsResize = true;
       SetFullScreenRoot(true);
     }
     else if (lastRes>=DESKTOP )
     {
+      needsResize = false;
       SetFullScreenRoot(false);
     }
-
+    
     if (needsResize)
       m_screenSurface->ResizeSurface(m_iScreenWidth, m_iScreenHeight);
-
+    
 #elif defined(_WIN32) && !defined(HAS_XBOX_HARDWARE)
     m_screenSurface = new CSurface(m_iScreenWidth, m_iScreenHeight, true, 0, 0, 0, g_advancedSettings.m_fullScreen);
     //get the display frequency
@@ -707,7 +709,9 @@ void CGraphicContext::SetVideoResolution(RESOLUTION &res, BOOL NeedZ, bool force
 #else
     m_screenSurface = new CSurface(m_iScreenWidth, m_iScreenHeight, true, 0, 0, 0);
 #endif
-    SDL_WM_SetCaption("XBMC", NULL);
+#ifdef __APPLE__
+    SDL_WM_SetCaption("Plex", NULL);
+#endif
 #endif
 
     {
@@ -726,8 +730,8 @@ void CGraphicContext::SetVideoResolution(RESOLUTION &res, BOOL NeedZ, bool force
 
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-
-    glOrtho(0.0f, m_iScreenWidth, m_iScreenHeight, 0.0f, -1.0f, 1.0f);
+    
+    glOrtho(0.0f, m_iScreenWidth-1, m_iScreenHeight-1, 0.0f, -1.0f, 1.0f);
 
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
@@ -833,6 +837,7 @@ void CGraphicContext::ResetScreenParameters(RESOLUTION res)
     g_settings.m_ResInfo[res].iWidth = 1920;
     g_settings.m_ResInfo[res].iHeight = 1080;
     g_settings.m_ResInfo[res].dwFlags = D3DPRESENTFLAG_INTERLACED | D3DPRESENTFLAG_WIDESCREEN;
+    g_settings.m_ResInfo[res].fPixelRatio = 1.0f;
     strcpy(g_settings.m_ResInfo[res].strMode, "1080i 16:9");
     break;
   case HDTV_720p:
@@ -840,6 +845,7 @@ void CGraphicContext::ResetScreenParameters(RESOLUTION res)
     g_settings.m_ResInfo[res].iWidth = 1280;
     g_settings.m_ResInfo[res].iHeight = 720;
     g_settings.m_ResInfo[res].dwFlags = D3DPRESENTFLAG_PROGRESSIVE | D3DPRESENTFLAG_WIDESCREEN;
+    g_settings.m_ResInfo[res].fPixelRatio = 1.0f;
     strcpy(g_settings.m_ResInfo[res].strMode, "720p 16:9");
     break;
   case HDTV_480p_4x3:
@@ -847,6 +853,7 @@ void CGraphicContext::ResetScreenParameters(RESOLUTION res)
     g_settings.m_ResInfo[res].iWidth = 720;
     g_settings.m_ResInfo[res].iHeight = 480;
     g_settings.m_ResInfo[res].dwFlags = D3DPRESENTFLAG_PROGRESSIVE;
+    g_settings.m_ResInfo[res].fPixelRatio = 4320.0f / 4739.0f;
     strcpy(g_settings.m_ResInfo[res].strMode, "480p 4:3");
     break;
   case HDTV_480p_16x9:
@@ -854,6 +861,7 @@ void CGraphicContext::ResetScreenParameters(RESOLUTION res)
     g_settings.m_ResInfo[res].iWidth = 720;
     g_settings.m_ResInfo[res].iHeight = 480;
     g_settings.m_ResInfo[res].dwFlags = D3DPRESENTFLAG_PROGRESSIVE | D3DPRESENTFLAG_WIDESCREEN;
+    g_settings.m_ResInfo[res].fPixelRatio = 4320.0f / 4739.0f*4.0f / 3.0f;
     strcpy(g_settings.m_ResInfo[res].strMode, "480p 16:9");
     break;
   case NTSC_4x3:
@@ -861,6 +869,7 @@ void CGraphicContext::ResetScreenParameters(RESOLUTION res)
     g_settings.m_ResInfo[res].iWidth = 720;
     g_settings.m_ResInfo[res].iHeight = 480;
     g_settings.m_ResInfo[res].dwFlags = D3DPRESENTFLAG_INTERLACED;
+    g_settings.m_ResInfo[res].fPixelRatio = 4320.0f / 4739.0f;
     strcpy(g_settings.m_ResInfo[res].strMode, "NTSC 4:3");
     break;
   case NTSC_16x9:
@@ -868,6 +877,7 @@ void CGraphicContext::ResetScreenParameters(RESOLUTION res)
     g_settings.m_ResInfo[res].iWidth = 720;
     g_settings.m_ResInfo[res].iHeight = 480;
     g_settings.m_ResInfo[res].dwFlags = D3DPRESENTFLAG_INTERLACED | D3DPRESENTFLAG_WIDESCREEN;
+    g_settings.m_ResInfo[res].fPixelRatio = 4320.0f / 4739.0f*4.0f / 3.0f;
     strcpy(g_settings.m_ResInfo[res].strMode, "NTSC 16:9");
     break;
   case PAL_4x3:
@@ -875,6 +885,7 @@ void CGraphicContext::ResetScreenParameters(RESOLUTION res)
     g_settings.m_ResInfo[res].iWidth = 720;
     g_settings.m_ResInfo[res].iHeight = 576;
     g_settings.m_ResInfo[res].dwFlags = D3DPRESENTFLAG_INTERLACED;
+    g_settings.m_ResInfo[res].fPixelRatio = 128.0f / 117.0f;
     strcpy(g_settings.m_ResInfo[res].strMode, "PAL 4:3");
     break;
   case PAL_16x9:
@@ -882,6 +893,7 @@ void CGraphicContext::ResetScreenParameters(RESOLUTION res)
     g_settings.m_ResInfo[res].iWidth = 720;
     g_settings.m_ResInfo[res].iHeight = 576;
     g_settings.m_ResInfo[res].dwFlags = D3DPRESENTFLAG_INTERLACED | D3DPRESENTFLAG_WIDESCREEN;
+    g_settings.m_ResInfo[res].fPixelRatio = 128.0f / 117.0f*4.0f / 3.0f;
     strcpy(g_settings.m_ResInfo[res].strMode, "PAL 16:9");
     break;
   case PAL60_4x3:
@@ -889,6 +901,7 @@ void CGraphicContext::ResetScreenParameters(RESOLUTION res)
     g_settings.m_ResInfo[res].iWidth = 720;
     g_settings.m_ResInfo[res].iHeight = 480;
     g_settings.m_ResInfo[res].dwFlags = D3DPRESENTFLAG_INTERLACED;
+    g_settings.m_ResInfo[res].fPixelRatio = 4320.0f / 4739.0f;
     strcpy(g_settings.m_ResInfo[res].strMode, "PAL60 4:3");
     break;
   case PAL60_16x9:
@@ -896,6 +909,7 @@ void CGraphicContext::ResetScreenParameters(RESOLUTION res)
     g_settings.m_ResInfo[res].iWidth = 720;
     g_settings.m_ResInfo[res].iHeight = 480;
     g_settings.m_ResInfo[res].dwFlags = D3DPRESENTFLAG_INTERLACED | D3DPRESENTFLAG_WIDESCREEN;
+    g_settings.m_ResInfo[res].fPixelRatio = 4320.0f / 4739.0f*4.0f / 3.0f;
     strcpy(g_settings.m_ResInfo[res].strMode, "PAL60 16:9");
     break;
   case DESKTOP:
@@ -906,6 +920,7 @@ void CGraphicContext::ResetScreenParameters(RESOLUTION res)
              "%dx%d (Full Screen)", g_settings.m_ResInfo[res].iWidth, g_settings.m_ResInfo[res].iHeight);
     if ((float)g_settings.m_ResInfo[res].iWidth/(float)g_settings.m_ResInfo[res].iHeight >= fOptimalSwitchPoint)
       g_settings.m_ResInfo[res].dwFlags = D3DPRESENTFLAG_WIDESCREEN;
+    g_settings.m_ResInfo[res].fPixelRatio = 1.0f;
     break;
   case WINDOW:
     g_settings.m_ResInfo[WINDOW] = g_settings.m_ResInfo[PAL60_4x3];
@@ -915,21 +930,16 @@ void CGraphicContext::ResetScreenParameters(RESOLUTION res)
     break;
   }
   ResetOverscan(res, g_settings.m_ResInfo[res].Overscan);
-  g_settings.m_ResInfo[res].fPixelRatio = GetPixelRatio(res);
 }
 
 float CGraphicContext::GetPixelRatio(RESOLUTION iRes) const
 {
+  // TODO: Why do we set a pixel ratio of 1.0 if the
+  //       user is not running fullscreen?
   if (!m_bFullScreenRoot)
     return 1.0f;
-  if (iRes == HDTV_1080i || iRes == HDTV_720p) return 1.0f;
-  if (iRes == HDTV_480p_4x3 || iRes == NTSC_4x3 || iRes == PAL60_4x3) return 4320.0f / 4739.0f;
-  if (iRes == HDTV_480p_16x9 || iRes == NTSC_16x9 || iRes == PAL60_16x9) return 4320.0f / 4739.0f*4.0f / 3.0f;
-  if (iRes == PAL_16x9) return 128.0f / 117.0f*4.0f / 3.0f;
 
-  // TODO: use XRandR to query physical size and obtain exact pixel ratio
-  // for now, just assume square pixels (most monitors' native resolution)
-  return 1.0f;
+  return g_settings.m_ResInfo[iRes].fPixelRatio;
 }
 
 void CGraphicContext::Clear()
@@ -1266,8 +1276,8 @@ CSurface* CGraphicContext::InitializeSurface()
 
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
-
-  glOrtho(0.0f, m_iScreenWidth, m_iScreenHeight, 0.0f, -1.0f, 1.0f);
+ 
+  glOrtho(0.0f, m_iScreenWidth-1, m_iScreenHeight-1, 0.0f, -1.0f, 1.0f);
 
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
@@ -1450,10 +1460,13 @@ void CGraphicContext::SetFullScreenRoot(bool fs)
                            g_advancedSettings.m_fakeFullScreen);
     m_screenSurface->RefreshCurrentContext();
     g_fontManager.ReloadTTFFonts();
+    
+    m_screenSurface->ResizeSurface(width, height, false);
 #else
     SDL_SetVideoMode(width, height, 0, SDL_FULLSCREEN);
-#endif
     m_screenSurface->ResizeSurface(width, height);
+#endif
+    
 #ifdef HAS_SDL_OPENGL
     glViewport(0, 0, m_iFullScreenWidth, m_iFullScreenHeight);
     glScissor(0, 0, m_iFullScreenWidth, m_iFullScreenHeight);

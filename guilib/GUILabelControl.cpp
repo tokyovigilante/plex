@@ -183,9 +183,9 @@ CGUIInfoLabel::CInfoPortion::CInfoPortion(int info, const CStdString &prefix, co
   m_info = info;
   m_prefix = prefix;
   m_postfix = postfix;
-  // filter our prefix and postfix for comma's and $$
-  m_prefix.Replace("$COMMA", ","); m_prefix.Replace("$$", "$");
-  m_postfix.Replace("$COMMA", ","); m_postfix.Replace("$$", "$");
+  // filter our prefix and postfix for comma's
+  m_prefix.Replace("$COMMA", ",");
+  m_postfix.Replace("$COMMA", ",");
   m_prefix.Replace("$LBRACKET", "["); m_prefix.Replace("$RBRACKET", "]");
   m_postfix.Replace("$LBRACKET", "["); m_postfix.Replace("$RBRACKET", "]");
 }
@@ -305,14 +305,15 @@ void CGUILabelControl::SetLabel(const string &strLabel)
     m_infoLabel.SetLabel(ShortenPath(strLabel), "");
   else // parse the label for info tags
     m_infoLabel.SetLabel(strLabel, "");
-  SetWidthControl(m_ScrollInsteadOfTruncate);
+  m_ScrollInfo.Reset();
   if (m_iCursorPos > (int)strLabel.size())
     m_iCursorPos = strLabel.size();
 }
 
-void CGUILabelControl::SetWidthControl(bool bScroll)
+void CGUILabelControl::SetWidthControl(bool bScroll, int scrollSpeed)
 {
   m_ScrollInsteadOfTruncate = bScroll;
+  m_ScrollInfo.SetSpeed(scrollSpeed);
   m_ScrollInfo.Reset();
 }
 

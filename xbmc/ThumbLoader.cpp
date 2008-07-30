@@ -151,6 +151,13 @@ bool CVideoThumbLoader::LoadItem(CFileItem* pItem)
     }  
   }
 
+  if (!pItem->HasProperty("fanart_image"))
+  {
+    pItem->CacheVideoFanart();
+    if (CFile::Exists(pItem->GetCachedVideoFanart()))
+      pItem->SetProperty("fanart_image",pItem->GetCachedVideoFanart());
+  }                          
+
 //  if (pItem->IsVideo() && !pItem->IsInternetStream())
 //    CDVDPlayer::GetFileMetaData(pItem->m_strPath, pItem);
 

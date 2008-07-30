@@ -12,5 +12,6 @@
 {
 }
 - (float)appNameLabelFontSize;
+- (NSString*)versionString;
 
 @end

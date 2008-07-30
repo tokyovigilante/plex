@@ -51,13 +51,16 @@ bool CVideoDatabaseDirectory::GetDirectory(const CStdString& strPath, CFileItemL
   bool bResult = pNode->GetChilds(items);
   for (int i=0;i<items.Size();++i)
   {
-    if (items[i]->m_bIsFolder && !items[i]->HasThumbnail())
+    CFileItem* item = items[i];
+    if (item->m_bIsFolder && !item->HasThumbnail())
     {
-      CStdString strImage = GetIcon(items[i]->m_strPath);
-      if (g_TextureManager.Load(strImage))
+      CStdString strImage = GetIcon(item->m_strPath);
+      if (!strImage.IsEmpty() && g_TextureManager.Load(strImage))
       {
-        items[i]->SetThumbnailImage(strImage);
-        g_TextureManager.ReleaseTexture(strImage);
+        item->SetThumbnailImage(strImage);
+        // NOTE: Ideally we'd release the texture resource here, but we can't reliably do that without first
+        //       requesting all the texture images and then asking for a release.
+        //       The better fix is a g_TextureManager.CanLoad(strImage) or something similar.
       }
     }
   }

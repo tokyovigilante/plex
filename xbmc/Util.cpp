@@ -1614,7 +1614,7 @@ void CUtil::GetHomePath(CStdString& strPath)
 {
   char szXBEFileName[1024];
   CIoSupport::GetXbePath(szXBEFileName);
-  strPath = getenv("XBMC_HOME");
+  strPath = getenv("PLEX_HOME");
   if (strPath != NULL && !strPath.IsEmpty())
   {
 #ifdef _WIN32PC
@@ -1627,7 +1627,7 @@ void CUtil::GetHomePath(CStdString& strPath)
   }
   else
   {
-    printf("The XBMC_HOME environment variable is not set.\n");
+    printf("The PLEX_HOME environment variable is not set.\n");
 #ifdef __APPLE__
     int      result = -1;
     char     given_path[2*MAXPATHLEN];

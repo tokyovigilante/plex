@@ -86,21 +86,35 @@ CGUIFont* GUIFontManager::LoadTTF(const CStdString& strFontName, const CStdStrin
   // Check if the file exists, otherwise try loading it from the global media dir
   if (!XFILE::CFile::Exists(strPath) && strFilename[1] != ':')
   {
-     strPath = _P("Q:\\media\\Fonts\\");
-     strPath += CUtil::GetFileName(strFilename);
+    strPath = _P("Q:\\media\\Fonts\\");
+    strPath += CUtil::GetFileName(strFilename);
 #ifdef _LINUX
-     strPath = PTH_IC(strPath);
+    strPath = PTH_IC(strPath);
 #endif
   }
   
 #ifdef __APPLE__
-  // See if it's a system font.
-  if (CUtil::GetExtension(strFilename).length() == 0)
+  // If the font is not stored in the skin path nor in the media path, see if it's a system font.
+  if (!XFILE::CFile::Exists(strPath) && strFilename[1] != ':')
   {
-    // We need to just take the base file, since it has the wrong path on it by this point. 
-    CStdString fontPath = "/Library/Fonts/" + CUtil::GetFileName(strFilename) + ".ttf";
+    CStdString fontPath;
+    fontPath += "/System/Library/Fonts/" + CUtil::GetFileName(strFilename);
+    if (CUtil::GetExtension(strFilename).length() == 0)
+      fontPath += ".ttf";
+    
     if (XFILE::CFile::Exists(fontPath))
+    {
       strPath = fontPath;
+    }
+    else
+    {
+      fontPath = "/Library/Fonts/" + CUtil::GetFileName(strFilename);
+      if (CUtil::GetExtension(strFilename).length() == 0)
+        fontPath += ".ttf";
+      
+      if (XFILE::CFile::Exists(fontPath))
+        strPath = fontPath;
+    }
   }
 #endif
   
@@ -251,6 +265,7 @@ void GUIFontManager::Clear()
 
   m_vecFonts.clear();
   m_vecFontFiles.clear();
+  m_vecFontInfo.clear();
   m_fontsetUnicode=false;
 }
 

@@ -88,14 +88,17 @@ XBMCHelper::XBMCHelper()
   oldHelper += "/Library/LaunchAgents/";
   oldHelper += "org.xbmc.helper.plist";
   
-  string cmd = "/bin/launchctl unload ";
-  cmd += oldHelper;
-  system(cmd.c_str());
-  DeleteFile(oldHelper.c_str());
+  if (::access(oldHelper.c_str(), R_OK) == 0)
+  {
+    string cmd = "/bin/launchctl unload ";
+    cmd += oldHelper;
+    system(cmd.c_str());
+    DeleteFile(oldHelper.c_str());
   
-  int pid = GetProcessPid("XBMCHelper");
-  if (pid != -1)
-    kill(pid, SIGKILL);
+    int pid = GetProcessPid("XBMCHelper");
+    if (pid != -1)
+      kill(pid, SIGKILL);
+  }
   //////
 }
 

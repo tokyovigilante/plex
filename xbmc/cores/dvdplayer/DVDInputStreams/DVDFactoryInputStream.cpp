@@ -28,6 +28,7 @@
 #include "DVDInputStreamFFmpeg.h"
 #include "../../../FileSystem/cdioSupport.h"
 #include "DVDInputStreamTV.h"
+#include "DVDInputStreamRTMP.h"
 #include "FileItem.h"
 #include "DVDInputStreamRTSP.h"
 
@@ -55,8 +56,10 @@ CDVDInputStream* CDVDFactoryInputStream::CreateInputStream(IDVDPlayer* pPlayer, 
     return new CDVDInputStreamTV();
   else if (file.substr(0, 7) == "rtsp://")
 	return new CDVDInputStreamRTSP();
+  else if(file.substr(0, 7) == "rtmp://")
+	return new CDVDInputStreamRTMP();
 
-  //else if (item.IsShoutCast())
+http://epg.pvr.geek.nz/epg/listings-freeview.xml.gz  //else if (item.IsShoutCast())
   //  /* this should be replaced with standard file as soon as ffmpeg can handle raw aac */
   //  /* currently ffmpeg isn't able to detect that */
   //  return (new CDVDInputStreamHttp());
