@@ -87,14 +87,14 @@ void CDetectDVDMedia::Process()
   }
 
 // for apple - currently disable this check since cdio will return null if no media is loaded
-#ifndef __APPLE__
+//#ifndef __APPLE__
   //Before entering loop make sure we actually have a CDrom drive
   CdIo_t *p_cdio = cdio_open (NULL, DRIVER_DEVICE);
   if (p_cdio == NULL)
     return;
   else
     cdio_destroy(p_cdio);
-#endif
+//#endif
 
   while (( !m_bStop ) && (!g_advancedSettings.m_usePCDVDROM))
   {

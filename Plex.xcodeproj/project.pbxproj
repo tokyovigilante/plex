@@ -62,6 +62,7 @@
 		94437AFF0E28395B00FB8C08 /* GUIEPGGridItem.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 94437AFE0E28395B00FB8C08 /* GUIEPGGridItem.cpp */; };
 		94437B070E283D1900FB8C08 /* GUIWindowEPG.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 94437B060E283D1900FB8C08 /* GUIWindowEPG.cpp */; };
 		94B9CC7E0E201D6200FA073E /* DVDDemuxMPEGTS.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 94B9CC7C0E201D6200FA073E /* DVDDemuxMPEGTS.cpp */; };
+		94BC285E0E397447009AB15C /* CoreAudioAUHAL.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 94BC285D0E397447009AB15C /* CoreAudioAUHAL.cpp */; };
 		94F3AFFD0E383E3F00940327 /* RTSPTVDirectory.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 944379670E27096400FB8C08 /* RTSPTVDirectory.cpp */; };
 		94F3AFFF0E383E7000940327 /* DVDInputStreamRTSP.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9443781B0E26DF8900FB8C08 /* DVDInputStreamRTSP.cpp */; };
 		B1A921F40DF6D14F0024CC4F /* libbz2.1.0.4.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B1A921F30DF6D14F0024CC4F /* libbz2.1.0.4.dylib */; };
@@ -895,7 +896,7 @@
 		E371C5270E2F2DF500FBF841 /* libmysqlclient.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 88ECB6EB0DE07C56003396A7 /* libmysqlclient.a */; };
 		E371C5280E2F2DF500FBF841 /* libogg.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 88ECB6E90DE07BEE003396A7 /* libogg.a */; };
 		E371C5290E2F2DF500FBF841 /* libpcre.0.0.1.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = E3BBB7A10D7EA8B200CAAFD3 /* libpcre.0.0.1.dylib */; };
-		E371C52A0E2F2DF500FBF841 /* libportaudio.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E38F12E70D2A178F0035C331 /* libportaudio.a */; };
+		E371C52A0E2F2DF500FBF841 /* libportaudio-debug.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E38F12E70D2A178F0035C331 /* libportaudio-debug.a */; };
 		E371C52B0E2F2DF500FBF841 /* libpostproc-osx.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E34486740D4DD18B0020377B /* libpostproc-osx.a */; };
 		E371C52C0E2F2DF500FBF841 /* librtv-osx.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E38E256C0D263A1C00618676 /* librtv-osx.a */; };
 		E371C52D0E2F2DF500FBF841 /* libSDL.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 810CA0050D683DEF0095F5DD /* libSDL.dylib */; };
@@ -1645,7 +1646,7 @@
 		E38E25C00D263DC100618676 /* DVDFactoryDemuxer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E38E25BF0D263DC100618676 /* DVDFactoryDemuxer.cpp */; settings = {COMPILER_FLAGS = "-D__STDC_CONSTANT_MACROS"; }; };
 		E38E25C30D263DE200618676 /* DVDDemuxFFmpeg.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E38E25C20D263DE200618676 /* DVDDemuxFFmpeg.cpp */; settings = {COMPILER_FLAGS = "-D__STDC_CONSTANT_MACROS"; }; };
 		E38F12C20D29FF200035C331 /* FileShoutcast.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E38F12C10D29FF200035C331 /* FileShoutcast.cpp */; };
-		E38F12E80D2A178F0035C331 /* libportaudio.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E38F12E70D2A178F0035C331 /* libportaudio.a */; };
+		E38F12E80D2A178F0035C331 /* libportaudio-debug.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E38F12E70D2A178F0035C331 /* libportaudio-debug.a */; };
 		E38F12EA0D2A17B30035C331 /* libGoAhead-osx.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E38F12E90D2A17B30035C331 /* libGoAhead-osx.a */; };
 		E3A4780A0D29029A00F3C3A6 /* dlgcache.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E3A478090D29029A00F3C3A6 /* dlgcache.cpp */; };
 		E3A478160D29030100F3C3A6 /* GUIMultiSelectText.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E3A478150D29030100F3C3A6 /* GUIMultiSelectText.cpp */; };
@@ -1796,6 +1797,8 @@
 		94437B060E283D1900FB8C08 /* GUIWindowEPG.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = GUIWindowEPG.cpp; sourceTree = "<group>"; };
 		94B9CC7C0E201D6200FA073E /* DVDDemuxMPEGTS.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = DVDDemuxMPEGTS.cpp; sourceTree = "<group>"; };
 		94B9CC7D0E201D6200FA073E /* DVDDemuxMPEGTS.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DVDDemuxMPEGTS.h; sourceTree = "<group>"; };
+		94BC285C0E397447009AB15C /* CoreAudioAUHAL.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CoreAudioAUHAL.h; sourceTree = "<group>"; };
+		94BC285D0E397447009AB15C /* CoreAudioAUHAL.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CoreAudioAUHAL.cpp; sourceTree = "<group>"; };
 		B1A921F30DF6D14F0024CC4F /* libbz2.1.0.4.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libbz2.1.0.4.dylib; path = /opt/local/lib/libbz2.1.0.4.dylib; sourceTree = "<absolute>"; };
 		E306D12C0DDF7B590052C2AD /* XBMCHelper.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = XBMCHelper.cpp; sourceTree = "<group>"; };
 		E306D12D0DDF7B590052C2AD /* XBMCHelper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = XBMCHelper.h; sourceTree = "<group>"; };
@@ -3696,7 +3699,7 @@
 		E38E25BF0D263DC100618676 /* DVDFactoryDemuxer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = DVDFactoryDemuxer.cpp; sourceTree = "<group>"; };
 		E38E25C20D263DE200618676 /* DVDDemuxFFmpeg.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = DVDDemuxFFmpeg.cpp; sourceTree = "<group>"; };
 		E38F12C10D29FF200035C331 /* FileShoutcast.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = FileShoutcast.cpp; sourceTree = "<group>"; };
-		E38F12E70D2A178F0035C331 /* libportaudio.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libportaudio.a; path = xbmc/lib/libportaudio/libportaudio.a; sourceTree = "<group>"; };
+		E38F12E70D2A178F0035C331 /* libportaudio-debug.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libportaudio-debug.a"; path = "xbmc/lib/libportaudio/libportaudio-debug.a"; sourceTree = "<group>"; };
 		E38F12E90D2A17B30035C331 /* libGoAhead-osx.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libGoAhead-osx.a"; path = "xbmc/lib/libGoAhead/libGoAhead-osx.a"; sourceTree = "<group>"; };
 		E3A478090D29029A00F3C3A6 /* dlgcache.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = dlgcache.cpp; sourceTree = "<group>"; };
 		E3A478150D29030100F3C3A6 /* GUIMultiSelectText.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = GUIMultiSelectText.cpp; sourceTree = "<group>"; };
@@ -3757,7 +3760,7 @@
 				E38E25420D2636F300618676 /* libstdc++.6.dylib in Frameworks */,
 				E38E25690D2639F100618676 /* libxdaap-osx.a in Frameworks */,
 				E38E256D0D263A1C00618676 /* librtv-osx.a in Frameworks */,
-				E38F12E80D2A178F0035C331 /* libportaudio.a in Frameworks */,
+				E38F12E80D2A178F0035C331 /* libportaudio-debug.a in Frameworks */,
 				E38F12EA0D2A17B30035C331 /* libGoAhead-osx.a in Frameworks */,
 				E33466A60D2E5103005A65EC /* IOKit.framework in Frameworks */,
 				E35EF2550D380C3D00DB5CD5 /* QuickTime.framework in Frameworks */,
@@ -3824,7 +3827,7 @@
 				E371C5270E2F2DF500FBF841 /* libmysqlclient.a in Frameworks */,
 				E371C5280E2F2DF500FBF841 /* libogg.a in Frameworks */,
 				E371C5290E2F2DF500FBF841 /* libpcre.0.0.1.dylib in Frameworks */,
-				E371C52A0E2F2DF500FBF841 /* libportaudio.a in Frameworks */,
+				E371C52A0E2F2DF500FBF841 /* libportaudio-debug.a in Frameworks */,
 				E371C52B0E2F2DF500FBF841 /* libpostproc-osx.a in Frameworks */,
 				E371C52C0E2F2DF500FBF841 /* librtv-osx.a in Frameworks */,
 				E371C52D0E2F2DF500FBF841 /* libSDL.dylib in Frameworks */,
@@ -3914,7 +3917,7 @@
 				E35EF2540D380C3D00DB5CD5 /* QuickTime.framework */,
 				E33466A50D2E5103005A65EC /* IOKit.framework */,
 				E38F12E90D2A17B30035C331 /* libGoAhead-osx.a */,
-				E38F12E70D2A178F0035C331 /* libportaudio.a */,
+				E38F12E70D2A178F0035C331 /* libportaudio-debug.a */,
 				E38E256C0D263A1C00618676 /* librtv-osx.a */,
 				E38E25680D2639F100618676 /* libxdaap-osx.a */,
 				E38E25410D2636F300618676 /* libstdc++.6.dylib */,
@@ -4873,6 +4876,8 @@
 		E38E14F80D25F9F900618676 /* dvdplayer */ = {
 			isa = PBXGroup;
 			children = (
+				94BC285C0E397447009AB15C /* CoreAudioAUHAL.h */,
+				94BC285D0E397447009AB15C /* CoreAudioAUHAL.cpp */,
 				9409C1E50E01D680001626C3 /* AC3Encoder */,
 				E38E14F90D25F9F900618676 /* ALSADirectSound.cpp */,
 				E38E14FA0D25F9F900618676 /* ALSADirectSound.h */,
@@ -8664,6 +8669,7 @@
 				E371CB900E303C7100FBF841 /* PlexDelegate.m in Sources */,
 				94F3AFFD0E383E3F00940327 /* RTSPTVDirectory.cpp in Sources */,
 				94F3AFFF0E383E7000940327 /* DVDInputStreamRTSP.cpp in Sources */,
+				94BC285E0E397447009AB15C /* CoreAudioAUHAL.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

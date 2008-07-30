@@ -149,7 +149,7 @@ PaStream* CPortAudio::CreateOutputStream(const CStdString& strName, int channels
       }
 #endif
 
-      err = Pa_OpenStream(&ret, 0, &outputParameters, (double)sampleRate, framesPerBuffer, paNoFlag, 0, 0);
+      err = Pa_OpenStream(&ret, 0, &outputParameters, (double)sampleRate, framesPerBuffer, paDitherOff, 0, 0);
 
     if (err != 0)
 	{

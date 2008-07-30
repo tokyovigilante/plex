@@ -120,6 +120,8 @@ PortAudioDirectSound::PortAudioDirectSound(IAudioCallback* pCallback, int iChann
 
   m_bCanPause = false;
   m_bIsAllocated = true;
+	
+  
 }
 
 //***********************************************************************************************
