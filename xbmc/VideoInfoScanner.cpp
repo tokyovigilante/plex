@@ -387,7 +387,6 @@ namespace VIDEO
     // needed to ensure the movie count etc is cached
     for (int i=LIBRARY_HAS_VIDEO;i<LIBRARY_HAS_MUSICVIDEOS+1;++i)
       g_infoManager.GetBool(i);
-    m_database.BeginTransaction();
     for (int i = 0; i < (int)items.Size(); ++i)
     {
       IMDB_EPISODELIST episodes;
@@ -636,7 +635,6 @@ namespace VIDEO
     if(pDlgProgress)
       pDlgProgress->ShowProgressBar(false);
 
-    m_database.CommitTransaction();
     m_database.Close();
     return true;
   }

@@ -59,7 +59,6 @@
 		94437AFF0E28395B00FB8C08 /* GUIEPGGridItem.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 94437AFE0E28395B00FB8C08 /* GUIEPGGridItem.cpp */; };
 		94437B070E283D1900FB8C08 /* GUIWindowEPG.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 94437B060E283D1900FB8C08 /* GUIWindowEPG.cpp */; };
 		94B9CC7E0E201D6200FA073E /* DVDDemuxMPEGTS.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 94B9CC7C0E201D6200FA073E /* DVDDemuxMPEGTS.cpp */; };
-		94BC285E0E397447009AB15C /* CoreAudioAUHAL.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 94BC285D0E397447009AB15C /* CoreAudioAUHAL.cpp */; };
 		94F3AFFD0E383E3F00940327 /* RTSPTVDirectory.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 944379670E27096400FB8C08 /* RTSPTVDirectory.cpp */; };
 		94F3AFFF0E383E7000940327 /* DVDInputStreamRTSP.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9443781B0E26DF8900FB8C08 /* DVDInputStreamRTSP.cpp */; };
 		B1A921F40DF6D14F0024CC4F /* libbz2.1.0.4.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B1A921F30DF6D14F0024CC4F /* libbz2.1.0.4.dylib */; };
@@ -1797,8 +1796,6 @@
 		94437B060E283D1900FB8C08 /* GUIWindowEPG.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = GUIWindowEPG.cpp; sourceTree = "<group>"; };
 		94B9CC7C0E201D6200FA073E /* DVDDemuxMPEGTS.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = DVDDemuxMPEGTS.cpp; sourceTree = "<group>"; };
 		94B9CC7D0E201D6200FA073E /* DVDDemuxMPEGTS.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DVDDemuxMPEGTS.h; sourceTree = "<group>"; };
-		94BC285C0E397447009AB15C /* CoreAudioAUHAL.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CoreAudioAUHAL.h; sourceTree = "<group>"; };
-		94BC285D0E397447009AB15C /* CoreAudioAUHAL.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CoreAudioAUHAL.cpp; sourceTree = "<group>"; };
 		B1A921F30DF6D14F0024CC4F /* libbz2.1.0.4.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libbz2.1.0.4.dylib; path = /opt/local/lib/libbz2.1.0.4.dylib; sourceTree = "<absolute>"; };
 		E306D12C0DDF7B590052C2AD /* XBMCHelper.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = XBMCHelper.cpp; sourceTree = "<group>"; };
 		E306D12D0DDF7B590052C2AD /* XBMCHelper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = XBMCHelper.h; sourceTree = "<group>"; };
@@ -4888,8 +4885,6 @@
 		E38E14F80D25F9F900618676 /* dvdplayer */ = {
 			isa = PBXGroup;
 			children = (
-				94BC285C0E397447009AB15C /* CoreAudioAUHAL.h */,
-				94BC285D0E397447009AB15C /* CoreAudioAUHAL.cpp */,
 				9409C1E50E01D680001626C3 /* AC3Encoder */,
 				E38E14F90D25F9F900618676 /* ALSADirectSound.cpp */,
 				E38E14FA0D25F9F900618676 /* ALSADirectSound.h */,
@@ -8718,7 +8713,6 @@
 				E371CB900E303C7100FBF841 /* PlexDelegate.m in Sources */,
 				94F3AFFD0E383E3F00940327 /* RTSPTVDirectory.cpp in Sources */,
 				94F3AFFF0E383E7000940327 /* DVDInputStreamRTSP.cpp in Sources */,
-				94BC285E0E397447009AB15C /* CoreAudioAUHAL.cpp in Sources */,
 				E3B963B70E3863CB0022F663 /* AMFObject.cpp in Sources */,
 				E3B963B80E3863D80022F663 /* rtmp.cpp in Sources */,
 				E3B963B90E3863E00022F663 /* rtmppacket.cpp in Sources */,
@@ -8983,6 +8977,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = YES;
+				APPLICATION_VERSION = "0.5-RC3";
 				CODE_SIGN_IDENTITY = Plex;
 				COPY_PHASE_STRIP = NO;
 				GCC_DYNAMIC_NO_PIC = NO;
@@ -9071,6 +9066,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = YES;
+				APPLICATION_VERSION = "0.5-RC3";
 				CODE_SIGN_IDENTITY = Plex;
 				COPY_PHASE_STRIP = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";

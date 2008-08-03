@@ -27,6 +27,7 @@
 #ifdef _LINUX
 #include "../lib/libcdio/cd_types.h"
 #endif
+#include "Settings.h"
 
 using namespace MEDIA_DETECT;
 
@@ -944,6 +945,9 @@ ULONG CCdIoSupport::CddbDiscId()
 
 char* CCdIoSupport::GetDeviceFileName()
 {
+  if (g_advancedSettings.m_enableOpticalMedia == false)
+    return "";
+  
   if (s_defaultDevice == NULL)  
   {
     if (getenv("XBMC_DVD_DEVICE") != NULL)
