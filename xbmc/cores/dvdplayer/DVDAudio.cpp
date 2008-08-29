@@ -25,7 +25,6 @@
 #include "cores/mplayer/ASyncDirectSound.h"
 #include "cores/mplayer/ac97directsound.h"
 #elif defined(__APPLE__)
-#include "CoreAudioAUHAL.h"
 #include "PortaudioDirectSound.h"
 #elif _LINUX
 #include "ALSADirectSound.h"

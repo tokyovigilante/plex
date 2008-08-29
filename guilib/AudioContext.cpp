@@ -143,7 +143,11 @@ void CAudioContext::SetupSpeakerConfig(int iChannels, bool& bAudioOnAllSpeakers,
   {
     if (((g_guiSettings.GetBool("musicplayer.outputtoallspeakers")) && (bIsMusic)) || (g_stSettings.m_currentVideoSettings.m_OutputToAllSpeakers && !bIsMusic))
     {
-      if( g_audioConfig.GetAC3Enabled() )
+#ifdef __APPLE__
+      if(g_guiSettings.GetBool("audiooutput.ac3passthrough"))
+#else
+	  if(g_audioConfig.GetAC3Enabled())
+#endif
       {
         bAudioOnAllSpeakers = true;      
         m_bAC3EncoderActive = true;
@@ -176,7 +180,11 @@ void CAudioContext::SetupSpeakerConfig(int iChannels, bool& bAudioOnAllSpeakers,
       else
       {
         spconfig = DSSPEAKER_USE_DEFAULT; //Allows ac3 encoder should it be enabled
+#ifdef __APPLE__
+		  m_bAC3EncoderActive = g_guiSettings.GetBool("audiooutput.ac3passthrough");
+#else
         m_bAC3EncoderActive = g_audioConfig.GetAC3Enabled();
+#endif
       }
     }
   }

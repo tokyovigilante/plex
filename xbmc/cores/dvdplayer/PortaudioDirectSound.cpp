@@ -54,7 +54,7 @@ PortAudioDirectSound::PortAudioDirectSound(IAudioCallback* pCallback, int iChann
   m_bIsAllocated = false;
 
 	if (g_guiSettings.GetInt("audiooutput.mode") == AUDIO_DIGITAL 
-		&& g_audioConfig.GetAC3Enabled() 
+		&& g_guiSettings.GetBool("audiooutput.ac3passthrough")
 		&& iChannels > 2
 		&& !bPassthrough)
 	{
@@ -92,7 +92,11 @@ PortAudioDirectSound::PortAudioDirectSound(IAudioCallback* pCallback, int iChann
   CLog::Log(LOGINFO, "Asked to open device: [%s]\n", device.c_str());
   
   if (g_guiSettings.GetInt("audiooutput.mode") == AUDIO_DIGITAL && 
-      g_audioConfig.GetAC3Enabled() && 
+#ifdef __APPLE__
+      g_guiSettings.GetBool("audiooutput.ac3passthrough") && 
+#else
+	  g_audioConfig.GetAC3Enabled() &&
+#endif
       iChannels > 2 &&
       !m_bPassthrough)
   {

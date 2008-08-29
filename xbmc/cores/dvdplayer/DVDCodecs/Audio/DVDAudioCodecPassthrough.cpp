@@ -240,8 +240,13 @@ bool CDVDAudioCodecPassthrough::Open(CDVDStreamInfo &hints, CDVDCodecOptions &op
   // TODO - move this stuff somewhere else
   if (g_guiSettings.GetInt("audiooutput.mode") == AUDIO_DIGITAL)
   {
+#ifdef __APPLE__
+    bSupportsAC3Out = g_guiSettings.GetBool("audiooutput.ac3passthrough");
+    bSupportsDTSOut = g_guiSettings.GetBool("audiooutput.dtspassthrough");
+#else
     bSupportsAC3Out = g_audioConfig.GetAC3Enabled();
     bSupportsDTSOut = g_audioConfig.GetDTSEnabled();
+#endif
   }  
 
   //Samplerate cannot be checked here as we don't know it at this point in time. 

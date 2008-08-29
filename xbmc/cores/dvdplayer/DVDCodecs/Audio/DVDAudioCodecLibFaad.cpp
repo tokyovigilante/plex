@@ -222,7 +222,12 @@ bool CDVDAudioCodecLibFaad::OpenDecoder()
 		if (g_guiSettings.GetInt("audiooutput.mode") == AUDIO_DIGITAL)
 		{
 			// Downmatrix with analog devices or if device doesn't support AC3
+#ifdef __APPLE__
+			pConfiguration->downMatrix = !(g_guiSettings.GetBool("audiooutput.ac3passthrough"));
+#else
 			pConfiguration->downMatrix = !(g_audioConfig.GetAC3Enabled());
+
+#endif
 		}
 		else pConfiguration->downMatrix = 1;
 		

@@ -207,7 +207,11 @@ void CPlayerCoreFactory::GetPlayers( const CFileItem& item, VECPLAYERCORES &vecC
       {
         vecCores.push_back(EPC_PAPLAYER);
       }
+#ifdef __APPLE__
+	  else if( ( url.GetFileType().Equals("ac3") && g_guiSettings.GetBool("audiooutput.ac3passthrough"))	
+#else
       else if( ( url.GetFileType().Equals("ac3") && g_audioConfig.GetAC3Enabled() )
+#endif
         ||  ( url.GetFileType().Equals("dts") && g_audioConfig.GetDTSEnabled() ) ) 
       {
 #ifdef HAS_MPLAYER
