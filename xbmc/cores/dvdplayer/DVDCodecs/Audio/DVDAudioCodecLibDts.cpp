@@ -255,7 +255,9 @@ void CDVDAudioCodecLibDts::SetupChannels(int flags)
 {
   m_iSourceFlags    = flags;
   m_iSourceChannels = GetNrOfChannels(flags);
-  if (g_audioContext.IsPassthroughActive() == false)
+	
+if (g_audioContext.IsPassthroughActive() == false &&
+		!(g_audioContext.IsAC3EncoderActive()))
     m_iOutputChannels = 2;
   else
     m_iOutputChannels = m_iSourceChannels;
@@ -267,7 +269,7 @@ void CDVDAudioCodecLibDts::SetupChannels(int flags)
   else
   {
     m_iOutputFlags  = m_iSourceFlags;
-    m_iOutputFlags |=DTS_ADJUST_LEVEL;
+    m_iOutputFlags |= DTS_ADJUST_LEVEL;
   }
 }
 
@@ -375,7 +377,7 @@ int CDVDAudioCodecLibDts::Decode(BYTE* pData, int iSize)
   
   m_dll.dts_frame(m_pState, frame, &flags, &level, bias);
 
-  //m_dll.dts_dynrng(m_pState, NULL, NULL);
+  m_dll.dts_dynrng(m_pState, NULL, NULL);
         
   int blocks = m_dll.dts_blocks_num(m_pState);
   for (int i = 0; i < blocks; i++)

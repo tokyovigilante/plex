@@ -235,7 +235,11 @@ bool CAudioContext::IsAC3EncoderActive() const
 
 bool CAudioContext::IsPassthroughActive() const
 {
+#ifdef __APPLE__
+  return (g_guiSettings.GetInt("audiooutput.mode") == AUDIO_DIGITAL);
+#else
   return (m_iDevice == AC97_DEVICE);
+#endif
 }
 
 #ifdef HAS_XBOX_AUDIO
