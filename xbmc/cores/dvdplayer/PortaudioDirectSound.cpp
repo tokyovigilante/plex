@@ -60,7 +60,7 @@ PortAudioDirectSound::PortAudioDirectSound(IAudioCallback* pCallback, int iChann
 	{
 		// Enable AC3 passthrough for digital devices
 		int mpeg_remapping = 0;
-		if (strAudioCodec == "AAC") mpeg_remapping = 1;
+		if (strAudioCodec == "AAC" || strAudioCodec == "DTS") mpeg_remapping = 1; // DTS uses MPEG channel mapping
 		ac3encoder_init(&m_ac3encoder, iChannels, uiSamplesPerSec, uiBitsPerSample, mpeg_remapping);
 		m_bEncodeAC3 = true;
 		m_bPassthrough = true;
