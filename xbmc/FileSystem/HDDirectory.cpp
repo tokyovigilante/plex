@@ -108,15 +108,15 @@ bool CHDDirectory::GetNormalFolder(const CStdString& strPath1, CFileItemList &it
   {
     if (wfd.cFileName[0] != 0)
     {
-      CFileItem* pItem = BuildResolvedFileItem(strRoot, wfd);
+      CFileItemPtr pItem(BuildResolvedFileItem(strRoot, wfd));
       if (pItem)
       {
         // Always add to the cache.
         vecCacheItems.Add(pItem);
 
         // If it's allowed, add it to the list.
-        if (IsAllowed(pItem, wfd))
-          items.Add(new CFileItem(*pItem));
+        if (IsAllowed(pItem.get(), wfd))
+          items.Add(pItem);
       }
     }
   }
@@ -189,11 +189,11 @@ void CHDDirectory::HandleSearchResult(void* thisPtr, void* itemListPtr, const ch
   TimeTToFileTime(fileStat.st_atime, &wfd.ftLastAccessTime);
   TimeTToFileTime(fileStat.st_mtime, &wfd.ftLastWriteTime);
 
-  CFileItem* pItem = me->BuildResolvedFileItem(strPath, wfd);
+  CFileItemPtr pItem(me->BuildResolvedFileItem(strPath, wfd));
 
   // If it's allowed, add it to the list.
-  if (pItem && me->IsAllowed(pItem, wfd))
-    pItemList->Add(new CFileItem(*pItem));
+  if (pItem && me->IsAllowed(pItem.get(), wfd))
+    pItemList->Add(pItem);
 }
 
 /////////////////////////////////////////////////////////////////////////////

@@ -25,8 +25,11 @@
 #include "Settings.h"
 #include "SkinInfo.h"
 #include "Key.h"
+#include "File.h"
+
 
 using namespace std;
+using namespace XFILE;
 
 CButtonTranslator g_buttonTranslator;
 extern CStdString g_LoadErrorStr;
@@ -39,26 +42,67 @@ CButtonTranslator::~CButtonTranslator()
 
 bool CButtonTranslator::Load()
 {
-  // load our xml file, and fill up our mapping tables
-  TiXmlDocument xmlDoc;
+  translatorMap.clear();
 
   // Load the config file
   CStdString keymapPath;
-  //CUtil::AddFileToFolder(g_settings.GetUserDataFolder(), "Keymap.xml", keymapPath);
+  bool success = false;
+
+  keymapPath = _P("Q:\\system\\Keymap.xml");
+  if(CFile::Exists(keymapPath))
+    success |= LoadKeymap(keymapPath);
+  else
+    CLog::Log(LOGDEBUG, "CButtonTranslator::Load - no system keymap found, skipping");
+
   keymapPath = g_settings.GetUserDataItem("Keymap.xml");
-  CLog::Log(LOGINFO, "Loading %s", keymapPath.c_str());
-  if (!xmlDoc.LoadFile(keymapPath))
+  if(CFile::Exists(keymapPath))
+    success |= LoadKeymap(keymapPath);
+  else
+    CLog::Log(LOGDEBUG, "CButtonTranslator::Load - no userdata keymap found, skipping");
+
+  if (!success)
   {
-    g_LoadErrorStr.Format("%s, Line %d\n%s", keymapPath.c_str(), xmlDoc.ErrorRow(), xmlDoc.ErrorDesc());
+    g_LoadErrorStr.Format("Error loading keymap: %s", keymapPath.c_str());
     return false;
   }
 
-  translatorMap.clear();
+#ifdef HAS_LIRC
+#ifdef _LINUX
+#define REMOTEMAP "Lircmap.xml"
+#else
+#define REMOTEMAP "IRSSmap.xml"
+#endif
+  CStdString lircmapPath;
+  CUtil::AddFileToFolder(_P("Q:\\system"), REMOTEMAP, lircmapPath);
+  success = LoadLircMap(lircmapPath);
+  lircmapPath = g_settings.GetUserDataItem(REMOTEMAP);
+  success |= LoadLircMap(lircmapPath);
+  if (!success)
+  {
+    CLog::Log(LOGERROR, "%s - unable to load remote map %s", __FUNCTION__, REMOTEMAP);
+    // don't return false - it is to only indicate a fatal error (which this is not)
+  }
+#endif
+
+  // Done!
+  return true;
+}
+
+bool CButtonTranslator::LoadKeymap(const CStdString &keymapPath)
+{
+  TiXmlDocument xmlDoc;
+
+  CLog::Log(LOGINFO, "Loading %s", keymapPath.c_str());
+  if (!xmlDoc.LoadFile(keymapPath))
+  {
+    CLog::Log(LOGERROR, "Error loading keymap: %s, Line %d\n%s", keymapPath.c_str(), xmlDoc.ErrorRow(), xmlDoc.ErrorDesc());
+    return false;
+  }
   TiXmlElement* pRoot = xmlDoc.RootElement();
   CStdString strValue = pRoot->Value();
   if ( strValue != "keymap")
   {
-    g_LoadErrorStr.Format("%sl Doesn't contain <keymap>", keymapPath.c_str());
+    CLog::Log(LOGERROR, "%s Doesn't contain <keymap>", keymapPath.c_str());
     return false;
   }
   // run through our window groups
@@ -79,37 +123,35 @@ bool CButtonTranslator::Load()
       pWindow = pWindow->NextSibling();
     }
   }
-  
-#ifdef HAS_LIRC
-  if (!LoadLircMap())
-    return false;
-#endif
 
-  // Done!
   return true;
 }
 
 #ifdef HAS_LIRC
-bool CButtonTranslator::LoadLircMap()
+bool CButtonTranslator::LoadLircMap(const CStdString &lircmapPath)
 {
+#ifdef _LINUX
+#define REMOTEMAPTAG "lircmap"
+#else
+#define REMOTEMAPTAG "irssmap"
+#endif
   // load our xml file, and fill up our mapping tables
   TiXmlDocument xmlDoc;
 
   // Load the config file
-  CStdString lircmapPath = g_settings.GetUserDataItem("Lircmap.xml");
   CLog::Log(LOGINFO, "Loading %s", lircmapPath.c_str());
   if (!xmlDoc.LoadFile(lircmapPath))
   {
     g_LoadErrorStr.Format("%s, Line %d\n%s", lircmapPath.c_str(), xmlDoc.ErrorRow(), xmlDoc.ErrorDesc());
-    return true; // This is so people who don't have the file won't fail, just warn
+    return false; // This is so people who don't have the file won't fail, just warn
   }
 
   lircRemotesMap.clear();
   TiXmlElement* pRoot = xmlDoc.RootElement();
   CStdString strValue = pRoot->Value();
-  if (strValue != "lircmap")
+  if (strValue != REMOTEMAPTAG)
   {
-    g_LoadErrorStr.Format("%sl Doesn't contain <lircmap>", lircmapPath.c_str());
+    g_LoadErrorStr.Format("%sl Doesn't contain <%s>", lircmapPath.c_str(), REMOTEMAPTAG);
     return false;
   }
 
@@ -126,14 +168,20 @@ bool CButtonTranslator::LoadLircMap()
     }
     pRemote = pRemote->NextSibling();
   }
-  
+
   return true;
 }
 
 void CButtonTranslator::MapRemote(TiXmlNode *pRemote, const char* szDevice)
 {
   lircButtonMap buttons;
-  
+  std::map<CStdString, lircButtonMap>::iterator it = lircRemotesMap.find(szDevice);
+  if (it != lircRemotesMap.end())
+  {
+    buttons = it->second;
+    lircRemotesMap.erase(it);
+  }
+
   TiXmlElement *pButton = pRemote->FirstChildElement();
   while (pButton)
   {
@@ -141,9 +189,9 @@ void CButtonTranslator::MapRemote(TiXmlNode *pRemote, const char* szDevice)
       buttons[pButton->FirstChild()->Value()] = pButton->Value();
     pButton = pButton->NextSiblingElement();
   }
-  
+
   lircRemotesMap[szDevice] = buttons;
-} 
+}
 
 WORD CButtonTranslator::TranslateLircRemoteString(const char* szDevice, const char *szButton)
 {
@@ -155,9 +203,9 @@ WORD CButtonTranslator::TranslateLircRemoteString(const char* szDevice, const ch
   // Find the button
   lircButtonMap::iterator it2 = (*it).second.find(szButton);
   if (it2 == (*it).second.end())
-    return 0;  
+    return 0;
 
-  // Convert the button to code  
+  // Convert the button to code
   return TranslateRemoteString((*it2).second.c_str());
 }
 #endif
@@ -186,17 +234,19 @@ void CButtonTranslator::MapJoystickActions(WORD wWindowID, TiXmlNode *pJoystick)
   TiXmlElement *pButton = pJoystick->FirstChildElement();
   int id = 0;
   //char* szId;
-  char* szType;
-  char *szAction;
+  const char* szType;
+  const char *szAction;
   while (pButton)
   {
-    szType = (char*)pButton->Value();
-    szAction = (char*)pButton->GetText();
-    if (szType && szAction)
+    szType = pButton->Value();
+    szAction = pButton->GetText();
+    if (szAction == NULL)
+      szAction = "";
+    if (szType)
     {
       if ((pButton->QueryIntAttribute("id", &id) == TIXML_SUCCESS) && id>=0 && id<=256)
       {
-        if (strcmpi(szType, "button")==0) 
+        if (strcmpi(szType, "button")==0)
         {
           buttonMap[id] = string(szAction);
         }
@@ -251,11 +301,11 @@ void CButtonTranslator::MapJoystickActions(WORD wWindowID, TiXmlNode *pJoystick)
     pButton = pButton->NextSiblingElement();
   }
   vector<string>::iterator it = joynames.begin();
-  while (it!=joynames.end()) 
+  while (it!=joynames.end())
   {
     m_joystickButtonMap[*it][wWindowID] = buttonMap;
-    m_joystickAxisMap[*it][wWindowID] = axisMap;      
-    CLog::Log(LOGNOTICE, "Found Joystick map for %s", it->c_str());
+    m_joystickAxisMap[*it][wWindowID] = axisMap;
+    CLog::Log(LOGDEBUG, "Found Joystick map for window %d using %s", wWindowID, it->c_str());
     it++;
   }
 
@@ -270,7 +320,7 @@ bool CButtonTranslator::TranslateJoystickString(WORD wWindow, const char* szDevi
   map<string, JoystickMap> *jmap;
 
   fullrange = false;
-  
+
   if (axis)
   {
     jmap = &m_joystickAxisMap;
@@ -410,6 +460,20 @@ WORD CButtonTranslator::GetActionCode(WORD wWindow, const CKey &key, CStdString 
     strAction = (*it2).second.strID;
     it2 = (*it).second.end();
   }
+#ifdef _LINUX
+  // Some buttoncodes changed in Hardy
+  if (wAction == 0 && (wKey & KEY_VKEY) == KEY_VKEY && (wKey & (DWORD)0x0F00)) {
+    CLog::Log(LOGDEBUG, "%s: Trying Hardy keycode for %#04x", __FUNCTION__, wKey);
+    wKey &= ~(DWORD)0x0F00;
+    buttonMap::iterator it2 = (*it).second.find(wKey);
+    while (it2 != (*it).second.end())
+    {
+      wAction = (*it2).second.wID;
+      strAction = (*it2).second.strID;
+      it2 = (*it).second.end();
+    }
+  }
+#endif
   return wAction;
 }
 
@@ -421,11 +485,12 @@ void CButtonTranslator::MapAction(WORD wButtonCode, const char *szAction, button
   // have a valid action, and a valid button - map it.
   // check to see if we've already got this (button,action) pair defined
   buttonMap::iterator it = map.find(wButtonCode);
-  if (it == map.end() || (*it).second.wID != wAction)
+  if (it == map.end() || (*it).second.wID != wAction || (*it).second.strID != szAction)
   {
-    //char szTmp[128];
-    //sprintf(szTmp,"  action:%i button:%i\n", wAction,wButtonCode);
-    //OutputDebugString(szTmp);
+    // NOTE: This multimap is only being used as a normal map at this point (no support
+    //       for multiple actions per key)
+    if (it != map.end())
+      map.erase(it);
     CButtonAction button;
     button.wID = wAction;
     button.strID = szAction;
@@ -437,6 +502,12 @@ void CButtonTranslator::MapWindowActions(TiXmlNode *pWindow, WORD wWindowID)
 {
   if (!pWindow || wWindowID == WINDOW_INVALID) return;
   buttonMap map;
+  std::map<WORD, buttonMap>::iterator it = translatorMap.find(wWindowID);
+  if (it != translatorMap.end())
+  {
+    map = it->second;
+    translatorMap.erase(it);
+  }
   TiXmlNode* pDevice;
   if ((pDevice = pWindow->FirstChild("gamepad")) != NULL)
   { // map gamepad actions
@@ -484,7 +555,7 @@ void CButtonTranslator::MapWindowActions(TiXmlNode *pWindow, WORD wWindowID)
   }
 #if defined(HAS_SDL_JOYSTICK) || defined(HAS_EVENT_SERVER)
   if ((pDevice = pWindow->FirstChild("joystick")) != NULL)
-  { 
+  {
     // map joystick actions
     while (pDevice)
     {
@@ -635,9 +706,34 @@ bool CButtonTranslator::TranslateActionString(const char *szAction, WORD &wActio
   else if (strAction.Equals("togglefullscreen")) wAction = ACTION_TOGGLE_FULLSCREEN;
   else if (strAction.Equals("nextscene")) wAction = ACTION_NEXT_SCENE;
   else if (strAction.Equals("previousscene")) wAction = ACTION_PREV_SCENE;
-  else
+  else if (strAction.Equals("nextletter")) wAction = ACTION_NEXT_LETTER;
+  else if (strAction.Equals("prevletter")) wAction = ACTION_PREV_LETTER;
+  // break if else block (MSVC 2k3 complains otherwise)
+  if (strAction.Equals("jumpsms2")) wAction = ACTION_JUMP_SMS2;
+  else if (strAction.Equals("jumpsms3")) wAction = ACTION_JUMP_SMS3;
+  else if (strAction.Equals("jumpsms4")) wAction = ACTION_JUMP_SMS4;
+  else if (strAction.Equals("jumpsms5")) wAction = ACTION_JUMP_SMS5;
+  else if (strAction.Equals("jumpsms6")) wAction = ACTION_JUMP_SMS6;
+  else if (strAction.Equals("jumpsms7")) wAction = ACTION_JUMP_SMS7;
+  else if (strAction.Equals("jumpsms8")) wAction = ACTION_JUMP_SMS8;
+  else if (strAction.Equals("jumpsms9")) wAction = ACTION_JUMP_SMS9;
+  else if (strAction.Equals("filterclear")) wAction = ACTION_FILTER_CLEAR;
+  else if (strAction.Equals("filtersms2")) wAction = ACTION_FILTER_SMS2;
+  else if (strAction.Equals("filtersms3")) wAction = ACTION_FILTER_SMS3;
+  else if (strAction.Equals("filtersms4")) wAction = ACTION_FILTER_SMS4;
+  else if (strAction.Equals("filtersms5")) wAction = ACTION_FILTER_SMS5;
+  else if (strAction.Equals("filtersms6")) wAction = ACTION_FILTER_SMS6;
+  else if (strAction.Equals("filtersms7")) wAction = ACTION_FILTER_SMS7;
+  else if (strAction.Equals("filtersms8")) wAction = ACTION_FILTER_SMS8;
+  else if (strAction.Equals("filtersms9")) wAction = ACTION_FILTER_SMS9;
+
+  if (wAction == ACTION_NONE)
+  {
     CLog::Log(LOGERROR, "Keymapping error: no such action '%s' defined", strAction.c_str());
-  return (wAction != ACTION_NONE);
+    return false;
+  }
+
+  return true;
 }
 
 WORD CButtonTranslator::TranslateWindowString(const char *szWindow)
@@ -679,6 +775,7 @@ WORD CButtonTranslator::TranslateWindowString(const char *szWindow)
   else if (strWindow.Equals("systeminfo")) wWindowID = WINDOW_SYSTEM_INFORMATION;
   else if (strWindow.Equals("guicalibration")) wWindowID = WINDOW_SCREEN_CALIBRATION;
   else if (strWindow.Equals("screencalibration")) wWindowID = WINDOW_SCREEN_CALIBRATION;
+  else if (strWindow.Equals("testpattern")) wWindowID = WINDOW_TEST_PATTERN;
   else if (strWindow.Equals("picturessettings")) wWindowID = WINDOW_SETTINGS_MYPICTURES;
   else if (strWindow.Equals("programssettings")) wWindowID = WINDOW_SETTINGS_MYPROGRAMS;
   else if (strWindow.Equals("weathersettings")) wWindowID = WINDOW_SETTINGS_MYWEATHER;
@@ -688,18 +785,15 @@ WORD CButtonTranslator::TranslateWindowString(const char *szWindow)
   else if (strWindow.Equals("networksettings")) wWindowID = WINDOW_SETTINGS_NETWORK;
   else if (strWindow.Equals("appearancesettings")) wWindowID = WINDOW_SETTINGS_APPEARANCE;
   else if (strWindow.Equals("scripts")) wWindowID = WINDOW_SCRIPTS;
-  else if (strWindow.Equals("gamesaves")) wWindowID = WINDOW_GAMESAVES;
   else if (strWindow.Equals("profiles")) wWindowID = WINDOW_SETTINGS_PROFILES;
   else if (strWindow.Equals("yesnodialog")) wWindowID = WINDOW_DIALOG_YES_NO;
   else if (strWindow.Equals("progressdialog")) wWindowID = WINDOW_DIALOG_PROGRESS;
-  else if (strWindow.Equals("invitedialog")) wWindowID = WINDOW_DIALOG_INVITE;
   else if (strWindow.Equals("virtualkeyboard")) wWindowID = WINDOW_DIALOG_KEYBOARD;
   else if (strWindow.Equals("volumebar")) wWindowID = WINDOW_DIALOG_VOLUME_BAR;
   else if (strWindow.Equals("submenu")) wWindowID = WINDOW_DIALOG_SUB_MENU;
   else if (strWindow.Equals("favourites")) wWindowID = WINDOW_DIALOG_FAVOURITES;
   else if (strWindow.Equals("contextmenu")) wWindowID = WINDOW_DIALOG_CONTEXT_MENU;
   else if (strWindow.Equals("infodialog")) wWindowID = WINDOW_DIALOG_KAI_TOAST;
-  else if (strWindow.Equals("hostdialog")) wWindowID = WINDOW_DIALOG_HOST;
   else if (strWindow.Equals("numericinput")) wWindowID = WINDOW_DIALOG_NUMERIC;
   else if (strWindow.Equals("gamepadinput")) wWindowID = WINDOW_DIALOG_GAMEPAD;
   else if (strWindow.Equals("shutdownmenu")) wWindowID = WINDOW_DIALOG_BUTTON_MENU;
@@ -713,7 +807,6 @@ WORD CButtonTranslator::TranslateWindowString(const char *szWindow)
   else if (strWindow.Equals("osdvideosettings")) wWindowID = WINDOW_DIALOG_VIDEO_OSD_SETTINGS;
   else if (strWindow.Equals("osdaudiosettings")) wWindowID = WINDOW_DIALOG_AUDIO_OSD_SETTINGS;
   else if (strWindow.Equals("videobookmarks")) wWindowID = WINDOW_DIALOG_VIDEO_BOOKMARKS;
-  else if (strWindow.Equals("trainersettings")) wWindowID = WINDOW_DIALOG_TRAINER_SETTINGS;
   else if (strWindow.Equals("profilesettings")) wWindowID = WINDOW_DIALOG_PROFILE_SETTINGS;
   else if (strWindow.Equals("locksettings")) wWindowID = WINDOW_DIALOG_LOCK_SETTINGS;
   else if (strWindow.Equals("contentsettings")) wWindowID = WINDOW_DIALOG_CONTENT_SETTINGS;
@@ -730,7 +823,6 @@ WORD CButtonTranslator::TranslateWindowString(const char *szWindow)
   else if (strWindow.Equals("slideshow")) wWindowID = WINDOW_SLIDESHOW;
   else if (strWindow.Equals("filestackingdialog")) wWindowID = WINDOW_DIALOG_FILESTACKING;
   else if (strWindow.Equals("weather")) wWindowID = WINDOW_WEATHER;
-  else if (strWindow.Equals("xlinkkai")) wWindowID = WINDOW_BUDDIES;
   else if (strWindow.Equals("screensaver")) wWindowID = WINDOW_SCREENSAVER;
   else if (strWindow.Equals("videoosd")) wWindowID = WINDOW_OSD;
   else if (strWindow.Equals("videomenu")) wWindowID = WINDOW_VIDEO_MENU;
@@ -742,6 +834,7 @@ WORD CButtonTranslator::TranslateWindowString(const char *szWindow)
   else if (strWindow.Equals("videooverlay")) wWindowID = WINDOW_VIDEO_OVERLAY;
   else if (strWindow.Equals("pictureinfo")) wWindowID = WINDOW_DIALOG_PICTURE_INFO;
   else if (strWindow.Equals("pluginsettings")) wWindowID = WINDOW_DIALOG_PLUGIN_SETTINGS;
+  else if (strWindow.Equals("fullscreeninfo")) wWindowID = WINDOW_DIALOG_FULLSCREEN_INFO;
   else
     CLog::Log(LOGERROR, "Window Translator: Can't find window %s", strWindow.c_str());
 
@@ -754,7 +847,7 @@ WORD CButtonTranslator::TranslateGamepadButton(TiXmlElement *pButton)
   const char *szButton = pButton->Value();
   return TranslateGamepadString(szButton);
 }
-  
+
 WORD CButtonTranslator::TranslateGamepadString(const char *szButton)
 {
   if (!szButton) return 0;
@@ -881,14 +974,14 @@ WORD CButtonTranslator::TranslateKeyboardString(const char *szButton)
   if (strlen(szButton) == 1)
   { // single character
     wButtonCode = (WORD)toupper(szButton[0]) | KEY_VKEY;
-    // FIXME It is a printable character, printable should be ASCII not VKEY! Till now it works, but how (long)? 
+    // FIXME It is a printable character, printable should be ASCII not VKEY! Till now it works, but how (long)?
     // FIXME support unicode: additional parameter necessary since unicode can not be embedded into key/action-ID.
   }
   else
   { // for keys such as return etc. etc.
     CStdString strKey = szButton;
     strKey.ToLower();
-    
+
     if (strKey.Equals("return")) wButtonCode = 0xF00D;
     else if (strKey.Equals("enter")) wButtonCode = 0xF06C;
     else if (strKey.Equals("escape")) wButtonCode = 0xF01B;
@@ -955,7 +1048,7 @@ WORD CButtonTranslator::TranslateKeyboardString(const char *szButton)
     else if (strKey.Equals("forwardslash") || strKey.Equals("questionmark")) wButtonCode = 0xF0BF;
     else if (strKey.Equals("leftquote") || strKey.Equals("tilde")) wButtonCode = 0xF0C0;
     else if (strKey.Equals("opensquarebracket") || strKey.Equals("openbrace")) wButtonCode = 0xF0EB;
-#ifdef __APPLE__
+#if defined(__APPLE__) || defined(_WIN32PC)
     // Why are these different. Why did the Linux one have to change???
     else if (strKey.Equals("backslash") || strKey.Equals("pipe")) wButtonCode = 0xF0EC;
 #else
@@ -978,7 +1071,7 @@ WORD CButtonTranslator::TranslateKeyboardString(const char *szButton)
     else if (strKey.Equals("prev_track")) wButtonCode = 0xF0B1;
     else if (strKey.Equals("next_track")) wButtonCode = 0xF0B0;
     else
-      CLog::Log(LOGERROR, "Keyboard Translator: Can't find button %s", strKey.c_str());      
+      CLog::Log(LOGERROR, "Keyboard Translator: Can't find button %s", strKey.c_str());
   }
   return wButtonCode;
 }
@@ -986,7 +1079,7 @@ WORD CButtonTranslator::TranslateKeyboardString(const char *szButton)
 WORD CButtonTranslator::TranslateKeyboardButton(TiXmlElement *pButton)
 {
   const char *szButton = pButton->Value();
-  
+
   if (!szButton) return 0;
   CStdString strKey = szButton;
   if (strKey.Equals("key"))

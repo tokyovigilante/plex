@@ -38,7 +38,7 @@ class CScrollInfo;
 class CGUIString
 {
 public:
-  typedef std::vector<DWORD>::iterator iString;
+  typedef std::vector<DWORD>::const_iterator iString;
 
   CGUIString(iString start, iString end, bool carriageReturn);
 
@@ -58,7 +58,10 @@ public:
   void RenderScrolling(float x, float y, float angle, DWORD color, DWORD shadowColor, DWORD alignment, float maxWidth, CScrollInfo &scrollInfo);
   void RenderOutline(float x, float y, DWORD color, DWORD outlineColor, DWORD outlineWidth, DWORD alignment, float maxWidth);
   void GetTextExtent(float &width, float &height);
+  float GetTextWidth();
+  float GetTextWidth(const CStdStringW &text) const;
   bool Update(const CStdString &text, float maxWidth = 0);
+  void SetText(const CStdStringW &text, float maxWidth = 0);
 
   unsigned int GetTextLength() const;
   void GetFirstText(std::vector<DWORD> &text) const;
@@ -67,12 +70,15 @@ public:
   void SetWrap(bool bWrap=true);
   void SetMaxHeight(float fHeight);
 
+
   static void DrawText(CGUIFont *font, float x, float y, DWORD color, DWORD shadowColor, const CStdString &text, DWORD align);
   static void DrawOutlineText(CGUIFont *font, float x, float y, DWORD color, DWORD outlineColor, DWORD outlineWidth, const CStdString &text);
+  static void Filter(CStdString &text);
+
 protected:
-  void ParseText(const CStdString &text, std::vector<DWORD> &parsedText);
-  void WrapText(std::vector<DWORD> &text, float maxWidth);
-  void LineBreakText(std::vector<DWORD> &text);
+  void ParseText(const CStdStringW &text, std::vector<DWORD> &parsedText);
+  void LineBreakText(const std::vector<DWORD> &text, std::vector<CGUIString> &lines);
+  void WrapText(const std::vector<DWORD> &text, float maxWidth);
 
   // our text to render
   std::vector<DWORD> m_colors;
@@ -88,7 +94,10 @@ protected:
 
   CStdString m_lastText;
 private:
-  static void AppendToUTF32(const CStdString &text, DWORD colStyle, std::vector<DWORD> &utf32);
+  static void AppendToUTF32(const CStdString &utf8, DWORD colStyle, std::vector<DWORD> &utf32);
+  static void AppendToUTF32(const CStdStringW &utf16, DWORD colStyle, std::vector<DWORD> &utf32);
   static void DrawOutlineText(CGUIFont *font, float x, float y, const std::vector<DWORD> &colors, DWORD outlineColor, DWORD outlineWidth, const std::vector<DWORD> &text, DWORD align, float maxWidth);
-};
+  static void ParseText(const CStdStringW &text, DWORD defaultStyle, std::vector<DWORD> &colors, std::vector<DWORD> &parsedText);
 
+  static void utf8ToW(const CStdString &utf8, CStdStringW &utf16);
+};

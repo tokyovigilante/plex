@@ -106,7 +106,7 @@ bool CGUIDialog::OnMessage(CGUIMessage& message)
   case GUI_MSG_WINDOW_INIT:
     {
       CGUIWindow::OnMessage(message);
-      m_showStartTime = SDL_GetTicks();
+      m_showStartTime = timeGetTime();
       return true;
     }
   }
@@ -140,7 +140,7 @@ void CGUIDialog::Close(bool forceClose /*= false*/)
   OnMessage(msg);
 }
 
-void CGUIDialog::DoModal_Internal(int iWindowID /*= WINDOW_INVALID */)
+void CGUIDialog::DoModal_Internal(int iWindowID /*= WINDOW_INVALID */, const CStdString &param /* = "" */)
 {
   //Lock graphic context here as it is sometimes called from non rendering threads
   //maybe we should have a critical section per window instead??
@@ -160,6 +160,7 @@ void CGUIDialog::DoModal_Internal(int iWindowID /*= WINDOW_INVALID */)
 
   // active this window...
   CGUIMessage msg(GUI_MSG_WINDOW_INIT, 0, 0, WINDOW_INVALID, iWindowID);
+  msg.SetStringParam(param);
   OnMessage(msg);
 
 //  m_bRunning = true;
@@ -203,9 +204,9 @@ void CGUIDialog::Show_Internal()
 //  m_bRunning = true;
 }
 
-void CGUIDialog::DoModal(int iWindowID /*= WINDOW_INVALID */)
+void CGUIDialog::DoModal(int iWindowID /*= WINDOW_INVALID */, const CStdString &param)
 {
-  g_application.getApplicationMessenger().DoModal(this, iWindowID);
+  g_application.getApplicationMessenger().DoModal(this, iWindowID, param);
 }
 
 void CGUIDialog::Show()
@@ -231,12 +232,9 @@ void CGUIDialog::Render()
     Close(true);
   }
     
-  if (m_autoClosing)
+  if (m_autoClosing && m_showStartTime + m_showDuration < timeGetTime() && !m_dialogClosing)
   {
-     if (m_showStartTime + m_showDuration < SDL_GetTicks())
-     {
-        Close(true);
-     }
+    Close();
   }
 }
 
@@ -257,6 +255,8 @@ void CGUIDialog::SetAutoClose(unsigned int timeoutMs)
 {
    m_autoClosing = true;
    m_showDuration = timeoutMs;
+   if (m_bRunning)
+     m_showStartTime = timeGetTime();
 }
 
 

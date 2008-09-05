@@ -26,6 +26,7 @@
 #include "VideoDatabase.h"
 #include "Settings.h"
 #include "FileItem.h"
+#include "Util.h"
 
 #include "FileSystem/MusicDatabaseDirectory.h"
 #include "FileSystem/VideoDatabaseDirectory.h"
@@ -196,6 +197,9 @@ CGUIViewStateMusicDatabase::CGUIViewStateMusicDatabase(const CFileItemList& item
         AddSortMethod(SORT_METHOD_ARTIST_IGNORE_THE, 557, LABEL_MASKS("%F", "", strAlbumLeft, strAlbumRight));  // Filename, empty | Userdefined, Userdefined
       else
         AddSortMethod(SORT_METHOD_ARTIST, 557, LABEL_MASKS("%F", "", strAlbumLeft, strAlbumRight));  // Filename, empty | Userdefined, Userdefined
+
+      // year
+      AddSortMethod(SORT_METHOD_YEAR, 562, LABEL_MASKS("%F", "", strAlbumLeft, strAlbumRight));
 
       SetSortMethod(g_stSettings.m_viewStateMusicNavAlbums.m_sortMethod);
 
@@ -439,7 +443,7 @@ CGUIViewStateWindowMusicNav::CGUIViewStateWindowMusicNav(const CFileItemList& it
           AddSortMethod(SORT_METHOD_LABEL_IGNORE_THE, 556, LABEL_MASKS("%T", "%Y"));  // Filename, Duration | Foldername, empty
         else
           AddSortMethod(SORT_METHOD_LABEL, 551, LABEL_MASKS("%T", "%Y"));  // Filename, Duration | Foldername, empty
-        AddSortMethod(SORT_METHOD_VIDEO_YEAR,562, LABEL_MASKS("%T", "%Y"));
+        AddSortMethod(SORT_METHOD_YEAR,562, LABEL_MASKS("%T", "%Y"));
         if (g_guiSettings.GetBool("filelists.ignorethewhensorting"))
         {
           AddSortMethod(SORT_METHOD_ARTIST_IGNORE_THE,557, LABEL_MASKS("%A - %T", "%Y"));
@@ -502,7 +506,7 @@ VECSOURCES& CGUIViewStateWindowMusicNav::GetSources()
   CDirectory::GetDirectory("musicdb://", items);
   for (int i=0; i<items.Size(); ++i)
   {
-    CFileItem* item=items[i];
+    CFileItemPtr item=items[i];
     CMediaSource share;
     share.strName=item->GetLabel();
     share.strPath = item->m_strPath;
@@ -586,7 +590,17 @@ void CGUIViewStateWindowMusicSongs::SaveViewState()
 
 VECSOURCES& CGUIViewStateWindowMusicSongs::GetSources()
 {
-  return g_settings.m_musicSources;
+  bool bIsSourceName = true;
+  // plugins share
+  if (CPluginDirectory::HasPlugins("music"))
+  {
+    CMediaSource share;
+    share.strName = g_localizeStrings.Get(1038);
+    share.strPath = "plugin://music/";
+    if (CUtil::GetMatchingSource(share.strName, g_settings.m_musicSources, bIsSourceName) < 0)
+      g_settings.m_musicSources.push_back(share);
+  }
+  return g_settings.m_musicSources; 
 }
 
 CGUIViewStateWindowMusicPlaylist::CGUIViewStateWindowMusicPlaylist(const CFileItemList& items) : CGUIViewStateWindowMusic(items)

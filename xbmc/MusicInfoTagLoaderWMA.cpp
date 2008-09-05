@@ -102,7 +102,7 @@ bool CMusicInfoTagLoaderWMA::Load(const CStdString& strFileName, CMusicInfoTag& 
 
     int iOffset;
     unsigned int* pDataI;
-    void *utf16String;
+    CStdStringW utf16String;
 
     //Play time
     iOffset = 0;
@@ -243,7 +243,7 @@ bool CMusicInfoTagLoaderWMA::Load(const CStdString& strFileName, CMusicInfoTag& 
         // Get frame name
         CStdString strFrameName;
         CStdStringW wString = "";
-        utf16String = (void *)(pData.get() + iOffset);
+        utf16String = (wchar_t*)(pData.get() + iOffset);
         g_charsetConverter.utf16LEtoUTF8(utf16String, strFrameName);
         iOffset += iFrameNameSize;
 
@@ -261,7 +261,7 @@ bool CMusicInfoTagLoaderWMA::Load(const CStdString& strFileName, CMusicInfoTag& 
         {
           // TODO: UTF-8: Do we need to "fixString" these utf8 strings?
           CStdString utf8String;
-          utf16String = (void *)(pData.get() + iOffset);
+          utf16String = (wchar_t*)(pData.get() + iOffset);
           g_charsetConverter.utf16LEtoUTF8(utf16String, utf8String);
           SetTagValueString(strFrameName, utf8String, tag);
         }
@@ -326,7 +326,7 @@ bool CMusicInfoTagLoaderWMA::Load(const CStdString& strFileName, CMusicInfoTag& 
         // Get frame name
         CStdString strFrameName = "";
         CStdStringW wString = "";
-        utf16String = (void *)(pData.get() + iOffset);
+        utf16String = (wchar_t*)(pData.get() + iOffset);
         g_charsetConverter.utf16LEtoUTF8(utf16String, strFrameName);
         iOffset += iFrameNameSize;
 
@@ -336,7 +336,7 @@ bool CMusicInfoTagLoaderWMA::Load(const CStdString& strFileName, CMusicInfoTag& 
         {
           // TODO: UTF-8: Do we need to "fixString" these utf8 strings?
           CStdString utf8String;
-          utf16String = (void *)(pData.get() + iOffset);
+          utf16String = (wchar_t*)(pData.get() + iOffset);
           g_charsetConverter.utf16LEtoUTF8(utf16String, utf8String);
           SetTagValueString(strFrameName, utf8String, tag);
         }
@@ -479,12 +479,14 @@ void CMusicInfoTagLoaderWMA::SetTagValueBinary(const CStdString& strFrameName, c
     iPicOffset += 4;
 
     CStdStringW wString;
-    g_charsetConverter.utf16LEtoW((char*) (pValue + iPicOffset), wString);
+    CStdString utf16String = (wchar_t*)(pValue+iPicOffset);
+    g_charsetConverter.utf16LEtoW(utf16String, wString);
     g_charsetConverter.wToUTF8(wString, picture.pwszMIMEType);
     iPicOffset += (wString.length() * 2);
     iPicOffset += 2;
 
-    g_charsetConverter.utf16LEtoW((char*) (pValue + iPicOffset), picture.pwszDescription);
+    utf16String = (wchar_t*)(pValue+iPicOffset);
+    g_charsetConverter.utf16LEtoW(utf16String, picture.pwszDescription);
     iPicOffset += (picture.pwszDescription.length() * 2);
     iPicOffset += 2;
 

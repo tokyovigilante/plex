@@ -49,15 +49,18 @@ class CFileItem;
 #define TMSG_RESET                303
 #define TMSG_RESTARTAPP           304
 #define TMSG_SWITCHTOFULLSCREEN   305
+#define TMSG_TOGGLEFULLSCREEN     306
+#define TMSG_SLEEPSYSTEM          307
 
 #define TMSG_HTTPAPI              400
 
 #define TMSG_NETWORKMESSAGE         500
 
-#define TMSG_GUI_DO_MODAL         600
-#define TMSG_GUI_SHOW             601
-#define TMSG_GUI_WIN_MANAGER_PROCESS 602
-#define TMSG_GUI_WIN_MANAGER_RENDER 603
+#define TMSG_GUI_DO_MODAL             600
+#define TMSG_GUI_SHOW                 601
+#define TMSG_GUI_WIN_MANAGER_PROCESS  602
+#define TMSG_GUI_WIN_MANAGER_RENDER   603
+#define TMSG_GUI_ACTIVATE_WINDOW      604
 
 typedef struct
 {
@@ -80,7 +83,6 @@ public:
   void ProcessMessages(); // only call from main thread.
   void ProcessWindowMessages();
 
-
   void MediaPlay(std::string filename);
   void MediaStop();
   void MediaPause();
@@ -99,27 +101,28 @@ public:
   void RestartApp();
   void Reset();
   void SwitchToFullscreen(); //
+  void ToggleFullscreen();
+  void SleepSystem();
 
   CStdString GetResponse();
   int SetResponse(CStdString response);
-  void HttpApi(std::string cmd);
+  void HttpApi(std::string cmd, bool wait = false);
   void ExecBuiltIn(const CStdString &command);
 
   void NetworkMessage(DWORD dwMessage, DWORD dwParam = 0);
 
-  void DoModal(CGUIDialog *pDialog, int iWindowID = WINDOW_INVALID);
+  void DoModal(CGUIDialog *pDialog, int iWindowID = WINDOW_INVALID, const CStdString &param = "");
   void Show(CGUIDialog *pDialog);
   void WindowManagerProcess(bool renderOnly = false); // will call m_gWindowManager.Process on the rendering thread
   void Render(); // will call m_gWindowManager.Render on the rendering thread
+  void ActivateWindow(int windowID, const CStdString &path, bool swappingWindows);
 
 private:
   void ProcessMessage(ThreadMessage *pMsg);
-
 
   std::vector<ThreadMessage*> m_vecMessages;
   std::vector<ThreadMessage*> m_vecWindowMessages;
   CCriticalSection m_critSection;
   CCriticalSection m_critBuffer;
   CStdString bufferResponse;
-
 };

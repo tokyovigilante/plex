@@ -2,6 +2,7 @@
 
 #include "utils/UdpClient.h"
 #include "Key.h"
+#include "boost/shared_ptr.hpp"
 
 /******************************** Description *********************************/
 
@@ -15,6 +16,8 @@
 
 typedef char char_t;
 typedef struct websRec *webs_t;
+
+class CFileItem; typedef boost::shared_ptr<CFileItem> CFileItemPtr;
 
 class CXbmcHttpShim
 {
@@ -142,7 +145,7 @@ private:
   bool  closeFinalTag;
 
   void encodeblock( unsigned char in[3], unsigned char out[4], int len );
-  CStdString encodeFileToBase64( CStdString inFilename, int linesize );
+  CStdString encodeFileToBase64(const CStdString &inFilename, int linesize );
   void decodeblock( unsigned char in[4], unsigned char out[3] );
   bool decodeBase64ToFile( const CStdString &inString, const CStdString &outfilename, bool append = false );
   __int64 fileSize(const CStdString &filename);
@@ -154,7 +157,7 @@ private:
   CStdString flushResult(int eid, webs_t wp, const CStdString &output);
   int displayDir(int numParas, CStdString paras[]);
   void SetCurrentMediaItem(CFileItem& newItem);
-  void AddItemToPlayList(const CFileItem* pItem, int playList, int sortMethod, CStdString mask, bool recursive);
+  void AddItemToPlayList(const CFileItemPtr &pItem, int playList, int sortMethod, CStdString mask, bool recursive);
   void LoadPlayListOld(const CStdString& strPlayList, int playList);
   bool LoadPlayList(CStdString strPath, int iPlaylist, bool clearList, bool autoStart);
   void copyThumb(CStdString srcFn, CStdString destFn);

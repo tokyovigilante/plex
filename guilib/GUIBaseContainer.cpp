@@ -119,6 +119,32 @@ bool CGUIBaseContainer::OnAction(const CAction &action)
     }
     break;
 
+  case ACTION_NEXT_LETTER:
+    {
+      OnNextLetter();
+      return true;
+    }
+    break;
+  case ACTION_PREV_LETTER:
+    {
+      OnPrevLetter();
+      return true;
+    }
+    break;
+  case ACTION_JUMP_SMS2:
+  case ACTION_JUMP_SMS3:
+  case ACTION_JUMP_SMS4:
+  case ACTION_JUMP_SMS5:
+  case ACTION_JUMP_SMS6:
+  case ACTION_JUMP_SMS7:
+  case ACTION_JUMP_SMS8:
+  case ACTION_JUMP_SMS9:
+    {
+      OnJumpLetter(action.wID - ACTION_JUMP_SMS2 + 2);
+      return true;
+    }
+    break;
+
   default:
     if (action.wID)
     { 
@@ -141,13 +167,15 @@ bool CGUIBaseContainer::OnMessage(CGUIMessage& message)
         for (int i = 0; i < items->Size(); i++)
           m_items.push_back(items->Get(i));
         UpdateLayout(true); // true to refresh all items
+        UpdateScrollByLetter();
         SelectItem(message.GetParam1());
         return true;
       }
       if (message.GetMessage() == GUI_MSG_LABEL_ADD && message.GetLPVOID())
       {
-        CGUIListItem* item = (CGUIListItem*)message.GetLPVOID();
+        CGUIListItemPtr item = *(CGUIListItemPtr*)message.GetLPVOID();
         m_items.push_back(item);
+        UpdateScrollByLetter();
         if (m_pageControl)
         {
           CGUIMessage msg(GUI_MSG_LABEL_RESET, GetID(), m_pageControl, m_itemsPerPage, GetRows());
@@ -175,6 +203,8 @@ bool CGUIBaseContainer::OnMessage(CGUIMessage& message)
     {
       if (message.GetSenderId() == m_pageControl && IsVisible())
       { // update our page if we're visible - not much point otherwise
+        if ((int)message.GetParam1() != m_offset)
+          m_pageChangeTimer.StartZero();
         ScrollToOffset(message.GetParam1());
         return true;
       }
@@ -249,6 +279,71 @@ void CGUIBaseContainer::OnRight()
   CGUIControl::OnRight();
 }
 
+void CGUIBaseContainer::OnNextLetter()
+{
+  int offset = CorrectOffset(m_offset, m_cursor);
+  for (unsigned int i = 0; i < m_letterOffsets.size(); i++)
+  {
+    if (m_letterOffsets[i].first > offset)
+    {
+      SelectItem(m_letterOffsets[i].first);
+      return;
+    }
+  }
+}
+
+void CGUIBaseContainer::OnPrevLetter()
+{
+  int offset = CorrectOffset(m_offset, m_cursor);
+  if (!m_letterOffsets.size())
+    return;
+  for (unsigned int i = m_letterOffsets.size() - 1; i >= 0; i--)
+  {
+    if (m_letterOffsets[i].first < offset)
+    {
+      SelectItem(m_letterOffsets[i].first);
+      return;
+    }
+  }
+}
+
+void CGUIBaseContainer::OnJumpLetter(int letter)
+{
+  static const char letterMap[8][6] = { "ABC2", "DEF3", "GHI4", "JKL5", "MNO6", "PQRS7", "TUV8", "WXYZ9" };
+
+  // only 2..9 supported
+  if (letter < 2 || letter > 9 || !m_letterOffsets.size())
+    return;
+
+  const CStdString letters = letterMap[letter - 2];
+  // find where we currently are
+  int offset = CorrectOffset(m_offset, m_cursor);
+  unsigned int currentLetter = 0;
+  while (currentLetter + 1 < m_letterOffsets.size() && m_letterOffsets[currentLetter + 1].first <= offset)
+    currentLetter++;
+
+  // now switch to the next letter
+  CStdString current = m_letterOffsets[currentLetter].second;
+  int startPos = (letters.Find(current) + 1) % letters.size();
+  // now jump to letters[startPos], or another one in the same range if possible
+  int pos = startPos;
+  while (true)
+  {
+    // check if we can jump to this letter
+    for (unsigned int i = 0; i < m_letterOffsets.size(); i++)
+    {
+      if (m_letterOffsets[i].second == letters.Mid(pos, 1))
+      {
+        SelectItem(m_letterOffsets[i].first);
+        return;
+      }
+    }
+    pos = (pos + 1) % letters.size();
+    if (pos == startPos)
+      return;
+  }
+}
+
 bool CGUIBaseContainer::MoveUp(bool wrapAround)
 {
   return true;
@@ -270,10 +365,10 @@ int CGUIBaseContainer::GetSelectedItem() const
   return CorrectOffset(m_offset, m_cursor);
 }
 
-CGUIListItem *CGUIBaseContainer::GetListItem(int offset, unsigned int flag) const
+CGUIListItemPtr CGUIBaseContainer::GetListItem(int offset, unsigned int flag) const
 {
   if (!m_items.size())
-    return NULL;
+    return CGUIListItemPtr();
   int item = GetSelectedItem() + offset;
   if (flag & INFOFLAG_LISTITEM_POSITION) // use offset from the first item displayed, taking into account scrolling
     item = CorrectOffset((int)(m_scrollOffset / m_layout->Size(m_orientation)), offset);
@@ -289,13 +384,13 @@ CGUIListItem *CGUIBaseContainer::GetListItem(int offset, unsigned int flag) cons
     if (item >= 0 && item < (int)m_items.size())
       return m_items[item];
   }
-  return NULL;
+  return CGUIListItemPtr();
 }
 
 CGUIListItemLayout *CGUIBaseContainer::GetFocusedLayout() const
 {
-  CGUIListItem *item = GetListItem(0);
-  if (item) return item->GetFocusedLayout();
+  CGUIListItemPtr item = GetListItem(0);
+  if (item.get()) return item->GetFocusedLayout();
   return NULL;
 }
 
@@ -306,7 +401,7 @@ bool CGUIBaseContainer::SelectItemFromPoint(const CPoint &point)
 
   int row = 0;
   float pos = (m_orientation == VERTICAL) ? point.y : point.x;
-  while (row < m_itemsPerPage)
+  while (row < m_itemsPerPage + 1)  // 1 more to ensure we get the (possible) half item at the end.
   {
     const CGUIListItemLayout *layout = (row == m_cursor) ? m_focusedLayout : m_layout;
     if (pos < layout->Size(m_orientation) && row + m_offset < (int)m_items.size())
@@ -370,7 +465,7 @@ bool CGUIBaseContainer::OnClick(DWORD actionID)
       int selected = GetSelectedItem();
       if (selected >= 0 && selected < (int)m_items.size())
       {
-        CFileItem *item = (CFileItem *)m_items[selected];
+        CFileItemPtr item = boost::static_pointer_cast<CFileItem>(m_items[selected]);
         // multiple action strings are concat'd together, separated with " , "
         vector<CStdString> actions;
         StringUtils::SplitString(item->m_strPath, " , ", actions);
@@ -407,7 +502,7 @@ CStdString CGUIBaseContainer::GetDescription() const
   int item = GetSelectedItem();
   if (item >= 0 && item < (int)m_items.size())
   {
-    CGUIListItem *pItem = m_items[item];
+    CGUIListItemPtr pItem = m_items[item];
     if (pItem->m_bIsFolder)
       strLabel.Format("[%s]", pItem->GetLabel().c_str());
     else
@@ -444,6 +539,8 @@ void CGUIBaseContainer::DoRender(DWORD currentTime)
 {
   m_renderTime = currentTime;
   CGUIControl::DoRender(currentTime);
+  if (m_pageChangeTimer.GetElapsedMilliseconds() > 200)
+    m_pageChangeTimer.Stop();
   m_wasReset = false;
 }
 
@@ -458,8 +555,6 @@ void CGUIBaseContainer::FreeResources()
   if (m_staticContent)
   { // free any static content
     Reset();
-    for (iItems it = m_staticItems.begin(); it != m_staticItems.end(); it++)
-      delete *it;
     m_staticItems.clear();
   }
   m_scrollSpeed = 0;
@@ -505,15 +600,16 @@ void CGUIBaseContainer::UpdateVisibility(const CGUIListItem *item)
     Reset();
     for (unsigned int i = 0; i < m_staticItems.size(); ++i)
     {
-      CFileItem *item = (CFileItem *)m_staticItems[i];
+      CFileItemPtr item = boost::static_pointer_cast<CFileItem>(m_staticItems[i]);
       // m_idepth is used to store the visibility condition
       if (!item->m_idepth || g_infoManager.GetBool(item->m_idepth, GetParentID()))
       {
         m_items.push_back(item);
-        if (item == lastItem)
+        if (item.get() == lastItem)
           m_lastItem = lastItem;
       }
     }
+    UpdateScrollByLetter();
   }
 }
 
@@ -534,6 +630,23 @@ void CGUIBaseContainer::CalculateLayout()
 
   // ensure that the scroll offset is a multiple of our size
   m_scrollOffset = m_offset * m_layout->Size(m_orientation);
+}
+
+void CGUIBaseContainer::UpdateScrollByLetter()
+{
+  m_letterOffsets.clear();
+
+  // for scrolling by letter we have an offset table into our vector.
+  CStdString currentMatch;
+  for (unsigned int i = 0; i < m_items.size(); i++)
+  {
+    CGUIListItemPtr item = m_items[i];
+    if (currentMatch != item->GetSortLabel().Left(1))
+    {
+      currentMatch = item->GetSortLabel().Left(1);
+      m_letterOffsets.push_back(make_pair((int)i, currentMatch));
+    }
+  }
 }
 
 unsigned int CGUIBaseContainer::GetRows() const
@@ -563,8 +676,27 @@ void CGUIBaseContainer::ScrollToOffset(int offset)
   }
   m_scrollSpeed = (offset * size - m_scrollOffset) / m_scrollTime;
   if (!m_wasReset)
+  {
     g_infoManager.SetContainerMoving(GetID(), offset - m_offset);
+    if (m_scrollSpeed)
+      m_scrollTimer.Start();
+    else
+      m_scrollTimer.Stop();
+  }
   m_offset = offset;
+}
+
+void CGUIBaseContainer::UpdateScrollOffset()
+{
+  m_scrollOffset += m_scrollSpeed * (m_renderTime - m_scrollLastTime);
+  if ((m_scrollSpeed < 0 && m_scrollOffset < m_offset * m_layout->Size(m_orientation)) ||
+      (m_scrollSpeed > 0 && m_scrollOffset > m_offset * m_layout->Size(m_orientation)))
+  {
+    m_scrollOffset = m_offset * m_layout->Size(m_orientation);
+    m_scrollSpeed = 0;
+    m_scrollTimer.Stop();
+  }
+  m_scrollLastTime = m_renderTime;
 }
 
 int CGUIBaseContainer::CorrectOffset(int offset, int cursor) const
@@ -627,7 +759,7 @@ void CGUIBaseContainer::LoadContent(TiXmlElement *content)
     g_SkinInfo.ResolveIncludes(item);
     if (item->FirstChild())
     {
-      CFileItem *newItem = NULL;
+      CFileItemPtr newItem;
       // check whether we're using the more verbose method...
       TiXmlNode *click = item->FirstChild("onclick");
       if (click && click->FirstChild())
@@ -640,7 +772,7 @@ void CGUIBaseContainer::LoadContent(TiXmlElement *content)
         const char *id = item->Attribute("id");
         int visibleCondition = 0;
         CGUIControlFactory::GetConditionalVisibility(item, visibleCondition);
-        newItem = new CFileItem(CGUIControlFactory::FilterLabel(label));
+        newItem.reset(new CFileItem(CGUIControlFactory::FilterLabel(label)));
         // multiple action strings are concat'd together, separated with " , "
         vector<CStdString> actions;
         CGUIControlFactory::GetMultipleString(item, "onclick", actions);
@@ -660,7 +792,7 @@ void CGUIBaseContainer::LoadContent(TiXmlElement *content)
         const char *thumb = item->Attribute("thumb");
         const char *icon = item->Attribute("icon");
         const char *id = item->Attribute("id");
-        newItem = new CFileItem(label ? CGUIControlFactory::FilterLabel(label) : "");
+        newItem.reset(new CFileItem(label ? CGUIControlFactory::FilterLabel(label) : ""));
         newItem->m_strPath = item->FirstChild()->Value();
         if (label2) newItem->SetLabel2(CGUIControlFactory::FilterLabel(label2));
         if (thumb) newItem->SetThumbnailImage(thumb);
@@ -720,7 +852,7 @@ void CGUIBaseContainer::DumpTextureUse()
   CLog::Log(LOGDEBUG, "%s for container %u", __FUNCTION__, GetID());
   for (unsigned int i = 0; i < m_items.size(); ++i)
   {
-    CGUIListItem *item = m_items[i];
+    CGUIListItemPtr item = m_items[i];
     if (item->GetFocusedLayout()) item->GetFocusedLayout()->DumpTextureUse();
     if (item->GetLayout()) item->GetLayout()->DumpTextureUse();
   }
@@ -746,6 +878,8 @@ bool CGUIBaseContainer::GetCondition(int condition, int data) const
       CGUIListItemLayout *layout = GetFocusedLayout();
       return layout ? (layout->GetFocus() == (unsigned int)data) : false;
     }
+  case CONTAINER_SCROLLING:
+    return (m_scrollTimer.GetElapsedMilliseconds() > m_scrollTime || m_pageChangeTimer.IsRunning());
   default:
     return false;
   }
@@ -807,7 +941,7 @@ CStdString CGUIBaseContainer::GetLabel(int info) const
   case CONTAINER_NUM_ITEMS:
     {
       unsigned int numItems = GetNumItems();
-      if (numItems && m_items[0]->IsFileItem() && ((CFileItem *)m_items[0])->IsParentFolder())
+      if (numItems && m_items[0]->IsFileItem() && (boost::static_pointer_cast<CFileItem>(m_items[0]))->IsParentFolder())
         label.Format("%u", numItems-1);
       else
         label.Format("%u", numItems);

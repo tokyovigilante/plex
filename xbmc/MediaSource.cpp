@@ -37,13 +37,11 @@ bool CMediaSource::isWritable() const
   {
     if (strPath.substr(0,4) == "smb:")
       return true; // smb path
-    #ifdef HAS_XBOX_HARDWARE
-    else if (strPath.substr(0,4) == "mem:")
-    {
-      return g_memoryUnitManager.IsDriveWriteable(strPath);
-    }
-    #endif
   }
+#ifdef _LINUX
+  if (strPath == getenv("HOME"))
+    return true;
+#endif
 
   return false;
 }
@@ -80,8 +78,6 @@ void CMediaSource::FromNameAndPaths(const CStdString &category, const CStdString
     m_iDriveType = SOURCE_TYPE_VIRTUAL_DVD;
     strPath = "D:\\";
   }
-  else if (strPath.Left(11).Equals("soundtrack:"))
-    m_iDriveType = SOURCE_TYPE_LOCAL;
   else if (CUtil::IsISO9660(strPath))
     m_iDriveType = SOURCE_TYPE_VIRTUAL_DVD;
   else if (CUtil::IsDVD(strPath))

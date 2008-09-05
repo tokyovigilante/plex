@@ -7,8 +7,12 @@
 //
 //
 #import <Cocoa/Cocoa.h>
+#include <SDL/SDL.h>
 
-@interface PlexApplication : NSApplication 
+#define PLEX_MESSAGE SDL_USEREVENT
+
+@interface PlexApplication : NSApplication
+- (void)terminate:(id)sender;
 - (IBAction) quit:(id)sender;
 - (IBAction)fullScreenToggle:(id)sender;
 - (void) finishLaunching;

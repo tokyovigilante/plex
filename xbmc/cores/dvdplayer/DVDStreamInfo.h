@@ -76,6 +76,9 @@ public:
   // CODEC EXTRADATA
   void*        extradata; // extra data for codec to use
   unsigned int extrasize; // size of extra data
+  
+  // OTHER STUFF.
+  bool forPreview;
 
   bool operator==(const CDVDStreamInfo& right)      { return Equal(right, true);}
   bool operator!=(const CDVDStreamInfo& right)      { return !Equal(right, true);}

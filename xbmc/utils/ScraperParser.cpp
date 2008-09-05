@@ -57,7 +57,6 @@ CScraperParser::~CScraperParser()
   m_document = NULL;
   m_name = m_content = NULL;
   m_settings = NULL;
-//  m_SearchStringEncoding = NULL;
 }
 
 bool CScraperParser::Load(const CStdString& strXMLFile)
@@ -103,13 +102,10 @@ bool CScraperParser::Load(const CStdString& strXMLFile)
 
     TiXmlElement* pChildElement = m_pRootElement->FirstChildElement("CreateSearchUrl");
     if (pChildElement)
-    { 
-      if(!(m_SearchStringEncoding = pChildElement->Attribute("SearchStringEncoding")))
+    {
+      if (!(m_SearchStringEncoding = pChildElement->Attribute("SearchStringEncoding")))
         m_SearchStringEncoding = "UTF-8";
-    } 
-       
-  return true;
-
+    }
   }
   else
   {
@@ -170,7 +166,7 @@ void CScraperParser::ParseExpression(const CStdString& input, CStdString& dest, 
     if (!reg.RegComp(strExpression.c_str()))
     {
       //std::cout << "error compiling regexp in scraper";
-      return; 
+      return;
     }
 
     bool bRepeat = false;
@@ -330,7 +326,7 @@ void CScraperParser::ParseNext(TiXmlElement* element)
       TiXmlElement* pChildReg = pReg->FirstChildElement("clear");
       if (pChildReg)
         ParseNext(pChildReg);
-    }  
+    }
 
     int iDest = 1;
     bool bAppend = false;
@@ -393,10 +389,10 @@ const CStdString CScraperParser::Parse(const CStdString& strTag, CScraperSetting
     m_settings = NULL;
   ParseNext(pChildStart);
   CStdString tmp = m_param[iResult-1];
-  
+
   const char* szClearBuffers = pChildElement->Attribute("clearbuffers");
   if (!szClearBuffers || stricmp(szClearBuffers,"no") != 0)
-    ClearBuffers(); 
+    ClearBuffers();
 
   return tmp;
 }
@@ -404,10 +400,10 @@ const CStdString CScraperParser::Parse(const CStdString& strTag, CScraperSetting
 bool CScraperParser::HasFunction(const CStdString& strTag)
 {
   TiXmlElement* pChildElement = m_pRootElement->FirstChildElement(strTag.c_str());
-  
-  if (!pChildElement) 
+
+  if (!pChildElement)
     return false;
-  
+
   return true;
 }
 

@@ -39,12 +39,13 @@ CPlayListPlayer::CPlayListPlayer(void)
   m_PlaylistVideo = new CPlayList;
   m_PlaylistEmpty = new CPlayList;
   m_iCurrentSong = -1;
-  m_bChanged = false;
   m_bPlayedFirstFile = false;
+  m_bPlaybackStarted = false;
   m_iCurrentPlayList = PLAYLIST_NONE;
   for (int i = 0; i < 2; i++)
     m_repeatState[i] = REPEAT_NONE;
   m_iFailedSongs = 0;
+  m_failedSongsStart = 0;
 }
 
 CPlayListPlayer::~CPlayListPlayer(void)
@@ -64,12 +65,13 @@ bool CPlayListPlayer::OnMessage(CGUIMessage &message)
     {
       // update our item if necessary
       CPlayList &playlist = GetPlaylist(m_iCurrentPlayList);
-      playlist.UpdateItem((CFileItem *)message.GetLPVOID());
+      CFileItemPtr item = *(CFileItemPtr *)message.GetLPVOID();
+      playlist.UpdateItem(item.get());
     }
     break;
   case GUI_MSG_PLAYBACK_STOPPED:
     {
-      if (m_iCurrentPlayList != PLAYLIST_NONE)
+      if (m_iCurrentPlayList != PLAYLIST_NONE && m_bPlaybackStarted)
       {
         CGUIMessage msg(GUI_MSG_PLAYLISTPLAYER_STOPPED, 0, 0, m_iCurrentPlayList, m_iCurrentSong);
         m_gWindowManager.SendThreadMessage(msg);
@@ -82,6 +84,32 @@ bool CPlayListPlayer::OnMessage(CGUIMessage &message)
   }
 
   return false;
+}
+
+int CPlayListPlayer::GetNextSong(int offset) const
+{
+  if (m_iCurrentPlayList == PLAYLIST_NONE)
+    return -1;
+
+  const CPlayList& playlist = GetPlaylist(m_iCurrentPlayList);
+  if (playlist.size() <= 0)
+    return -1;
+
+  int song = m_iCurrentSong;
+
+  // party mode
+  if (g_partyModeManager.IsEnabled() && GetCurrentPlaylist() == PLAYLIST_MUSIC)
+    return song + offset;
+
+  // wrap around in the case of repeating
+  if (RepeatedOne(m_iCurrentPlayList))
+    return song;
+
+  song += offset;
+  if (song >= playlist.size() && Repeated(m_iCurrentPlayList))
+    song %= playlist.size();
+
+  return song;
 }
 
 int CPlayListPlayer::GetNextSong()
@@ -101,9 +129,9 @@ int CPlayListPlayer::GetNextSong()
   if (RepeatedOne(m_iCurrentPlayList))
   {
     // otherwise immediately abort playback
-    if (playlist[m_iCurrentSong].IsUnPlayable())
+    if (playlist[m_iCurrentSong]->GetPropertyBOOL("unplayable"))
     {
-      CLog::Log(LOGERROR,"Playlist Player: RepeatOne stuck on unplayable item: %i, path [%s]", m_iCurrentSong, playlist[m_iCurrentSong].m_strPath.c_str());
+      CLog::Log(LOGERROR,"Playlist Player: RepeatOne stuck on unplayable item: %i, path [%s]", m_iCurrentSong, playlist[m_iCurrentSong]->m_strPath.c_str());
       CGUIMessage msg(GUI_MSG_PLAYLISTPLAYER_STOPPED, 0, 0, m_iCurrentPlayList, m_iCurrentSong);
       m_gWindowManager.SendThreadMessage(msg);
       Reset();
@@ -140,14 +168,14 @@ void CPlayListPlayer::PlayNext(bool bAutoPlay)
 
   if (bAutoPlay)
   {
-    const CPlayListItem& item = playlist[iSong];
-    if ( item.IsShoutCast() )
+    CFileItemPtr item = playlist[iSong];
+    if ( item->IsShoutCast() )
     {
       return ;
     }
   }
   Play(iSong, bAutoPlay);
-  if (playlist[iSong].IsAudio() && m_gWindowManager.GetActiveWindow() == WINDOW_FULLSCREEN_VIDEO)
+  if (iSong < playlist.size() && playlist[iSong]->IsAudio() && m_gWindowManager.GetActiveWindow() == WINDOW_FULLSCREEN_VIDEO)
     m_gWindowManager.ActivateWindow(WINDOW_VISUALISATION);
   //g_partyModeManager.OnSongChange();
 }
@@ -203,20 +231,25 @@ void CPlayListPlayer::Play(int iSong, bool bAutoPlay /* = false */, bool bPlayPr
         break;
   }
 
-  m_bChanged = true;
   int iPreviousSong = m_iCurrentSong;
   m_iCurrentSong = iSong;
-  const CPlayListItem& item = playlist[m_iCurrentSong];
+  CFileItemPtr item = playlist[m_iCurrentSong];
   playlist.SetPlayed(true);
 
-  if (!g_application.PlayFile(item, bAutoPlay))
+  m_bPlaybackStarted = false;
+
+  DWORD playAttempt = timeGetTime();
+  if (!g_application.PlayFile(*item, bAutoPlay))
   {
-    CLog::Log(LOGERROR,"Playlist Player: skipping unplayable item: %i, path [%s]", m_iCurrentSong, item.m_strPath.c_str());
+    CLog::Log(LOGERROR,"Playlist Player: skipping unplayable item: %i, path [%s]", m_iCurrentSong, item->m_strPath.c_str());
     playlist.SetUnPlayable(m_iCurrentSong);
 
     // abort on 100 failed CONSECTUTIVE songs
+    if (!m_iFailedSongs)
+      m_failedSongsStart = playAttempt;
     m_iFailedSongs++;
-    if (m_iFailedSongs >= g_advancedSettings.m_playlistRetries && g_advancedSettings.m_playlistRetries >= 0)
+    if ((m_iFailedSongs >= g_advancedSettings.m_playlistRetries && g_advancedSettings.m_playlistRetries >= 0)
+        || (timeGetTime() - m_failedSongsStart  >= (unsigned int)g_advancedSettings.m_playlistTimeout * 1000) && g_advancedSettings.m_playlistTimeout)
     {
       CLog::Log(LOGDEBUG,"Playlist Player: too many consecutive failures... aborting playback");
 
@@ -229,6 +262,7 @@ void CPlayListPlayer::Play(int iSong, bool bAutoPlay /* = false */, bool bPlayPr
       GetPlaylist(m_iCurrentPlayList).Clear();
       m_iCurrentPlayList = PLAYLIST_NONE;
       m_iFailedSongs = 0;
+      m_failedSongsStart = 0;
       return;
     }
 
@@ -253,21 +287,26 @@ void CPlayListPlayer::Play(int iSong, bool bAutoPlay /* = false */, bool bPlayPr
     }
   }
 
-  m_bPlayedFirstFile = true;
+  // TODO - move the above failure logic and the below success logic
+  //        to callbacks instead so we don't rely on the return value
+  //        of PlayFile()
 
   // consecutive error counter so reset if the current item is playing
   m_iFailedSongs = 0;
+  m_failedSongsStart = 0;
+  m_bPlaybackStarted = true;
+  m_bPlayedFirstFile = true;
 
-  if (!item.IsShoutCast())
+  if (!item->IsShoutCast())
   {
     if (iPreviousSong < 0)
     {
-      CGUIMessage msg(GUI_MSG_PLAYLISTPLAYER_STARTED, 0, 0, m_iCurrentPlayList, m_iCurrentSong, (CFileItem*)&item);
+      CGUIMessage msg(GUI_MSG_PLAYLISTPLAYER_STARTED, 0, 0, m_iCurrentPlayList, m_iCurrentSong, item);
       m_gWindowManager.SendThreadMessage( msg );
     }
     else
     {
-      CGUIMessage msg(GUI_MSG_PLAYLISTPLAYER_CHANGED, 0, 0, m_iCurrentPlayList, MAKELONG(m_iCurrentSong, iPreviousSong), (CFileItem*)&item);
+      CGUIMessage msg(GUI_MSG_PLAYLISTPLAYER_CHANGED, 0, 0, m_iCurrentPlayList, MAKELONG(m_iCurrentSong, iPreviousSong), item);
       m_gWindowManager.SendThreadMessage(msg);
     }
   }
@@ -288,20 +327,13 @@ int CPlayListPlayer::GetCurrentSong() const
   return m_iCurrentSong;
 }
 
-bool CPlayListPlayer::HasChanged()
-{
-  bool bResult = m_bChanged;
-  m_bChanged = false;
-  return bResult;
-}
-
 /// \brief Returns the active playlist.
 /// \return Active playlist \n
 /// Return values can be: \n
 /// - PLAYLIST_NONE \n No playlist active
 /// - PLAYLIST_MUSIC \n Playlist from music playlist window
 /// - PLAYLIST_VIDEO \n Playlist from music playlist window
-int CPlayListPlayer::GetCurrentPlaylist()
+int CPlayListPlayer::GetCurrentPlaylist() const
 {
   return m_iCurrentPlayList;
 }
@@ -324,7 +356,6 @@ void CPlayListPlayer::SetCurrentPlaylist(int iPlaylist)
 
   m_iCurrentPlayList = iPlaylist;
   m_bPlayedFirstFile = false;
-  m_bChanged = true;
 }
 
 void CPlayListPlayer::ClearPlaylist(int iPlaylist)
@@ -362,6 +393,23 @@ CPlayList& CPlayListPlayer::GetPlaylist(int iPlaylist)
   }
 }
 
+const CPlayList& CPlayListPlayer::GetPlaylist(int iPlaylist) const
+{
+  switch ( iPlaylist )
+  {
+  case PLAYLIST_MUSIC:
+    return *m_PlaylistMusic;
+    break;
+  case PLAYLIST_VIDEO:
+    return *m_PlaylistVideo;
+    break;
+  default:
+    // NOTE: This playlist may not be empty if the caller of the non-const version alters it!
+    return *m_PlaylistEmpty;
+    break;
+  }
+}
+
 /// \brief Removes any item from all playlists located on a removable share
 /// \return Number of items removed from PLAYLIST_MUSIC and PLAYLIST_VIDEO
 int CPlayListPlayer::RemoveDVDItems()
@@ -377,6 +425,7 @@ void CPlayListPlayer::Reset()
 {
   m_iCurrentSong = -1;
   m_bPlayedFirstFile = false;
+  m_bPlaybackStarted = false;
 
   // its likely that the playlist changed
   CGUIMessage msg(GUI_MSG_PLAYLIST_CHANGED, 0, 0);
@@ -384,14 +433,14 @@ void CPlayListPlayer::Reset()
 }
 
 /// \brief Whether or not something has been played yet or not from the current playlist.
-bool CPlayListPlayer::HasPlayedFirstFile()
+bool CPlayListPlayer::HasPlayedFirstFile() const
 {
   return m_bPlayedFirstFile;
 }
 
 /// \brief Returns \e true if iPlaylist is repeated
 /// \param iPlaylist Playlist to be asked
-bool CPlayListPlayer::Repeated(int iPlaylist)
+bool CPlayListPlayer::Repeated(int iPlaylist) const
 {
   if (iPlaylist >= PLAYLIST_MUSIC && iPlaylist <= PLAYLIST_VIDEO)
     return (m_repeatState[iPlaylist] == REPEAT_ALL);
@@ -400,7 +449,7 @@ bool CPlayListPlayer::Repeated(int iPlaylist)
 
 /// \brief Returns \e true if iPlaylist repeats one song
 /// \param iPlaylist Playlist to be asked
-bool CPlayListPlayer::RepeatedOne(int iPlaylist)
+bool CPlayListPlayer::RepeatedOne(int iPlaylist) const
 {
   if (iPlaylist >= PLAYLIST_MUSIC && iPlaylist <= PLAYLIST_VIDEO)
     return (m_repeatState[iPlaylist] == REPEAT_ONE);
@@ -424,7 +473,7 @@ void CPlayListPlayer::SetShuffle(int iPlaylist, bool bYesNo)
     // save the order value of the current song so we can use it find its new location later
     int iOrder = -1;
     if (m_iCurrentSong >= 0)
-      iOrder = GetPlaylist(iPlaylist)[m_iCurrentSong].m_iprogramCount;
+      iOrder = GetPlaylist(iPlaylist)[m_iCurrentSong]->m_iprogramCount;
 
     // shuffle or unshuffle as necessary
     if (bYesNo)
@@ -444,7 +493,7 @@ void CPlayListPlayer::SetShuffle(int iPlaylist, bool bYesNo)
   }
 }
 
-bool CPlayListPlayer::IsShuffled(int iPlaylist)
+bool CPlayListPlayer::IsShuffled(int iPlaylist) const
 {
   // even if shuffled, party mode says its not
   if (g_partyModeManager.IsEnabled() && iPlaylist == PLAYLIST_MUSIC)
@@ -469,7 +518,7 @@ void CPlayListPlayer::SetRepeat(int iPlaylist, REPEAT_STATE state)
   m_repeatState[iPlaylist] = state;
 }
 
-REPEAT_STATE CPlayListPlayer::GetRepeat(int iPlaylist)
+REPEAT_STATE CPlayListPlayer::GetRepeat(int iPlaylist) const
 {
   if (iPlaylist >= PLAYLIST_MUSIC && iPlaylist <= PLAYLIST_VIDEO)
     return m_repeatState[iPlaylist];
@@ -504,17 +553,6 @@ void CPlayListPlayer::ReShuffle(int iPlaylist, int iPosition)
   }
 }
 
-void CPlayListPlayer::Add(int iPlaylist, CPlayListItem& item)
-{
-  if (iPlaylist < PLAYLIST_MUSIC || iPlaylist > PLAYLIST_VIDEO)
-    return;
-  CPlayList& list = GetPlaylist(iPlaylist);
-  int iSize = list.size();
-  list.Add(item);
-  if (list.IsShuffled())
-    ReShuffle(iPlaylist, iSize);
-}
-
 void CPlayListPlayer::Add(int iPlaylist, CPlayList& playlist)
 {
   if (iPlaylist < PLAYLIST_MUSIC || iPlaylist > PLAYLIST_VIDEO)
@@ -526,7 +564,7 @@ void CPlayListPlayer::Add(int iPlaylist, CPlayList& playlist)
     ReShuffle(iPlaylist, iSize);
 }
 
-void CPlayListPlayer::Add(int iPlaylist, CFileItem *pItem)
+void CPlayListPlayer::Add(int iPlaylist, const CFileItemPtr &pItem)
 {
   if (iPlaylist < PLAYLIST_MUSIC || iPlaylist > PLAYLIST_VIDEO)
     return;

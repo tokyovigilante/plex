@@ -22,9 +22,7 @@
 #include "include.h"
 #include "Mouse.h"
 
-#ifdef _XBOX
-#include "XBoxMouse.h"
-#elif defined (HAS_SDL)
+#if defined (HAS_SDL)
 #include "SDLMouse.h"
 #else
 #include "DirectInputMouse.h"
@@ -33,6 +31,7 @@
 #include "../Key.h"
 #include "../GraphicContext.h"
 
+#define MOUSE_MINIMUM_MOVEMENT 2
 #define MOUSE_DOUBLE_CLICK_LENGTH 500L
 #define MOUSE_ACTIVE_LENGTH   5000L
 
@@ -60,9 +59,7 @@ void CMouse::Initialize(void *appData)
     return; // nothing to do
 
   // create the mouse device
-#ifdef _XBOX
-  m_mouseDevice = new CXBoxMouse();
-#elif defined (HAS_SDL)
+#if defined (HAS_SDL)
   m_mouseDevice = new CSDLMouse();
 #else
   m_mouseDevice = new CDirectInputMouse();
@@ -85,8 +82,11 @@ void CMouse::Update()
     if (m_mouseState.y < 0) m_mouseState.y = 0;
     if (m_mouseState.x > m_maxX) m_mouseState.x = m_maxX;
     if (m_mouseState.y > m_maxY) m_mouseState.y = m_maxY;
-    m_mouseState.active = true;
-    m_lastActiveTime = timeGetTime();
+    if (HasMoved())
+    {
+      m_mouseState.active = true;
+      m_lastActiveTime = timeGetTime();
+    }
   }
   else
   {
@@ -168,6 +168,12 @@ bool CMouse::IsActive() const
   return m_mouseState.active && m_mouseEnabled;
 }
 
+// IsEnabled - returns true if mouse is enabled
+bool CMouse::IsEnabled() const
+{
+  return m_mouseEnabled;
+}
+
 // turns off mouse activation
 void CMouse::SetInactive()
 {
@@ -176,7 +182,7 @@ void CMouse::SetInactive()
 
 bool CMouse::HasMoved() const
 {
-  return (m_mouseState.dx || m_mouseState.dy);
+  return (m_mouseState.dx * m_mouseState.dx + m_mouseState.dy + m_mouseState.dy >= MOUSE_MINIMUM_MOVEMENT * MOUSE_MINIMUM_MOVEMENT);
 }
 
 CPoint CMouse::GetLocation() const

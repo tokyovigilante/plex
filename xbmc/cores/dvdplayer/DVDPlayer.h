@@ -188,6 +188,7 @@ public:
 
   virtual int  GetChapterCount();
   virtual int  GetChapter();
+  virtual void GetChapterName(CStdString& strChapterName);
   virtual int  SeekChapter(int iChapter);
 
   virtual void SeekTime(__int64 iTime);
@@ -211,15 +212,9 @@ public:
   virtual bool IsCaching() const { return m_caching; } 
   virtual int GetCacheLevel() const ; 
 
-  virtual int OnDVDNavResult(void* pData, int iMessage);
-
-  static bool ExtractThumb(const CStdString &strPath, const CStdString &strTarget);
-  
-  // GetFileMetaData will fill pItem's properties according to what can be extracted from the file.
-  static void GetFileMetaData(const CStdString &strPath, CFileItem *pItem); 
-    
   static int GetCacheSize();
-  
+
+  virtual int OnDVDNavResult(void* pData, int iMessage);    
 protected:  
   friend class CSelectionStreams;
   void LockStreams()                                            { EnterCriticalSection(&m_critStreamSection); }
@@ -253,7 +248,6 @@ protected:
 
   void HandleMessages();
   void HandlePlaySpeed();
-  void HandlePlayState(double timeout);
   bool IsInMenu() const;
 
   void SyncronizePlayers(DWORD sources, double pts = DVD_NOPTS_VALUE);
@@ -261,18 +255,20 @@ protected:
   void CheckContinuity(DemuxPacket* pPacket, unsigned int source);
   bool CheckSceneSkip(CCurrentStream& current, unsigned int source);
   bool CheckPlayerInit(CCurrentStream& current, unsigned int source);
+  void SendPlayerMessage(CDVDMsg* pMsg, unsigned int target);
 
   bool ReadPacket(DemuxPacket*& packet, CDemuxStream*& stream);
   bool IsValidStream(CCurrentStream& stream, StreamType type);
   bool IsBetterStream(CCurrentStream& current, StreamType type, CDemuxStream* stream);
 
+  bool OpenInputStream();
   bool OpenDemuxStream();
 
   void UpdateApplication(double timeout);
+  void UpdatePlayState(double timeout);
   double m_UpdateApplication;
 
   bool m_bAbortRequest;
-  bool m_bPlayingNewFile;
 
   std::string m_filename; // holds the actual filename
   std::string m_content;  // hold a hint to what content file contains (mime type)
@@ -307,13 +303,25 @@ protected:
 
   struct SPlayerState
   {
+    void Clear()
+    {
+      timestamp     = 0;
+      time          = 0;
+      time_total    = 0;
+      chapter       = 0;
+      chapter_count = 0;
+      canrecord     = false;
+      recording     = false;
+    }
+    
     double timestamp;         // last time of update
 
     double time;              // current playback time
     double time_total;        // total playback time
 
-    int chapter;              // current chapter
-    int chapter_count;        // number of chapter
+    int         chapter;      // current chapter
+    std::string chapter_name; // name of current chapter
+    int         chapter_count;// number of chapter
 
     bool canrecord;           // can input stream record
     bool recording;           // are we currently recording

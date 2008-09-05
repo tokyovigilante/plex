@@ -3,17 +3,14 @@
 #include "include.h"
 #include "TextureManager.h"
 #include "AnimatedGif.h"
-#include "PackedTexture.h"
 #include "GraphicContext.h"
 #include "../xbmc/Picture.h"
 #include "utils/SingleLock.h"
 #include "StringUtils.h"
 #include "utils/CharsetConverter.h"
 #include "../xbmc/Util.h"
-
-#ifdef HAS_XBOX_D3D
-#include <XGraphics.h>
-#endif
+#include "../xbmc/FileSystem/File.h"
+#include "../xbmc/FileSystem/Directory.h"
 
 #ifdef HAS_SDL
 #define MAX_PICTURE_WIDTH  4096
@@ -34,7 +31,7 @@ CTexture::CTexture()
   m_iWidth = m_iHeight = 0;
   m_iLoops = 0;
   m_pPalette = NULL;
-  m_bPacked = false;
+  m_bPacked = false;  
   m_memUsage = 0;
   m_format = D3DFMT_UNKNOWN;
 }
@@ -55,11 +52,6 @@ CTexture::CTexture(SDL_Surface* pTexture, int iWidth, int iHeight, bool bPacked,
   m_iDelay = 2 * iDelay;
   m_iWidth = iWidth;
   m_iHeight = iHeight;
-#ifdef HAS_XBOX_D3D
-  m_pPalette = pPalette;
-  if (m_pPalette)
-    m_pPalette->AddRef();
-#endif
   m_bPacked = bPacked;
   ReadTextureInfo();
 }
@@ -77,13 +69,7 @@ void CTexture::FreeTexture()
   {
     if (m_bPacked)
     {
-#ifdef HAS_XBOX_D3D
-      m_pTexture->BlockUntilNotBusy();
-      void* Data = (void*)(*(DWORD*)(((char*)m_pTexture) + sizeof(D3DTexture)));
-      if (Data)
-        XPhysicalFree(Data);
-      delete [] m_pTexture;
-#elif defined(HAS_SDL_2D)
+#if defined(HAS_SDL_2D)
       SDL_FreeSurface(m_pTexture);
 #elif defined(HAS_SDL_OPENGL)
       delete m_pTexture;
@@ -104,20 +90,6 @@ void CTexture::FreeTexture()
   
 // Note that in SDL and Win32 we already conver the paletted textures into normal textures, 
 // so there's no chance of having m_pPalette as a real palette
-#ifdef HAS_XBOX_D3D
-  if (m_pPalette)
-  {
-    if (m_bPacked)
-    {
-      if ((m_pPalette->Common & D3DCOMMON_REFCOUNT_MASK) > 1)
-        m_pPalette->Release();
-      else
-        delete m_pPalette;
-    }
-    else
-      m_pPalette->Release();
-  }
-#endif
   m_pPalette = NULL;
 }
 
@@ -360,13 +332,17 @@ DWORD CTextureMap::GetMemoryUsage() const
 //------------------------------------------------------------------------------
 CGUITextureManager::CGUITextureManager(void)
 {
-#ifdef HAS_XBOX_D3D
-  D3DXSetDXT3DXT5(TRUE);
-#endif
   for (int bundle = 0; bundle < 2; bundle++)
     m_iNextPreload[bundle] = m_PreLoadNames[bundle].end();
   // we set the theme bundle to be the first bundle (thus prioritising it
   m_TexBundle[0].SetThemeBundle(true);
+
+#if defined(HAS_SDL) && defined(_WIN32)
+  // Hack for SDL library that keeps loading and unloading these
+  LoadLibraryEx("zlib1.dll", NULL, 0);
+  LoadLibraryEx("libpng12.dll", NULL, 0);
+#endif
+
 }
 
 CGUITextureManager::~CGUITextureManager(void)
@@ -576,13 +552,31 @@ int CGUITextureManager::Load(const CStdString& strTextureName, DWORD dwColorKey,
 
   CStdString strPath;
 
+  // See if texture is being overridden.
+  CStdString strTextureFile = strTextureName;
+  CStdString strTextureOverridePath1;
+  CStdString strTextureOverridePath2;
+  CStdString strExt = CUtil::GetExtension(strTextureFile);
+  CUtil::RemoveExtension(strTextureFile);
+  
+  // Check original format and JPEG.
+  strTextureOverridePath1.Format("%s/media/%s%s", _P("Q:"), strTextureFile.c_str(), strExt.c_str());
+  strTextureOverridePath2.Format("%s/media/%s.jpg", _P("Q:"), strTextureFile.c_str(), strExt.c_str());
+  
   if (checkBundleOnly && bundle == -1)
     return 0;
 
-  if (bundle == -1)
+  if (XFILE::CFile::Exists(strTextureOverridePath1))
+    { strPath = strTextureOverridePath1; bundle = -1; }
+  else if (XFILE::CFile::Exists(strTextureOverridePath2))
+    { strPath = strTextureOverridePath2; bundle = -1; }
+  else if (bundle == -1)
     strPath = GetTexturePath(strTextureName);
   else
     strPath = strTextureName;
+
+  if (strPath.IsEmpty())
+    return 0;
 
 #ifdef _DEBUG
   LARGE_INTEGER start;
@@ -636,10 +630,6 @@ int CGUITextureManager::Load(const CStdString& strTextureName, DWORD dwColorKey,
       }
       else // packed
       {
-#ifdef HAS_XBOX_D3D
-        nImages = LoadPackedAnim(g_graphicsContext.Get3DDevice(), strPackedPath.c_str(), &info, &pTextures, &pPal, nLoops, &Delay);
-        if (!nImages)
-#endif
         {
           if (!strnicmp(strPackedPath.c_str(), "q:\\skin", 7))
             CLog::Log(LOGERROR, "Texture manager unable to load packed file: %s", strPackedPath.c_str());
@@ -651,7 +641,6 @@ int CGUITextureManager::Load(const CStdString& strTextureName, DWORD dwColorKey,
       for (int iImage = 0; iImage < nImages; ++iImage)
       {
         CTexture* pclsTexture = new CTexture(pTextures[iImage], info.Width, info.Height, true, 100, pPal);
-        
         pclsTexture->SetDelay(Delay[iImage]);
         pclsTexture->SetLoops(nLoops);
         pMap->Add(pclsTexture);
@@ -664,9 +653,6 @@ int CGUITextureManager::Load(const CStdString& strTextureName, DWORD dwColorKey,
 
       delete [] pTextures;
       delete [] Delay;
-#ifdef HAS_XBOX_D3D
-      pPal->Release();
-#endif
     }
     else
     {
@@ -682,19 +668,6 @@ int CGUITextureManager::Load(const CStdString& strTextureName, DWORD dwColorKey,
       int iHeight = AnimatedGifSet.FrameHeight;
 
       int iPaletteSize = (1 << AnimatedGifSet.m_vecimg[0]->BPP);
-#ifdef HAS_XBOX_D3D
-      g_graphicsContext.Get3DDevice()->CreatePalette(D3DPALETTE_256, &pPal);
-      PALETTEENTRY* pal;
-      pPal->Lock((D3DCOLOR**)&pal, 0);
-
-      memcpy(pal, AnimatedGifSet.m_vecimg[0]->Palette, sizeof(PALETTEENTRY)*iPaletteSize);
-      for (int i = 0; i < iPaletteSize; i++)
-        pal[i].peFlags = 0xff; // alpha
-      if (AnimatedGifSet.m_vecimg[0]->Transparency && AnimatedGifSet.m_vecimg[0]->Transparent >= 0)
-        pal[AnimatedGifSet.m_vecimg[0]->Transparent].peFlags = 0;
-
-      pPal->Unlock();
-#endif
       pMap = new CTextureMap(strTextureName);
 
       for (int iImage = 0; iImage < iImages; iImage++)
@@ -718,10 +691,6 @@ int CGUITextureManager::Load(const CStdString& strTextureName, DWORD dwColorKey,
           if (SDL_LockSurface(pTexture) != -1)
 #endif          
           {
-#ifdef HAS_XBOX_D3D
-            POINT pt = { 0, 0 };
-            XGSwizzleRect(pImage->Raster, pImage->BytesPerRow, &rc, lr.pBits, w, h, &pt, 1);
-#else
             COLOR *palette = AnimatedGifSet.m_vecimg[0]->Palette;
             // set the alpha values to fully opaque
             for (int i = 0; i < iPaletteSize; i++)
@@ -752,7 +721,6 @@ int CGUITextureManager::Load(const CStdString& strTextureName, DWORD dwColorKey,
                 *dest++ = col.x;
               }
             }
-#endif
 
 #ifndef HAS_SDL
             pTexture->UnlockRect( 0 );
@@ -772,10 +740,6 @@ int CGUITextureManager::Load(const CStdString& strTextureName, DWORD dwColorKey,
           }
         }
       } // of for (int iImage=0; iImage < iImages; iImage++)
-
-#ifdef HAS_XBOX_D3D
-      pPal->Release();
-#endif
     }
 
 #ifdef _DEBUG
@@ -805,9 +769,6 @@ int CGUITextureManager::Load(const CStdString& strTextureName, DWORD dwColorKey,
   }
   else if (bPacked)
   {
-#ifdef HAS_XBOX_D3D
-    if (FAILED(LoadPackedTexture(g_graphicsContext.Get3DDevice(), strPackedPath.c_str(), &info, &pTexture, &pPal)))
-#endif
     {
       if (!strnicmp(strPackedPath.c_str(), "q:\\skin", 7))
         CLog::Log(LOGERROR, "Texture manager unable to load packed file: %s", strPackedPath.c_str());
@@ -1116,18 +1077,66 @@ DWORD CGUITextureManager::GetMemoryUsage() const
   return memUsage;
 }
 
-CStdString CGUITextureManager::GetTexturePath(const CStdString &textureName)
+void CGUITextureManager::SetTexturePath(const CStdString &texturePath)
 {
-  CStdString path;
+  m_texturePaths.clear();
+  AddTexturePath(texturePath);
+}
+
+void CGUITextureManager::AddTexturePath(const CStdString &texturePath)
+{
+  if (!texturePath.IsEmpty())
+    m_texturePaths.push_back(texturePath);
+}
+
+void CGUITextureManager::RemoveTexturePath(const CStdString &texturePath)
+{
+  for (vector<CStdString>::iterator it = m_texturePaths.begin(); it != m_texturePaths.end(); ++it)
+  {
+    if (*it == texturePath)
+    {
+      m_texturePaths.erase(it);
+      return;
+    }
+  }
+}
+
+CStdString CGUITextureManager::GetTexturePath(const CStdString &textureName, bool directory /* = false */)
+{
 #ifndef _LINUX  
   if (textureName.c_str()[1] == ':')
 #else
   if (textureName.c_str()[0] == '/')
 #endif  
-    path = textureName;
+    return _P(textureName); // texture includes the full path
   else
-    path.Format("%s\\media\\%s", g_graphicsContext.GetMediaDir().c_str(), textureName.c_str());
-  return _P(path);
+  { // texture doesn't include the full path, so check all fallbacks
+    for (vector<CStdString>::iterator it = m_texturePaths.begin(); it != m_texturePaths.end(); ++it)
+    {
+      CStdString path;
+      path.Format("%s\\media\\%s", it->c_str(), textureName.c_str());
+      path = _P(path);
+      if (directory)
+      {
+        if (DIRECTORY::CDirectory::Exists(path))
+          return path;
+      }
+      else
+      {
+        if (XFILE::CFile::Exists(path))
+          return path;
+      }
+    }
+  }
+  
+  // Finally, check the media directory. I'm honestly not sure why this isn't checked.
+  CStdString path;
+  path.Format("%s\\media\\%s", g_graphicsContext.GetMediaDir(), textureName.c_str());
+  path = _P(path);
+  if (directory && DIRECTORY::CDirectory::Exists(path) || XFILE::CFile::Exists(path))
+    return path;
+  
+  return "";
 }
 
 void CGUITextureManager::GetBundledTexturesFromPath(const CStdString& texturePath, std::vector<CStdString> &items)

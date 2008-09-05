@@ -34,7 +34,6 @@
 #include "CPUInfo.h"
 #endif
 #include "IMsgTargetCallback.h"
-#include "DateTime.h"
 #include "inttypes.h"
 
 #include <list>
@@ -47,6 +46,7 @@ namespace MUSIC_INFO
 class CVideoInfoTag;
 class CFileItem;
 class CGUIListItem;
+class CDateTime;
 
 // conditions for window retrieval
 #define WINDOW_CONDITION_HAS_LIST_ITEMS  1
@@ -96,6 +96,7 @@ class CGUIListItem;
 #define PLAYER_FINISH_TIME           38
 #define PLAYER_CACHELEVEL            39
 #define PLAYER_STAR_RATING           40
+#define PLAYER_CHAPTERNAME           41
 
 #define WEATHER_CONDITIONS          100
 #define WEATHER_TEMPERATURE         101
@@ -249,6 +250,10 @@ class CGUIListItem;
 #define LASTFM_CANLOVE              306
 #define LASTFM_CANBAN               307
 
+#define CONTAINER_SCROLLING         355
+#define CONTAINER_PLUGINNAME        356
+#define CONTAINER_PROPERTY          357
+#define CONTAINER_SORT_DIRECTION    358
 #define CONTAINER_NUM_ITEMS         359
 #define CONTAINER_FOLDERTHUMB       360
 #define CONTAINER_FOLDERPATH        361
@@ -454,6 +459,7 @@ class CGUIListItem;
 #define LISTITEM_TRAILER            (LISTITEM_START + 40)
 #define LISTITEM_STAR_RATING        (LISTITEM_START + 41)
 #define LISTITEM_FILENAME_AND_PATH  (LISTITEM_START + 42)
+#define LISTITEM_SORT_LETTER        (LISTITEM_START + 43)
 
 #define LISTITEM_PROPERTY_START     (LISTITEM_START + 200)
 #define LISTITEM_PROPERTY_END       (LISTITEM_PROPERTY_START + 1000)

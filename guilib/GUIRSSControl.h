@@ -44,6 +44,7 @@ public:
 
   virtual void Render();
   virtual void OnFeedUpdate(const std::vector<DWORD> &feed);
+  virtual void OnFeedRelease();
   virtual bool CanFocus() const { return false; };
 
   void SetIntervals(const std::vector<int>& vecIntervals);

@@ -21,7 +21,9 @@
 #define MEASURE_FUNCTION
 #endif
 #include "GUIFontManager.h"
-
+#ifdef HAS_SDL_JOYSTICK
+#include "common/SDLJoystick.h"
+#endif
 
 //-----------------------------------------------------------------------------
 // Global access to common members
@@ -392,6 +394,11 @@ void CXBApplicationEx::ReadInput()
         g_Mouse.UpdateMouseWheel(1);
       else if (event.button.button == 5)
         g_Mouse.UpdateMouseWheel(-1);
+      break;
+      
+    case SDL_USEREVENT:
+      if (event.user.code == TMSG_TOGGLEFULLSCREEN)
+        g_graphicsContext.ToggleFullScreenRoot();
       break;
     }
   }

@@ -195,7 +195,8 @@ public:
   void Clear();
 
   // output scaling
-  void SetScalingResolution(RESOLUTION res, float posX, float posY, bool needsScaling);  // sets the input skin resolution.
+  void SetRenderingResolution(RESOLUTION res, float posX, float posY, bool needsScaling);  ///< Sets scaling up for rendering
+  void SetScalingResolution(RESOLUTION res, float posX, float posY, bool needsScaling);    ///< Sets scaling up for skin loading etc.
   float GetScalingPixelRatio() const;
   void Flip() {m_screenSurface->Flip();}
   void InvertFinalCoords(float &x, float &y) const;
@@ -248,6 +249,7 @@ public:
       UpdateFinalTransform(TransformMatrix());
   }
 
+  int GetMaxTextureSize() const { return m_maxTextureSize; };
 protected:
   IMsgSenderCallback* m_pCallback;
 #ifndef HAS_SDL    
@@ -294,6 +296,8 @@ private:
   TransformMatrix m_guiTransform;
   TransformMatrix m_finalTransform;
   std::stack<TransformMatrix> m_groupTransform;
+
+  GLint m_maxTextureSize;
 };
 
 /*!

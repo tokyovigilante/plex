@@ -197,7 +197,7 @@ void XBMCHelper::Configure()
 
     // Secure input.
     char strSecure[64];
-    sprintf(strDelay, "--secureInput %d ", m_secureInput ? 1 : 0);
+    sprintf(strSecure, "--secureInput %d ", m_secureInput ? 1 : 0);
     strConfig += strSecure;
     
     // Find out where we're running from.
@@ -396,6 +396,12 @@ void XBMCHelper::WriteFile(const char* fileName, const std::string& data)
 }
 
 /////////////////////////////////////////////////////////////////////////////
+extern "C" int GetProcessPid(const char* processName)
+{
+  return XBMCHelper::GetProcessPid(processName);
+}
+
+/////////////////////////////////////////////////////////////////////////////
 int XBMCHelper::GetProcessPid(const char* strProgram)
 {
   kinfo_proc* mylist;
@@ -407,7 +413,7 @@ int XBMCHelper::GetProcessPid(const char* strProgram)
   {
     kinfo_proc *proc = NULL;
     proc = &mylist[k];
-
+    
     if (strcmp(proc->kp_proc.p_comm, strProgram) == 0)
     {
       //if (ignorePid == 0 || ignorePid != proc->kp_proc.p_pid)

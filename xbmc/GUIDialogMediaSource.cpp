@@ -53,13 +53,17 @@ CGUIDialogMediaSource::CGUIDialogMediaSource(void)
 
 CGUIDialogMediaSource::~CGUIDialogMediaSource()
 {
+  m_bNameChanged=false;
   delete m_paths;
 }
 
 bool CGUIDialogMediaSource::OnAction(const CAction &action)
 {
   if (action.wID == ACTION_PREVIOUS_MENU)
+  {
     m_confirmed = false;
+    m_bNameChanged=false;
+  }
   return CGUIDialog::OnAction(action);
 }
 
@@ -80,7 +84,12 @@ bool CGUIDialogMediaSource::OnMessage(CGUIMessage& message)
       else if (iControl == CONTROL_PATH_REMOVE)
         OnPathRemove(GetSelectedItem());
       else if (iControl == CONTROL_NAME)
+      {
         OnName();
+        //OnEditChanged(iControl, m_name);
+	      m_bNameChanged=true;
+        UpdateButtons();
+      }
       else if (iControl == CONTROL_OK)
         OnOK();
       else if (iControl == CONTROL_CANCEL)
@@ -243,6 +252,19 @@ void CGUIDialogMediaSource::OnPathBrowse(int item)
     share1.strPath = "special://musicplaylists/";
     share1.strName = g_localizeStrings.Get(20011);
     extraShares.push_back(share1);
+
+    share1.strPath = "smb://";
+    share1.strName = g_localizeStrings.Get(20171);
+    extraShares.push_back(share1);
+
+    share1.strPath = "upnp://";
+    share1.strName = "UPnP Devices";
+    extraShares.push_back(share1);
+
+    share1.strPath = "sap://";
+    share1.strName = "SAP Streams";
+    extraShares.push_back(share1);
+
     if (g_guiSettings.GetString("mymusic.recordingpath",false) != "")
     {
       CMediaSource share2;
@@ -257,9 +279,6 @@ void CGUIDialogMediaSource::OnPathBrowse(int item)
       share2.strName = g_localizeStrings.Get(21883);
       extraShares.push_back(share2);
     }
-    share1.strPath = "soundtrack://";
-    share1.strName = "MS Soundtracks";
-    extraShares.push_back(share1);
     if (g_guiSettings.GetBool("network.enableinternet"))
     {
       CMediaSource share3;
@@ -293,7 +312,23 @@ void CGUIDialogMediaSource::OnPathBrowse(int item)
 
     CMediaSource share2;
     share2.strPath = "rtv://*/";
-    share2.strName = "ReplayTV";
+    share2.strName = "ReplayTV Devices";
+    extraShares.push_back(share2);
+
+    share2.strPath = "smb://";
+    share2.strName = g_localizeStrings.Get(20171);
+    extraShares.push_back(share2);
+
+    share2.strPath = "hdhomerun://";
+    share2.strName = "HDHomerun Devices";
+    extraShares.push_back(share2);
+
+    share2.strPath = "sap://";
+    share2.strName = "SAP Streams";
+    extraShares.push_back(share2);
+
+    share2.strPath = "upnp://";
+    share2.strName = "UPnP Devices";
     extraShares.push_back(share2);
 
     // add the plugins dir as needed
@@ -314,6 +349,16 @@ void CGUIDialogMediaSource::OnPathBrowse(int item)
       share1.strName = g_localizeStrings.Get(20008);
       extraShares.push_back(share1);
     }
+
+    CMediaSource share2;
+
+    share2.strPath = "smb://";
+    share2.strName = g_localizeStrings.Get(20171);
+    extraShares.push_back(share2);
+
+    share2.strPath = "upnp://";
+    share2.strName = "UPnP Devices";
+    extraShares.push_back(share2);
 
     // add the plugins dir as needed
     if (CPluginDirectory::HasPlugins("pictures"))
@@ -337,7 +382,7 @@ void CGUIDialogMediaSource::OnPathBrowse(int item)
   if (CGUIDialogFileBrowser::ShowAndGetSource(path, allowNetworkShares, extraShares.size()==0?NULL:&extraShares))
   {
     m_paths->Get(item)->m_strPath = path;
-    if (m_name.IsEmpty())
+    if (!m_bNameChanged || m_name.IsEmpty())
     {
       CURL url(path);
       url.GetURLWithoutUserDetails(m_name);
@@ -352,6 +397,7 @@ void CGUIDialogMediaSource::OnPath(int item)
 {
   if (item < 0 || item > m_paths->Size()) return;
   CGUIDialogKeyboard::ShowAndGetInput(m_paths->Get(item)->m_strPath, g_localizeStrings.Get(1021), false);
+  CUtil::AddSlashAtEnd(m_paths->Get(item)->m_strPath);
   UpdateButtons();
 }
 
@@ -440,7 +486,7 @@ void CGUIDialogMediaSource::UpdateButtons()
     OnMessage(msgReset);
     for (int i = 0; i < m_paths->Size(); i++)
     {
-      CFileItem* item = m_paths->Get(i);
+      CFileItemPtr item = m_paths->Get(i);
       CStdString path;
       CURL url(item->m_strPath);
       url.GetURLWithoutUserDetails(path);
@@ -483,9 +529,15 @@ void CGUIDialogMediaSource::SetShare(const CMediaSource &share)
 {
   m_paths->Clear();
   for (unsigned int i = 0; i < share.vecPaths.size(); i++)
-    m_paths->Add(new CFileItem(share.vecPaths[i], true));
+  {
+    CFileItemPtr item(new CFileItem(share.vecPaths[i], true));
+    m_paths->Add(item);
+  }
   if (0 == share.vecPaths.size())
-    m_paths->Add(new CFileItem("", true));
+  {
+    CFileItemPtr item(new CFileItem("", true));
+    m_paths->Add(item);
+  }
   m_name = share.strName;
   UpdateButtons();
 }
@@ -574,7 +626,8 @@ void CGUIDialogMediaSource::OnPathRemove(int item)
 void CGUIDialogMediaSource::OnPathAdd()
 {
   // add a new item and select it as well
-  m_paths->Add(new CFileItem("", true));
+  CFileItemPtr item(new CFileItem("", true));
+  m_paths->Add(item);
   UpdateButtons();
   HighlightItem(m_paths->Size() - 1);
 }

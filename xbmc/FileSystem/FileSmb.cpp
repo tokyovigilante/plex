@@ -56,9 +56,6 @@ smbc_get_cached_srv_fn orig_cache;
 
 SMBCSRV* xb_smbc_cache(SMBCCTX* c, const char* server, const char* share, const char* workgroup, const char* username)
 {
-  if (strcmp(share, "IPC$") == 0)
-    return NULL;
-
   return orig_cache(c, server, share, workgroup, username);
 }
 
@@ -73,7 +70,7 @@ CSMB::~CSMB()
 }
 void CSMB::Deinit()
 {
-  CSingleLock(*this);
+  CSingleLock lock(*this);
 
   /* samba goes loco if deinited while it has some files opened */
   if (m_context)
@@ -100,7 +97,8 @@ void CSMB::Deinit()
 
 void CSMB::Init()
 {
-  CSingleLock(*this);
+  CSingleLock lock(*this);
+  
   if (!m_context)
   {
 #ifdef _XBOX
@@ -119,7 +117,7 @@ void CSMB::Init()
     m_context->callbacks.auth_fn = xb_smbc_auth;
     orig_cache = m_context->callbacks.get_cached_srv_fn;
     m_context->callbacks.get_cached_srv_fn = xb_smbc_cache;
-    m_context->options.one_share_per_server = true;
+    m_context->options.one_share_per_server = false;
     m_context->options.browse_max_lmb_count = 0;
 
     /* set connection timeout. since samba always tries two ports, divide this by two the correct value */
@@ -190,7 +188,7 @@ void CSMB::Init()
 void CSMB::Purge()
 {
 #ifndef _LINUX
-  CSingleLock(*this);
+  CSingleLock lock(*this);
   smbc_purge();
 #endif
 }
@@ -207,7 +205,7 @@ void CSMB::Purge()
  */
 void CSMB::PurgeEx(const CURL& url)
 {
-  CSingleLock(*this);
+  CSingleLock lock(*this);
   CStdString strShare = url.GetFileName().substr(0, url.GetFileName().Find('/'));
 
 #ifndef _LINUX
@@ -299,7 +297,7 @@ void CSMB::CheckIfIdle()
    worst case scenario is that m_OpenConnections could read 0 and then changed to 1 if this happens it will enter the if wich will lead to another check, wich is locked.  */
   if (m_OpenConnections == 0)
   { /* I've set the the maxiumum IDLE time to be 1 min and 30 sec. */
-    CSingleLock(*this);
+    CSingleLock lock(*this);
     if (m_OpenConnections == 0 /* check again - when locked */ && m_context != NULL && (timeGetTime() - m_LastActive) > 90000)
     {
       CLog::Log(LOGNOTICE, "Samba is idle. Closing the remaining connections");
@@ -317,12 +315,12 @@ void CSMB::SetActivityTime()
    This makes the idle timer not count if a movie is paused for example */
 void CSMB::AddActiveConnection()
 {
-  CSingleLock(*this);
+  CSingleLock lock(*this);
   m_OpenConnections++;
 }
 void CSMB::AddIdleConnection()
 {
-  CSingleLock(*this);
+  CSingleLock lock(*this);
   m_OpenConnections--;
   /* If we close a file we reset the idle timer so that we don't have any wierd behaviours if a user
      leaves the movie paused for a long while and then press stop */
@@ -519,7 +517,6 @@ bool CFileSMB::Exists(const CURL& url)
 #else
   struct stat info;
 #endif
-
   CSingleLock lock(smb);
 	int iResult = 0;//smbc_stat(strFileName, &info);
 
@@ -527,18 +524,46 @@ bool CFileSMB::Exists(const CURL& url)
   return true;
 }
 
+int CFileSMB::Stat(struct __stat64* buffer)
+{
+  if (m_fd == -1)
+    return -1;
+
+#ifndef _LINUX
+  struct __stat64 tmpBuffer = {0};
+#else
+  struct stat tmpBuffer = {0};
+#endif
+
+  CSingleLock lock(smb);
+  int iResult = smbc_fstat(m_fd, &tmpBuffer);
+
+  buffer->st_dev = tmpBuffer.st_dev;
+  buffer->st_ino = tmpBuffer.st_ino;  
+  buffer->st_mode = tmpBuffer.st_mode;
+  buffer->st_nlink = tmpBuffer.st_nlink;
+  buffer->st_uid = tmpBuffer.st_uid;
+  buffer->st_gid = tmpBuffer.st_gid;
+  buffer->st_rdev = tmpBuffer.st_rdev;
+  buffer->st_size = tmpBuffer.st_size;
+  buffer->_st_atime = tmpBuffer.st_atime;
+  buffer->_st_mtime = tmpBuffer.st_mtime;
+  buffer->_st_ctime = tmpBuffer.st_ctime;
+
+  return iResult;
+}
+
 int CFileSMB::Stat(const CURL& url, struct __stat64* buffer)
 {
   smb.Init();
   CStdString strFileName = smb.URLEncode(url);
   strFileName = g_passwordManager.GetSMBAuthFilename(strFileName);
-
   CSingleLock lock(smb);
-
+  
 #ifndef _LINUX
   struct __stat64 tmpBuffer = {0};
 #else
-  struct stat tmpBuffer;
+  struct stat tmpBuffer = {0};
 #endif
 	int iResult = 0;//smbc_stat(strFileName, &tmpBuffer);
 

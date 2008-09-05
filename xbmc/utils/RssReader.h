@@ -32,11 +32,6 @@
 
 #include "StdString.h"
 #include "Thread.h"
-#ifndef _LINUX
-#include "../lib/libiconv/iconv.h"
-#else
-#include <iconv.h>
-#endif
 
 #include <vector>
 #include <list>
@@ -51,10 +46,12 @@ class IRssObserver
 {
 public:
   virtual void OnFeedUpdate(const std::vector<DWORD> &feed) = 0;
+  virtual void OnFeedRelease() = 0;
   virtual ~IRssObserver() {}
 };
 
-class CRssReader : public CThread
+class CRssReader : public CThread, 
+                   public CCriticalSection
 {
 public:
   CRssReader();
@@ -68,6 +65,7 @@ public:
   void UpdateObserver();
   void SetObserver(IRssObserver* observer);
   void CheckForUpdates();
+  void requestRefresh();
 
 private:
   void fromRSSToUTF16(const CStdStringA& strSource, CStdStringW& strDest);
@@ -77,6 +75,7 @@ private:
   void AddString(CStdStringW aString, int aColour, int iFeed);
   void UpdateFeed();
   virtual void OnExit();
+  int GetQueueSize();
 
   IRssObserver* m_pObserver;
   
@@ -90,9 +89,9 @@ private:
   std::vector<std::string> m_vecUrls;
   std::vector<int> m_vecQueue;
   bool m_bIsRunning;
-  iconv_t m_iconv;
-  bool m_shouldFlip;
   CStdString m_encoding;
+  bool m_rtlText;
+  bool m_requestRefresh;
 };
 
 class CRssManager
@@ -101,7 +100,10 @@ public:
   CRssManager();
   ~CRssManager();
 
+  void Start();
   void Stop();
+  void Reset();
+  bool IsActive() { return m_bActive; }
 
   bool GetReader(DWORD controlID, DWORD windowID, IRssObserver* observer, CRssReader *&reader);
 
@@ -114,6 +116,7 @@ private:
   };
 
   std::vector<READERCONTROL> m_readers;
+  bool m_bActive;
 };
 
 extern CRssManager g_rssManager;

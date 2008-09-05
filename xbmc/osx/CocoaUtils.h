@@ -20,6 +20,7 @@ extern "C"
   //
   void Cocoa_Initialize(void* pApplication);
   void InstallCrashReporter();
+  void Cocoa_DisplayError(const char* error);
 
   //
   // Pools.
@@ -67,6 +68,7 @@ extern "C"
   int Cocoa_DimDisplayNow();
   void Cocoa_UpdateSystemActivity();
   int Cocoa_SleepSystem();
+  void Cocoa_TurnOffScreenSaver();
 
   //
   // Mouse.

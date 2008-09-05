@@ -45,8 +45,6 @@
 #define CONTROL_CANCEL          21
 #define CONTROL_TYPE            22
 
-using namespace PLAYLIST;
-
 typedef struct
 {
   CGUIDialogSmartPlaylistEditor::PLAYLIST_TYPE type;
@@ -161,7 +159,7 @@ void CGUIDialogSmartPlaylistEditor::OnRuleList(int item)
 
 void CGUIDialogSmartPlaylistEditor::OnName()
 {
-  CGUIDialogKeyboard::ShowAndGetInput(m_playlist.m_playlistName, g_localizeStrings.Get(1022), false);
+  CGUIDialogKeyboard::ShowAndGetInput(m_playlist.m_playlistName, g_localizeStrings.Get(21381), false);
   UpdateButtons();
 }
 
@@ -269,7 +267,15 @@ void CGUIDialogSmartPlaylistEditor::UpdateButtons()
     CONTROL_ENABLE(CONTROL_MATCH)
   }
   // name
-  SET_CONTROL_LABEL(CONTROL_NAME, m_playlist.m_playlistName)
+  if (m_mode == "partyvideo" || m_mode == "partymusic")
+  {
+    SET_CONTROL_LABEL(CONTROL_NAME, g_localizeStrings.Get(16035))
+    CONTROL_DISABLE(CONTROL_NAME)
+  }
+  else
+  {
+    SET_CONTROL_LABEL(CONTROL_NAME, m_playlist.m_playlistName)
+  }
 
   int currentItem = GetSelectedItem();
   CGUIMessage msgReset(GUI_MSG_LABEL_RESET, GetID(), CONTROL_RULE_LIST);
@@ -277,7 +283,7 @@ void CGUIDialogSmartPlaylistEditor::UpdateButtons()
   m_ruleLabels->Clear();
   for (unsigned int i = 0; i < m_playlist.m_playlistRules.size(); i++)
   {
-    CFileItem* item = new CFileItem("", false);
+    CFileItemPtr item(new CFileItem("", false));
     if (m_playlist.m_playlistRules[i].m_field == CSmartPlaylistRule::FIELD_NONE)
       item->SetLabel(g_localizeStrings.Get(21423));
     else

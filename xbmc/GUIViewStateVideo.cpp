@@ -28,6 +28,7 @@
 #include "VideoDatabase.h"
 #include "Settings.h"
 #include "FileItem.h"
+#include "Util.h"
 
 using namespace DIRECTORY;
 using namespace VIDEODATABASEDIRECTORY;
@@ -66,10 +67,7 @@ CGUIViewStateWindowVideoFiles::CGUIViewStateWindowVideoFiles(const CFileItemList
   }
   else
   {
-    if (g_guiSettings.GetBool("filelists.ignorethewhensorting"))
-      AddSortMethod(SORT_METHOD_LABEL_IGNORE_THE, 551, LABEL_MASKS("%L", "%I", "%L", ""));  // FileName, Size | Foldername, empty
-    else
-      AddSortMethod(SORT_METHOD_LABEL, 551, LABEL_MASKS("%L", "%I", "%L", ""));  // FileName, Size | Foldername, empty
+    AddSortMethod(SORT_METHOD_LABEL, 551, LABEL_MASKS("%L", "%I", "%L", ""));  // FileName, Size | Foldername, empty
     AddSortMethod(SORT_METHOD_SIZE, 553, LABEL_MASKS("%L", "%I", "%L", "%I"));  // FileName, Size | Foldername, Size
     AddSortMethod(SORT_METHOD_DATE, 552, LABEL_MASKS("%L", "%J", "%L", "%J"));  // FileName, Date | Foldername, Date
     AddSortMethod(SORT_METHOD_FILE, 561, LABEL_MASKS("%L", "%I", "%L", ""));  // Filename, Size | FolderName, empty
@@ -89,7 +87,17 @@ void CGUIViewStateWindowVideoFiles::SaveViewState()
 
 VECSOURCES& CGUIViewStateWindowVideoFiles::GetSources()
 {
-  return g_settings.m_videoSources;
+  bool bIsSourceName = true;
+  // plugins share
+  if (CPluginDirectory::HasPlugins("video"))
+  {
+    CMediaSource share;
+    share.strName = g_localizeStrings.Get(1037);
+    share.strPath = "plugin://video/";
+    if (CUtil::GetMatchingSource(share.strName, g_settings.m_videoSources, bIsSourceName) < 0)
+      g_settings.m_videoSources.push_back(share);
+  }
+  return g_settings.m_videoSources; 
 }
 
 CGUIViewStateWindowVideoNav::CGUIViewStateWindowVideoNav(const CFileItemList& items) : CGUIViewStateWindowVideo(items)
@@ -164,7 +172,7 @@ CGUIViewStateWindowVideoNav::CGUIViewStateWindowVideoNav(const CFileItemList& it
           AddSortMethod(SORT_METHOD_LABEL, 551, LABEL_MASKS("%L", "%M", "%L", "%M"));  // Filename, Duration | Foldername, empty
 
         AddSortMethod(SORT_METHOD_TRACKNUM, 20360, LABEL_MASKS("%L", "%M", "%L", "%M"));  // Filename, Duration | Foldername, empty
-        AddSortMethod(SORT_METHOD_VIDEO_YEAR,562,LABEL_MASKS("%L","%Y","%L","%Y"));
+        AddSortMethod(SORT_METHOD_YEAR,562,LABEL_MASKS("%L","%Y","%L","%Y"));
         SetSortMethod(SORT_METHOD_LABEL);
 
         SetViewAsControl(g_stSettings.m_viewStateVideoNavTvShows.m_viewMode);
@@ -228,7 +236,7 @@ CGUIViewStateWindowVideoNav::CGUIViewStateWindowVideoNav(const CFileItemList& it
         else
           AddSortMethod(SORT_METHOD_LABEL, 551, LABEL_MASKS("%T", "%R"));  // Filename, Duration | Foldername, empty
         AddSortMethod(SORT_METHOD_VIDEO_RATING, 563, LABEL_MASKS("%T", "%R"));  // Filename, Duration | Foldername, empty
-        AddSortMethod(SORT_METHOD_VIDEO_YEAR,562, LABEL_MASKS("%T", "%Y"));
+        AddSortMethod(SORT_METHOD_YEAR,562, LABEL_MASKS("%T", "%Y"));
         SetSortMethod(g_stSettings.m_viewStateVideoNavTitles.m_sortMethod);
 
         SetViewAsControl(g_stSettings.m_viewStateVideoNavTitles.m_viewMode);
@@ -242,7 +250,7 @@ CGUIViewStateWindowVideoNav::CGUIViewStateWindowVideoNav(const CFileItemList& it
           AddSortMethod(SORT_METHOD_LABEL_IGNORE_THE, 556, LABEL_MASKS("%T", "%Y"));  // Filename, Duration | Foldername, empty
         else
           AddSortMethod(SORT_METHOD_LABEL, 551, LABEL_MASKS("%T", "%Y"));  // Filename, Duration | Foldername, empty
-        AddSortMethod(SORT_METHOD_VIDEO_YEAR,562, LABEL_MASKS("%T", "%Y"));
+        AddSortMethod(SORT_METHOD_YEAR,562, LABEL_MASKS("%T", "%Y"));
         if (g_guiSettings.GetBool("filelists.ignorethewhensorting"))
         {
           AddSortMethod(SORT_METHOD_ARTIST_IGNORE_THE,557, LABEL_MASKS("%A - %T", "%Y"));
@@ -339,7 +347,7 @@ VECSOURCES& CGUIViewStateWindowVideoNav::GetSources()
   CDirectory::GetDirectory("videodb://", items);
   for (int i=0; i<items.Size(); ++i)
   {
-    CFileItem* item=items[i];
+    CFileItemPtr item=items[i];
     CMediaSource share;
     share.strName=item->GetLabel();
     share.strPath = item->m_strPath;
@@ -426,7 +434,11 @@ CGUIViewStateVideoMovies::CGUIViewStateVideoMovies(const CFileItemList& items) :
   else
     AddSortMethod(SORT_METHOD_LABEL, 551, LABEL_MASKS("%T", "%R"));  // Filename, Duration | Foldername, empty
   AddSortMethod(SORT_METHOD_VIDEO_RATING, 563, LABEL_MASKS("%T", "%R"));  // Filename, Duration | Foldername, empty
-  AddSortMethod(SORT_METHOD_VIDEO_YEAR,562, LABEL_MASKS("%T", "%Y"));
+  AddSortMethod(SORT_METHOD_YEAR,562, LABEL_MASKS("%T", "%Y"));
+
+  if (items.IsSmartPlayList())
+    AddSortMethod(SORT_METHOD_PLAYLIST_ORDER, 559, LABEL_MASKS("%T", "%R"));
+
   SetSortMethod(g_stSettings.m_viewStateVideoNavTitles.m_sortMethod);
 
   SetViewAsControl(g_stSettings.m_viewStateVideoNavTitles.m_viewMode);
@@ -446,7 +458,7 @@ CGUIViewStateVideoMusicVideos::CGUIViewStateVideoMusicVideos(const CFileItemList
     AddSortMethod(SORT_METHOD_LABEL_IGNORE_THE, 556, LABEL_MASKS("%T", "%Y"));  // Filename, Duration | Foldername, empty
   else
     AddSortMethod(SORT_METHOD_LABEL, 551, LABEL_MASKS("%T", "%Y"));  // Filename, Duration | Foldername, empty
-  AddSortMethod(SORT_METHOD_VIDEO_YEAR,562, LABEL_MASKS("%T", "%Y"));
+  AddSortMethod(SORT_METHOD_YEAR,562, LABEL_MASKS("%T", "%Y"));
   if (g_guiSettings.GetBool("filelists.ignorethewhensorting"))
   {
     AddSortMethod(SORT_METHOD_ARTIST_IGNORE_THE,557, LABEL_MASKS("%A - %T", "%Y"));
@@ -478,7 +490,11 @@ CGUIViewStateVideoTVShows::CGUIViewStateVideoTVShows(const CFileItemList& items)
   else
     AddSortMethod(SORT_METHOD_LABEL, 551, LABEL_MASKS("%L", "%M", "%L", "%M"));  // Filename, Duration | Foldername, empty
 
-  AddSortMethod(SORT_METHOD_VIDEO_YEAR,562,LABEL_MASKS("%L","%Y","%L","%Y"));
+  AddSortMethod(SORT_METHOD_YEAR,562,LABEL_MASKS("%L","%Y","%L","%Y"));
+
+  if (items.IsSmartPlayList())
+    AddSortMethod(SORT_METHOD_PLAYLIST_ORDER, 559, LABEL_MASKS("%L", "%M", "%L", "%M"));
+
   SetSortMethod(g_stSettings.m_viewStateVideoNavTvShows.m_sortMethod);
 
   SetViewAsControl(g_stSettings.m_viewStateVideoNavTvShows.m_viewMode);

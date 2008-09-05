@@ -119,7 +119,7 @@ bool CGUIInfoManager::OnMessage(CGUIMessage &message)
   {
     if (message.GetParam1() == GUI_MSG_UPDATE_ITEM && message.GetLPVOID())
     {
-      CFileItem *item = (CFileItem *)message.GetLPVOID();
+      CFileItemPtr item = *(CFileItemPtr*)message.GetLPVOID();
       if (m_currentFile->m_strPath.Equals(item->m_strPath))
         *m_currentFile = *item;
       return true;
@@ -215,6 +215,7 @@ int CGUIInfoManager::TranslateSingleString(const CStdString &strCondition)
     else if (strTest.Equals("player.hasduration")) ret = PLAYER_HASDURATION;
     else if (strTest.Equals("player.chapter")) ret = PLAYER_CHAPTER;
     else if (strTest.Equals("player.chaptercount")) ret = PLAYER_CHAPTERCOUNT;
+    else if (strTest.Equals("player.chaptername")) ret = PLAYER_CHAPTERNAME;
     else if (strTest.Equals("player.starrating")) ret = PLAYER_STAR_RATING;
   }
   else if (strCategory.Equals("weather"))
@@ -602,9 +603,12 @@ int CGUIInfoManager::TranslateSingleString(const CStdString &strCondition)
     else if (info.Equals("tvshowthumb")) ret = CONTAINER_TVSHOWTHUMB;
     else if (info.Equals("seasonthumb")) ret = CONTAINER_SEASONTHUMB;
     else if (info.Equals("folderpath")) ret = CONTAINER_FOLDERPATH;
+    else if (info.Equals("pluginname")) ret = CONTAINER_PLUGINNAME;
     else if (info.Equals("viewmode")) ret = CONTAINER_VIEWMODE;
     else if (info.Equals("onnext")) ret = CONTAINER_ON_NEXT;
     else if (info.Equals("onprevious")) ret = CONTAINER_ON_PREVIOUS;
+    else if (info.Equals("scrolling"))
+      return AddMultiInfo(GUIInfo(bNegate ? -CONTAINER_SCROLLING : CONTAINER_SCROLLING, id, 0));
     else if (info.Equals("hasnext"))
       return AddMultiInfo(GUIInfo(bNegate ? -CONTAINER_HAS_NEXT : CONTAINER_HAS_NEXT, id, 0));
     else if (info.Equals("hasprevious"))    
@@ -624,6 +628,16 @@ int CGUIInfoManager::TranslateSingleString(const CStdString &strCondition)
     else if (info.Equals("numitems")) ret = CONTAINER_NUM_ITEMS;
     else if (info.Equals("currentpage")) ret = CONTAINER_CURRENT_PAGE;
     else if (info.Equals("sortmethod")) ret = CONTAINER_SORT_METHOD;
+    else if (info.Left(13).Equals("sortdirection"))
+    {
+      CStdString direction = info.Mid(14, info.GetLength() - 15);
+      SORT_ORDER order = SORT_ORDER_NONE;
+      if (direction == "ascending")
+        order = SORT_ORDER_ASC;
+      else if (direction == "descending")
+        order = SORT_ORDER_DESC;
+      return AddMultiInfo(GUIInfo(bNegate ? -CONTAINER_SORT_DIRECTION : CONTAINER_SORT_DIRECTION, order));
+    }
     else if (info.Left(5).Equals("sort("))
     {
       SORT_METHOD sort = SORT_METHOD_NONE;
@@ -636,6 +650,11 @@ int CGUIInfoManager::TranslateSingleString(const CStdString &strCondition)
     {
       int itemID = atoi(info.Mid(9, info.GetLength() - 10));
       return AddMultiInfo(GUIInfo(bNegate ? -CONTAINER_HAS_FOCUS : CONTAINER_HAS_FOCUS, id, itemID));
+    }
+    else if (info.Left(9).Equals("property("))
+    {
+      int compareString = ConditionalStringParameter(info.Mid(9, info.GetLength() - 10));
+      return AddMultiInfo(GUIInfo(CONTAINER_PROPERTY, id, compareString));
     }
     else if (info.Equals("showplot")) ret = CONTAINER_SHOWPLOT;
     if (id && (ret == CONTAINER_ON_NEXT || ret == CONTAINER_ON_PREVIOUS || ret == CONTAINER_NUM_PAGES ||
@@ -834,6 +853,7 @@ int CGUIInfoManager::TranslateListItem(const CStdString &info)
   else if (info.Equals("top250")) return LISTITEM_TOP250;
   else if (info.Equals("trailer")) return LISTITEM_TRAILER;
   else if (info.Equals("starrating")) return LISTITEM_STAR_RATING;
+  else if (info.Equals("sortletter")) return LISTITEM_SORT_LETTER;
   else if (info.Left(9).Equals("property(")) return AddListItemProp(info.Mid(9, info.GetLength() - 10));
   return 0;
 }
@@ -891,7 +911,10 @@ CStdString CGUIInfoManager::GetLabel(int info, DWORD contextWindow)
   {
     CGUIWindow *window = GetWindowWithCondition(contextWindow, WINDOW_CONDITION_HAS_LIST_ITEMS); // true for has list items
     if (window)
-      strLabel = GetItemLabel(window->GetCurrentListItem(), info);
+    {
+      CFileItemPtr item = window->GetCurrentListItem();
+      strLabel = GetItemLabel(item.get(), info);
+    }
 
     return strLabel;
   }
@@ -929,6 +952,10 @@ CStdString CGUIInfoManager::GetLabel(int info, DWORD contextWindow)
   case PLAYER_CHAPTERCOUNT:
     if(g_application.IsPlaying() && g_application.m_pPlayer)
       strLabel.Format("%02d", g_application.m_pPlayer->GetChapterCount());
+    break;
+  case PLAYER_CHAPTERNAME:
+    if(g_application.IsPlaying() && g_application.m_pPlayer)
+      g_application.m_pPlayer->GetChapterName(strLabel);
     break;
   case PLAYER_CACHELEVEL:
     {
@@ -1123,6 +1150,20 @@ CStdString CGUIInfoManager::GetLabel(int info, DWORD contextWindow)
       }
       break;
     }
+  case CONTAINER_PLUGINNAME:
+    {
+      CGUIWindow *window = GetWindowWithCondition(contextWindow, WINDOW_CONDITION_IS_MEDIA_WINDOW);
+      if (window)
+      {
+        CURL url(((CGUIMediaWindow*)window)->CurrentDirectory().m_strPath);
+        if (url.GetProtocol().Equals("plugin"))
+        {
+          strLabel = url.GetFileName();
+          CUtil::RemoveSlashAtEnd(strLabel);
+        }
+      }
+      break;
+    }
   case CONTAINER_VIEWMODE:
     {
       CGUIWindow *window = GetWindowWithCondition(contextWindow, WINDOW_CONDITION_IS_MEDIA_WINDOW);
@@ -1138,7 +1179,11 @@ CStdString CGUIInfoManager::GetLabel(int info, DWORD contextWindow)
     {
       CGUIWindow *window = GetWindowWithCondition(contextWindow, WINDOW_CONDITION_IS_MEDIA_WINDOW);
       if (window)
-        strLabel = g_localizeStrings.Get(((CGUIMediaWindow*)window)->GetContainerSortMethod());
+      {
+        const CGUIViewState *viewState = ((CGUIMediaWindow*)window)->GetViewState();
+        if (viewState)
+          strLabel = g_localizeStrings.Get(viewState->GetSortMethodLabel());
+      }
     }
     break;
   case CONTAINER_NUM_PAGES:
@@ -2079,29 +2124,30 @@ bool CGUIInfoManager::GetMultiInfoBool(const GUIInfo &info, DWORD dwContextWindo
         bReturn = m_stringParameters[info.GetData1()].Equals(content);
       }
       break;
-    case CONTAINER_ROW:
-    case CONTAINER_COLUMN:
-    case CONTAINER_POSITION:
-    case CONTAINER_HAS_NEXT:
-    case CONTAINER_HAS_PREVIOUS:
-    case CONTAINER_SUBITEM:
-      {
-        const CGUIControl *control = NULL;
-        if (info.GetData1())
-        { // container specified
-          CGUIWindow *window = GetWindowWithCondition(dwContextWindow, 0);
-          if (window)
-            control = window->GetControl(info.GetData1());
+      case CONTAINER_ROW:
+      case CONTAINER_COLUMN:
+      case CONTAINER_POSITION:
+      case CONTAINER_HAS_NEXT:
+      case CONTAINER_HAS_PREVIOUS:
+      case CONTAINER_SCROLLING:
+      case CONTAINER_SUBITEM:
+        {
+          const CGUIControl *control = NULL;
+          if (info.GetData1())
+          { // container specified
+            CGUIWindow *window = GetWindowWithCondition(dwContextWindow, 0);
+            if (window)
+              control = window->GetControl(info.GetData1());
+          }
+          else
+          { // no container specified - assume a mediawindow
+            CGUIWindow *window = GetWindowWithCondition(dwContextWindow, WINDOW_CONDITION_IS_MEDIA_WINDOW);
+            if (window)
+              control = window->GetControl(window->GetViewContainerID());
+          }
+          if (control)
+            bReturn = control->GetCondition(condition, info.GetData2());
         }
-        else
-        { // no container specified - assume a mediawindow
-          CGUIWindow *window = GetWindowWithCondition(dwContextWindow, WINDOW_CONDITION_IS_MEDIA_WINDOW);
-          if (window)
-            control = window->GetControl(window->GetViewContainerID());
-        }
-        if (control)
-          bReturn = control->GetCondition(condition, info.GetData2());
-      }
       break;
     case CONTAINER_HAS_FOCUS:
       { // grab our container
@@ -2111,37 +2157,13 @@ bool CGUIInfoManager::GetMultiInfoBool(const GUIInfo &info, DWORD dwContextWindo
           const CGUIControl *control = window->GetControl(info.GetData1());
           if (control && control->IsContainer())
           {
-            CFileItem *item = (CFileItem *)((CGUIBaseContainer *)control)->GetListItem(0);
+            CFileItemPtr item = boost::static_pointer_cast<CFileItem>(((CGUIBaseContainer *)control)->GetListItem(0));
             if (item && item->m_iprogramCount == info.GetData2())  // programcount used to store item id
               bReturn = true;
           }
         }
         break;
       }
-    case LISTITEM_ISSELECTED:
-    case LISTITEM_ISPLAYING:
-      {
-        CFileItem *item=NULL;
-        if (!info.GetData1())
-        { // assumes a media window
-          CGUIWindow *window = GetWindowWithCondition(dwContextWindow, WINDOW_CONDITION_HAS_LIST_ITEMS);
-          if (window)
-            item = window->GetCurrentListItem(info.GetData2());
-        }
-        else
-        {
-          CGUIWindow *window = GetWindowWithCondition(dwContextWindow, 0);
-          if (window)
-          {
-            const CGUIControl *control = window->GetControl(info.GetData1());
-            if (control && control->IsContainer())
-              item = (CFileItem *)((CGUIBaseContainer *)control)->GetListItem(info.GetData2());
-          }
-        }
-        if (item)
-          bReturn = GetBool(condition, dwContextWindow, item);
-      }
-      break;
     case VIDEOPLAYER_CONTENT:
       {
         CStdString strContent="movies";
@@ -2161,9 +2183,20 @@ bool CGUIInfoManager::GetMultiInfoBool(const GUIInfo &info, DWORD dwContextWindo
       CGUIWindow *window = GetWindowWithCondition(dwContextWindow, WINDOW_CONDITION_IS_MEDIA_WINDOW);
       if (window)
       {
-        const CFileItemList &item = ((CGUIMediaWindow*)window)->CurrentDirectory();
-        SORT_METHOD method = item.GetSortMethod();
-        bReturn = (method == (int)info.GetData1());
+        const CGUIViewState *viewState = ((CGUIMediaWindow*)window)->GetViewState();
+        if (viewState)
+          bReturn = (viewState->GetSortMethod() == info.GetData1());
+      }
+      break;
+    }
+    case CONTAINER_SORT_DIRECTION:
+    {
+      CGUIWindow *window = GetWindowWithCondition(dwContextWindow, WINDOW_CONDITION_IS_MEDIA_WINDOW);
+      if (window)
+      {
+        const CGUIViewState *viewState = ((CGUIMediaWindow*)window)->GetViewState();
+        if (viewState)
+          bReturn = (viewState->GetDisplaySortOrder() == info.GetData1());
       }
       break;
     }
@@ -2226,7 +2259,7 @@ CStdString CGUIInfoManager::GetMultiInfoLabel(const GUIInfo &info, DWORD context
   }
   if (info.m_info >= LISTITEM_START && info.m_info <= LISTITEM_END)
   {
-    CFileItem *item = NULL;
+    CFileItemPtr item;
     CGUIWindow *window = NULL;
 
     int data1 = info.GetData1();
@@ -2244,11 +2277,11 @@ CStdString CGUIInfoManager::GetMultiInfoLabel(const GUIInfo &info, DWORD context
     {
       const CGUIControl *control = window->GetControl(data1);
       if (control && control->IsContainer())
-        item = (CFileItem *)((CGUIBaseContainer *)control)->GetListItem(info.GetData2(), info.GetInfoFlag());
+        item = boost::static_pointer_cast<CFileItem>(((CGUIBaseContainer *)control)->GetListItem(info.GetData2(), info.GetInfoFlag()));
     }
 
     if (item) // If we got a valid item, do the lookup
-      return GetItemImage(item, info.m_info); // Image prioritizes images over labels (in the case of music item ratings for instance)
+      return GetItemImage(item.get(), info.m_info); // Image prioritizes images over labels (in the case of music item ratings for instance)
   }
   else if (info.m_info == PLAYER_TIME)
   {
@@ -2317,6 +2350,21 @@ CStdString CGUIInfoManager::GetMultiInfoLabel(const GUIInfo &info, DWORD context
   }
   else if (info.m_info >= MUSICPLAYER_TITLE && info.m_info <= MUSICPLAYER_DISC_NUMBER)
     return GetMusicPlaylistInfo(info);
+  else if (info.m_info == CONTAINER_PROPERTY)
+  {
+    CGUIWindow *window = NULL;
+    if (info.GetData1())
+    { // container specified
+      window = GetWindowWithCondition(contextWindow, 0);
+    }
+    else
+    { // no container specified - assume a mediawindow
+      window = GetWindowWithCondition(contextWindow, WINDOW_CONDITION_IS_MEDIA_WINDOW);
+    }
+    if (window)
+      return ((CGUIMediaWindow *)window)->CurrentDirectory().GetProperty(m_stringParameters[info.GetData2()]);
+  }
+
   return StringUtils::EmptyString;
 }
 
@@ -2382,9 +2430,9 @@ CStdString CGUIInfoManager::GetImage(int info, DWORD contextWindow)
     CGUIWindow *window = GetWindowWithCondition(contextWindow, WINDOW_CONDITION_HAS_LIST_ITEMS);
     if (window)
     {
-      CFileItem* item = window->GetCurrentListItem();
+      CFileItemPtr item = window->GetCurrentListItem();
       if (item)
-        return GetItemImage(item, info);
+        return GetItemImage(item.get(), info);
     }
   }
   return GetLabel(info, contextWindow);
@@ -2574,23 +2622,23 @@ const CStdString CGUIInfoManager::GetMusicPlaylistInfo(const GUIInfo& info) cons
   { // relative index (requires current playlist is PLAYLIST_MUSIC)
     if (g_playlistPlayer.GetCurrentPlaylist() != PLAYLIST_MUSIC)
       return "";
-    index += g_playlistPlayer.GetCurrentSong();
+    index = g_playlistPlayer.GetNextSong(index);
   }
   if (index < 0 || index >= playlist.size())
     return "";
-  PLAYLIST::CPlayListItem &playlistItem = playlist[index];
-  if (!playlistItem.GetMusicInfoTag()->Loaded())
+  CFileItemPtr playlistItem = playlist[index];
+  if (!playlistItem->GetMusicInfoTag()->Loaded())
   {
-    playlistItem.LoadMusicTag();
-    playlistItem.GetMusicInfoTag()->SetLoaded();
+    playlistItem->LoadMusicTag();
+    playlistItem->GetMusicInfoTag()->SetLoaded();
   }
   // try to set a thumbnail
-  if (!playlistItem.HasThumbnail())
+  if (!playlistItem->HasThumbnail())
   {
-    playlistItem.SetMusicThumb();
+    playlistItem->SetMusicThumb();
     // still no thumb? then just the set the default cover
-    if (!playlistItem.HasThumbnail())
-      playlistItem.SetThumbnailImage("defaultAlbumCover.png");
+    if (!playlistItem->HasThumbnail())
+      playlistItem->SetThumbnailImage("defaultAlbumCover.png");
   }
   if (info.m_info == MUSICPLAYER_PLAYLISTPOS)
   {
@@ -2599,8 +2647,8 @@ const CStdString CGUIInfoManager::GetMusicPlaylistInfo(const GUIInfo& info) cons
     return strPosition;
   }
   else if (info.m_info == MUSICPLAYER_COVER)
-    return playlistItem.GetThumbnailImage();
-  return GetMusicTagLabel(info.m_info, &playlistItem);
+    return playlistItem->GetThumbnailImage();
+  return GetMusicTagLabel(info.m_info, playlistItem.get());
 }
 
 CStdString CGUIInfoManager::GetPlaylistLabel(int item) const
@@ -2982,87 +3030,13 @@ void CGUIInfoManager::SetCurrentSong(CFileItem &item)
   CLog::Log(LOGDEBUG,"CGUIInfoManager::SetCurrentSong(%s)",item.m_strPath.c_str());
   *m_currentFile = item;
 
-  // Get a reference to the item's tag
-  CMusicInfoTag& tag = *m_currentFile->GetMusicInfoTag();
-  // check if we don't have the tag already loaded
-  if (!tag.Loaded())
+  m_currentFile->LoadMusicTag();
+  if (m_currentFile->GetMusicInfoTag()->GetTitle().IsEmpty())
   {
-    // we have a audio file.
-    // Look if we have this file in database...
-    bool bFound = false;
-    CMusicDatabase musicdatabase;
-    if (musicdatabase.Open())
-    {
-      CSong song;
-      bFound = musicdatabase.GetSongByFileName(m_currentFile->m_strPath, song);
-      m_currentFile->GetMusicInfoTag()->SetSong(song);
-      musicdatabase.Close();
-    }
-
-    if (!bFound)
-    {
-      // always get id3 info for the overlay
-      CMusicInfoTagLoaderFactory factory;
-      auto_ptr<IMusicInfoTagLoader> pLoader (factory.CreateLoader(m_currentFile->m_strPath));
-      // Do we have a tag loader for this file type?
-      if (NULL != pLoader.get())
-        pLoader->Load(m_currentFile->m_strPath, tag);
-    }
+    // No title in tag, show filename only
+    m_currentFile->GetMusicInfoTag()->SetTitle(CUtil::GetTitleFromPath(m_currentFile->m_strPath));
   }
-
-  // If we have tag information, ...
-  if (tag.Loaded())
-  {
-    if (!tag.GetTitle().size())
-    {
-      // No title in tag, show filename only
-#if defined(HAS_FILESYSTEM) && defined(HAS_XBOX_HARDWARE)
-      CSndtrkDirectory dir;
-      char NameOfSong[64];
-      if (dir.FindTrackName(m_currentFile->m_strPath, NameOfSong))
-        tag.SetTitle(NameOfSong);
-      else
-#endif
-        tag.SetTitle( CUtil::GetTitleFromPath(m_currentFile->m_strPath) );
-    }
-  } // if (tag.Loaded())
-  else
-  {
-    // If we have a cdda track without cddb information,...
-    if (m_currentFile->IsCDDA())
-    {
-      // we have the tracknumber...
-      int iTrack = tag.GetTrackNumber();
-      if (iTrack >= 1)
-      {
-        CStdString strText = g_localizeStrings.Get(554); // "Track"
-        if (strText.GetAt(strText.size() - 1) != ' ')
-          strText += " ";
-        CStdString strTrack;
-        strTrack.Format(strText + "%i", iTrack);
-        tag.SetTitle(strTrack);
-        tag.SetLoaded(true);
-      }
-    } // if (!tag.Loaded() && url.GetProtocol()=="cdda" )
-    else
-    {
-      CStdString fileName = CUtil::GetFileName(m_currentFile->m_strPath);
-      CUtil::RemoveExtension(fileName);
-      for (unsigned int i = 0; i < g_advancedSettings.m_musicTagsFromFileFilters.size(); i++)
-      {
-        CLabelFormatter formatter(g_advancedSettings.m_musicTagsFromFileFilters[i], "");
-        if (formatter.FillMusicTag(fileName, &tag))
-        {
-          tag.SetLoaded(true);
-          break;
-        }
-      }
-      if (!tag.Loaded()) // at worse, set our title as the filename
-        tag.SetTitle( CUtil::GetTitleFromPath(m_currentFile->m_strPath) );
-    }
-    // we now have at least the title
-    tag.SetLoaded(true);
-  }
+  m_currentFile->GetMusicInfoTag()->SetLoaded(true);
 
   // find a thumb for this file.
   if (m_currentFile->IsInternetStream())
@@ -3641,7 +3615,7 @@ CStdString CGUIInfoManager::GetItemLabel(const CFileItem *item, int info ) const
       if(!strThumb.IsEmpty() && !CURL::IsFileOnly(strThumb) && !CUtil::IsHD(strThumb))
         strThumb = "";
 
-      if(strThumb.IsEmpty())
+      if(strThumb.IsEmpty() && !item->GetIconImage().IsEmpty())
       {
         strThumb = item->GetIconImage();
         strThumb.Insert(strThumb.Find("."), "Big");
@@ -3729,6 +3703,13 @@ CStdString CGUIInfoManager::GetItemLabel(const CFileItem *item, int info ) const
       return strResult;
     }
     break;
+  case LISTITEM_SORT_LETTER:
+    {
+      CStdString letter = item->GetSortLabel().Left(1);
+      letter.ToUpper();
+      return letter;
+    }
+    break;
   }
   return "";
 }
@@ -3739,15 +3720,17 @@ CStdString CGUIInfoManager::GetItemImage(const CFileItem *item, int info) const
   { // old song rating format
     CStdString rating;
     if (item->HasMusicInfoTag())
+    {
       rating.Format("songrating%c.png", item->GetMusicInfoTag()->GetRating());
-    return rating;
+      return rating;
+    }
   }
   else if (info == LISTITEM_STAR_RATING)
   {
     CStdString rating;
     if (item->HasVideoInfoTag())
     { // rating for videos is assumed 0..10, so convert to 0..5
-      rating.Format("rating%d.png", (long)((item->GetVideoInfoTag()->m_fRating * 0.5) + 0.5));
+      rating.Format("rating%d.png", (long)((item->GetVideoInfoTag()->m_fRating * 0.5f) + 0.5f));
     }
     else if (item->HasMusicInfoTag())
     { // song rating.
@@ -3755,8 +3738,7 @@ CStdString CGUIInfoManager::GetItemImage(const CFileItem *item, int info) const
     }
     return rating;
   }
-  else
-    return GetItemLabel(item, info);
+  return GetItemLabel(item, info);
 }
 
 bool CGUIInfoManager::GetItemBool(const CGUIListItem *item, int condition) const

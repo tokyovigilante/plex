@@ -51,7 +51,8 @@ void StringUtils::JoinString(const CStdStringArray &strings, const CStdString& d
 
 // Splits the string input into pieces delimited by delimiter.
 // if 2 delimiters are in a row, it will include the empty string between them.
-int StringUtils::SplitString(const CStdString& input, const CStdString& delimiter, CStdStringArray &results)
+// added MaxStrings parameter to restrict the number of returned substrings (like perl and python)
+int StringUtils::SplitString(const CStdString& input, const CStdString& delimiter, CStdStringArray &results, unsigned int iMaxStrings /* = 0 */)
 {
   int iPos = -1;
   int newPos = -1;
@@ -60,7 +61,6 @@ int StringUtils::SplitString(const CStdString& input, const CStdString& delimite
 
   results.clear();
 
-  //CArray positions;
   vector<unsigned int> positions;
 
   newPos = input.Find (delimiter, 0);
@@ -71,22 +71,25 @@ int StringUtils::SplitString(const CStdString& input, const CStdString& delimite
     return 1;
   }
 
-  int numFound = 1;
-
   while ( newPos > iPos )
   {
-    numFound++;
     positions.push_back(newPos);
     iPos = newPos;
     newPos = input.Find (delimiter, iPos + sizeS2);
   }
 
-  for ( unsigned int i = 0; i <= positions.size(); i++ )
+  // numFound is the number of delimeters which is one less
+  // than the number of substrings
+  unsigned int numFound = positions.size();
+  if (iMaxStrings > 0 && numFound >= iMaxStrings)
+    numFound = iMaxStrings - 1;
+
+  for ( unsigned int i = 0; i <= numFound; i++ )
   {
     CStdString s;
     if ( i == 0 )
     {
-      if (i == positions.size())
+      if ( i == numFound )
         s = input;
       else
         s = input.Mid( i, positions[i] );
@@ -96,7 +99,7 @@ int StringUtils::SplitString(const CStdString& input, const CStdString& delimite
       int offset = positions[i - 1] + sizeS2;
       if ( offset < isize )
       {
-        if ( i == positions.size() )
+        if ( i == numFound )
           s = input.Mid(offset);
         else if ( i > 0 )
           s = input.Mid( positions[i - 1] + sizeS2,
@@ -105,7 +108,8 @@ int StringUtils::SplitString(const CStdString& input, const CStdString& delimite
     }
     results.push_back(s);
   }
-  return numFound;
+  // return the number of substrings
+  return results.size();
 }
 
 // returns the number of occurences of strFind in strInput.
@@ -138,15 +142,15 @@ int StringUtils::AlphaNumericCompare(const char *left, const char *right)
     {
       ld = l;
       lnum = 0;
-      while (*ld >= '0' && *ld <= '9' && ld < l + 8)
-      { // compare only up to 8 digits
+      while (*ld >= '0' && *ld <= '9' && ld < l + 10)
+      { // compare only up to 10 digits
         lnum *= 10;
         lnum += *ld++ - '0';
       }
       rd = r;
       rnum = 0;
-      while (*rd >= '0' && *rd <= '9' && rd < r + 8)
-      { // compare only up to 8 digits
+      while (*rd >= '0' && *rd <= '9' && rd < r + 10)
+      { // compare only up to 10 digits
         rnum *= 10;
         rnum += *rd++ - '0';
       }
@@ -309,7 +313,7 @@ CStdString StringUtils::SizeToString(__int64 size)
   return strLabel;
 }
 
-bool StringUtils::FindWords(const char *str, const char *wordLowerCase)
+size_t StringUtils::FindWords(const char *str, const char *wordLowerCase)
 {
   // NOTE: This assumes word is lowercase!
   unsigned char *s = (unsigned char *)str;
@@ -329,7 +333,7 @@ bool StringUtils::FindWords(const char *str, const char *wordLowerCase)
         same = false;
     }
     if (same && *w == 0)  // only the same if word has been exhausted
-      return true;
+      return (const char *)s - str;
 
     // otherwise, find a space and skip to the end of the whitespace
     while (*s && *s != ' ') s++;
@@ -338,7 +342,7 @@ bool StringUtils::FindWords(const char *str, const char *wordLowerCase)
     // and repeat until we're done
   } while (*s);
 
-  return false;
+  return CStdString::npos;
 }
 
 // assumes it is called from after the first open bracket is found
@@ -357,4 +361,22 @@ int StringUtils::FindEndBracket(const CStdString &str, char opener, char closer,
     }
   }
   return CStdString::npos;
+}
+
+void StringUtils::WordToDigits(CStdString &word) 
+{
+  static const char word_to_letter[] = "22233344455566677778889999";
+  word.ToLower();
+  for (unsigned int i = 0; i < word.size(); ++i)
+  { // NB: This assumes ascii, which probably needs extending at some  point.
+    char letter = word[i];
+    if ((letter >= 'a' && letter <= 'z')) // assume contiguous letter range
+    {  
+      word[i] = word_to_letter[letter-'a'];
+    }
+    else if (letter < '0' || letter > '9') // We want to keep 0-9!
+    {  
+      word[i] = ' ';  // replace everything else with a space
+    }
+  }
 }

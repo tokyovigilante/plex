@@ -28,5 +28,21 @@
 	<string>Plex</string>
 	<key>SmartCrashReports_EmailTicket</key>
 	<string>SCR-76B35BCAB9</string>
+	<key>CFBundleDocumentTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeName</key>
+			<string>Video</string>
+			<key>CFBundleTypeRole</key>
+			<string>Viewer</string>
+			<key>LSHandlerRank</key>
+			<string>Default</string>
+			<key>CFBundleTypeExtensions</key>
+			<array>
+				<string>mkv</string>
+				<string>avi</string>
+			</array>
+		</dict>
+	</array>
 </dict>
 </plist>

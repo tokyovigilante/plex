@@ -222,8 +222,23 @@ void XBPython::InitializeInterpreter()
   InitPluginModule(); // init plugin modules
   InitGUIModule(); // init xbmcgui modules
 
+  CStdString envstring = "";
+  // set HTTP_PROXY and HTTPS_PROXY env variables
+  if (g_guiSettings.GetBool("network.usehttpproxy") &&
+      g_guiSettings.GetString("network.httpproxyserver") &&
+      g_guiSettings.GetString("network.httpproxyport"))
+  {
+    CStdString env;
+    CStdString proxy = "http://" + g_guiSettings.GetString("network.httpproxyserver")
+                           + ":" + g_guiSettings.GetString("network.httpproxyport");
+    envstring += "import os\n";
+    env.Format("os.environ['HTTP_PROXY']='%s'\n", proxy.c_str()); 
+    envstring += env;
+    env.Format("os.environ['HTTPS_PROXY']='%s'\n", proxy.c_str()); 
+    envstring += env;
+  };
   // redirecting default output to debug console
-  if (PyRun_SimpleString(""
+  envstring += (
         "import xbmc\n"
         "class xbmcout:\n"
         "	def write(self, data):\n"
@@ -237,7 +252,9 @@ void XBPython::InitializeInterpreter()
         "sys.stdout = xbmcout()\n"
         "sys.stderr = xbmcout()\n"
         "print '-->Python Interpreter Initialized<--'\n"
-        "") == -1)
+        "");
+
+  if (PyRun_SimpleString(envstring.c_str()) == -1)
   {
     CLog::Log(LOGFATAL, "Python Initialize Error");
   }
@@ -299,6 +316,8 @@ void XBPython::Initialize()
 #ifdef _LINUX
       // Required for python to find optimized code (pyo) files
       setenv("PYTHONOPTIMIZE", "1", 1);
+      setenv("PYTHONHOME", _P("Q:/system/python"), 1);
+      setenv("PYTHONPATH", _P("Q:/system/python/python24.zip"), 1);
       //setenv("PYTHONDEBUG", "1", 1);
       //setenv("PYTHONINSPECT", "1", 1);
       //setenv("PYTHONVERBOSE", "1", 1);
@@ -367,7 +386,8 @@ void XBPython::Finalize()
     DllLoaderContainer::ReleaseModule(m_pDll);
 #endif    
     m_hModule = NULL;
-
+    mainThreadState = NULL;
+    
     m_bInitialized = false;
   }
   
@@ -410,7 +430,8 @@ void XBPython::Process()
   if (bStartup)
   {
     bStartup = false;
-    evalFile("Q:\\scripts\\autoexec.py");
+    if (evalFile("U:\\scripts\\autoexec.py") < 0)
+      evalFile("Q:\\scripts\\autoexec.py");
   }
 
   if (bLogin)

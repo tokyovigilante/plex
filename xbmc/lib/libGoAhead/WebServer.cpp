@@ -327,7 +327,7 @@ void CWebServer::Process()
 }
 
 /*
- * Sets password for user "xbox"
+ * Sets password for user "plex"
  * this is done in group "sys_xbox".
  * Note that when setting the password this function will delete all database info!!
  */
@@ -351,7 +351,7 @@ void CWebServer::SetPassword(const char* strPassword)
     umAddGroup(WEBSERVER_UM_GROUP, PRIV_READ | PRIV_WRITE | PRIV_ADMIN, AM_BASIC, false, false);
     
     // greate user
-    umAddUser("xbox", (char_t*)strPassword, WEBSERVER_UM_GROUP, false, false);
+    umAddUser("plex", (char_t*)strPassword, WEBSERVER_UM_GROUP, false, false);
     
     // create access limit
     umAddAccessLimit("/", AM_BASIC, 0, WEBSERVER_UM_GROUP);
@@ -371,7 +371,7 @@ char* CWebServer::GetPassword()
   char* pPass = "";
   
   umOpen();
-  if (umUserExists("xbox")) pPass = umGetUserPassword("xbox");
+  if (umUserExists("plex")) pPass = umGetUserPassword("plex");
   
   umClose();
   

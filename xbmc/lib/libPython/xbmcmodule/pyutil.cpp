@@ -38,13 +38,6 @@ static TiXmlDocument pySkinReferences;
 #pragma const_seg("PY_RDATA")
 #endif
 
-#ifdef __APPLE__
-#undef PyUnicode_AsUnicode
-// FIXME: hack to get it to compile since r12386
-// -d4rk (04/01/08)
-#define PyUnicode_AsUnicode(a) (const char *)(a) 
-#endif
-
 namespace PYXBMC
 {
   int PyGetUnicodeString(string& buf, PyObject* pObject, int pos)
@@ -60,14 +53,9 @@ namespace PYXBMC
       //
       CStdString utf8String;
 
-#ifdef __APPLE__
-      CStdStringW utf16String((wchar_t*)PyUnicodeUCS2_AsUnicode(pObject), PyUnicode_GET_SIZE(pObject));
-      g_charsetConverter.ucs2ToUTF8(utf16String, utf8String);
-#else
       CStdStringW utf16String = (wchar_t*) PyUnicode_AsUnicode(pObject);
       g_charsetConverter.wToUTF8(utf16String, utf8String);
-#endif
-      
+
       buf = utf8String;
       return 1;
     }

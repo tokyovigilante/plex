@@ -95,7 +95,7 @@ namespace PYXBMC
     pListItem->item->m_bIsFolder = bIsFolder;
 
     // call the directory class to add our item
-    bool bOk = DIRECTORY::CPluginDirectory::AddItem(handle, pListItem->item, iTotalItems);
+    bool bOk = DIRECTORY::CPluginDirectory::AddItem(handle, pListItem->item.get(), iTotalItems);
     return Py_BuildValue("b", bOk);
   }
 
@@ -241,6 +241,45 @@ namespace PYXBMC
     return Py_None;
   }
 
+  PyDoc_STRVAR(setPluginCategory__doc__,
+    "setPluginCategory(handle, category) -- Sets the plugins name for skins to display.\n"
+    "\n"
+    "handle      : Integer - handle the plugin was started with.\n"
+    "category    : string or unicode - plugins sub category.\n"
+    "\n"
+    "*Note, You can use the above as keywords for arguments.\n"
+    "\n"
+    "example:\n"
+    "  - xbmcplugin.setPluginCategory(int(sys.argv[1]), 'Comedy')\n");
+
+  PyObject* XBMCPLUGIN_SetPluginCategory(PyTypeObject *type, PyObject *args, PyObject *kwds)
+  {
+    static char *keywords[] = { "handle", "category", NULL };
+    int handle = -1;
+    PyObject *category = NULL;
+    // parse arguments to constructor
+    if (!PyArg_ParseTupleAndKeywords(
+      args,
+      kwds,
+      "iO",
+      keywords,
+      &handle,
+      &category
+      ))
+    {
+      return NULL;
+    };
+
+    CStdString uCategory;
+    if (!category || (category && !PyGetUnicodeString(uCategory, category, 1)))
+      return NULL;
+
+    DIRECTORY::CPluginDirectory::SetProperty(handle, "plugincategory", uCategory);
+
+    Py_INCREF(Py_None);
+    return Py_None;
+  }
+  
   // define c functions to be used in python here
   PyMethodDef pluginMethods[] = {
     {"addDirectoryItem", (PyCFunction)XBMCPLUGIN_AddDirectoryItem, METH_VARARGS|METH_KEYWORDS, addDirectoryItem__doc__},
@@ -248,6 +287,7 @@ namespace PYXBMC
     {"addSortMethod", (PyCFunction)XBMCPLUGIN_AddSortMethod, METH_VARARGS|METH_KEYWORDS, addSortMethod__doc__},
     {"getSetting", (PyCFunction)XBMCPLUGIN_GetSetting, METH_VARARGS|METH_KEYWORDS, getSetting__doc__},
     {"setContent", (PyCFunction)XBMCPLUGIN_SetContent, METH_VARARGS|METH_KEYWORDS, setContent__doc__},
+    {"setPluginCategory", (PyCFunction)XBMCPLUGIN_SetPluginCategory, METH_VARARGS|METH_KEYWORDS, setPluginCategory__doc__},
     {NULL, NULL, 0, NULL}
   };
 
@@ -285,35 +325,35 @@ namespace PYXBMC
     PyModule_AddStringConstant(pXbmcPluginModule, "__platform__", PY_XBMC_PLATFORM);
 
     // sort method constants
-    PyModule_AddIntConstant(pXbmcPluginModule, "SORT_METHOD_NONE", SORT_METHOD_NONE);
-    PyModule_AddIntConstant(pXbmcPluginModule, "SORT_METHOD_LABEL", SORT_METHOD_LABEL);
-    PyModule_AddIntConstant(pXbmcPluginModule, "SORT_METHOD_LABEL_IGNORE_THE", SORT_METHOD_LABEL_IGNORE_THE);
-    PyModule_AddIntConstant(pXbmcPluginModule, "SORT_METHOD_DATE", SORT_METHOD_DATE);
-    PyModule_AddIntConstant(pXbmcPluginModule, "SORT_METHOD_SIZE", SORT_METHOD_SIZE);
-    PyModule_AddIntConstant(pXbmcPluginModule, "SORT_METHOD_FILE", SORT_METHOD_FILE);
-    PyModule_AddIntConstant(pXbmcPluginModule, "SORT_METHOD_DRIVE_TYPE", SORT_METHOD_DRIVE_TYPE);
-    PyModule_AddIntConstant(pXbmcPluginModule, "SORT_METHOD_TRACKNUM", SORT_METHOD_TRACKNUM);
-    PyModule_AddIntConstant(pXbmcPluginModule, "SORT_METHOD_DURATION", SORT_METHOD_DURATION);
-    PyModule_AddIntConstant(pXbmcPluginModule, "SORT_METHOD_TITLE", SORT_METHOD_TITLE);
-    PyModule_AddIntConstant(pXbmcPluginModule, "SORT_METHOD_TITLE_IGNORE_THE", SORT_METHOD_TITLE_IGNORE_THE);
-    PyModule_AddIntConstant(pXbmcPluginModule, "SORT_METHOD_ARTIST", SORT_METHOD_ARTIST);
-    PyModule_AddIntConstant(pXbmcPluginModule, "SORT_METHOD_ARTIST_IGNORE_THE", SORT_METHOD_ARTIST_IGNORE_THE);
-    PyModule_AddIntConstant(pXbmcPluginModule, "SORT_METHOD_ALBUM", SORT_METHOD_ALBUM);
-    PyModule_AddIntConstant(pXbmcPluginModule, "SORT_METHOD_ALBUM_IGNORE_THE", SORT_METHOD_ALBUM_IGNORE_THE);
-    PyModule_AddIntConstant(pXbmcPluginModule, "SORT_METHOD_GENRE", SORT_METHOD_GENRE);
-    PyModule_AddIntConstant(pXbmcPluginModule, "SORT_METHOD_VIDEO_YEAR", SORT_METHOD_VIDEO_YEAR);
-    PyModule_AddIntConstant(pXbmcPluginModule, "SORT_METHOD_VIDEO_RATING", SORT_METHOD_VIDEO_RATING);
-    PyModule_AddIntConstant(pXbmcPluginModule, "SORT_METHOD_PROGRAM_COUNT", SORT_METHOD_PROGRAM_COUNT);
-    PyModule_AddIntConstant(pXbmcPluginModule, "SORT_METHOD_PLAYLIST_ORDER", SORT_METHOD_PLAYLIST_ORDER);
-    PyModule_AddIntConstant(pXbmcPluginModule, "SORT_METHOD_EPISODE", SORT_METHOD_EPISODE);
-    PyModule_AddIntConstant(pXbmcPluginModule, "SORT_METHOD_VIDEO_TITLE", SORT_METHOD_VIDEO_TITLE);
-    PyModule_AddIntConstant(pXbmcPluginModule, "SORT_METHOD_PRODUCTIONCODE", SORT_METHOD_PRODUCTIONCODE);
-    PyModule_AddIntConstant(pXbmcPluginModule, "SORT_METHOD_SONG_RATING", SORT_METHOD_SONG_RATING);
-    PyModule_AddIntConstant(pXbmcPluginModule, "SORT_METHOD_MPAA_RATING", SORT_METHOD_MPAA_RATING);
-    PyModule_AddIntConstant(pXbmcPluginModule, "SORT_METHOD_VIDEO_RUNTIME", SORT_METHOD_VIDEO_RUNTIME);
-    PyModule_AddIntConstant(pXbmcPluginModule, "SORT_METHOD_STUDIO", SORT_METHOD_STUDIO);
-    PyModule_AddIntConstant(pXbmcPluginModule, "SORT_METHOD_STUDIO_IGNORE_THE", SORT_METHOD_STUDIO_IGNORE_THE);
-    PyModule_AddIntConstant(pXbmcPluginModule, "SORT_METHOD_UNSORTED", SORT_METHOD_UNSORTED);
+    PyModule_AddIntConstant(pXbmcPluginModule, (char*)"SORT_METHOD_NONE", SORT_METHOD_NONE);
+    PyModule_AddIntConstant(pXbmcPluginModule, (char*)"SORT_METHOD_LABEL", SORT_METHOD_LABEL);
+    PyModule_AddIntConstant(pXbmcPluginModule, (char*)"SORT_METHOD_LABEL_IGNORE_THE", SORT_METHOD_LABEL_IGNORE_THE);
+    PyModule_AddIntConstant(pXbmcPluginModule, (char*)"SORT_METHOD_DATE", SORT_METHOD_DATE);
+    PyModule_AddIntConstant(pXbmcPluginModule, (char*)"SORT_METHOD_SIZE", SORT_METHOD_SIZE);
+    PyModule_AddIntConstant(pXbmcPluginModule, (char*)"SORT_METHOD_FILE", SORT_METHOD_FILE);
+    PyModule_AddIntConstant(pXbmcPluginModule, (char*)"SORT_METHOD_DRIVE_TYPE", SORT_METHOD_DRIVE_TYPE);
+    PyModule_AddIntConstant(pXbmcPluginModule, (char*)"SORT_METHOD_TRACKNUM", SORT_METHOD_TRACKNUM);
+    PyModule_AddIntConstant(pXbmcPluginModule, (char*)"SORT_METHOD_DURATION", SORT_METHOD_DURATION);
+    PyModule_AddIntConstant(pXbmcPluginModule, (char*)"SORT_METHOD_TITLE", SORT_METHOD_TITLE);
+    PyModule_AddIntConstant(pXbmcPluginModule, (char*)"SORT_METHOD_TITLE_IGNORE_THE", SORT_METHOD_TITLE_IGNORE_THE);
+    PyModule_AddIntConstant(pXbmcPluginModule, (char*)"SORT_METHOD_ARTIST", SORT_METHOD_ARTIST);
+    PyModule_AddIntConstant(pXbmcPluginModule, (char*)"SORT_METHOD_ARTIST_IGNORE_THE", SORT_METHOD_ARTIST_IGNORE_THE);
+    PyModule_AddIntConstant(pXbmcPluginModule, (char*)"SORT_METHOD_ALBUM", SORT_METHOD_ALBUM);
+    PyModule_AddIntConstant(pXbmcPluginModule, (char*)"SORT_METHOD_ALBUM_IGNORE_THE", SORT_METHOD_ALBUM_IGNORE_THE);
+    PyModule_AddIntConstant(pXbmcPluginModule, (char*)"SORT_METHOD_GENRE", SORT_METHOD_GENRE);
+    PyModule_AddIntConstant(pXbmcPluginModule, (char*)"SORT_METHOD_VIDEO_YEAR", SORT_METHOD_YEAR);
+    PyModule_AddIntConstant(pXbmcPluginModule, (char*)"SORT_METHOD_VIDEO_RATING", SORT_METHOD_VIDEO_RATING);
+    PyModule_AddIntConstant(pXbmcPluginModule, (char*)"SORT_METHOD_PROGRAM_COUNT", SORT_METHOD_PROGRAM_COUNT);
+    PyModule_AddIntConstant(pXbmcPluginModule, (char*)"SORT_METHOD_PLAYLIST_ORDER", SORT_METHOD_PLAYLIST_ORDER);
+    PyModule_AddIntConstant(pXbmcPluginModule, (char*)"SORT_METHOD_EPISODE", SORT_METHOD_EPISODE);
+    PyModule_AddIntConstant(pXbmcPluginModule, (char*)"SORT_METHOD_VIDEO_TITLE", SORT_METHOD_VIDEO_TITLE);
+    PyModule_AddIntConstant(pXbmcPluginModule, (char*)"SORT_METHOD_PRODUCTIONCODE", SORT_METHOD_PRODUCTIONCODE);
+    PyModule_AddIntConstant(pXbmcPluginModule, (char*)"SORT_METHOD_SONG_RATING", SORT_METHOD_SONG_RATING);
+    PyModule_AddIntConstant(pXbmcPluginModule, (char*)"SORT_METHOD_MPAA_RATING", SORT_METHOD_MPAA_RATING);
+    PyModule_AddIntConstant(pXbmcPluginModule, (char*)"SORT_METHOD_VIDEO_RUNTIME", SORT_METHOD_VIDEO_RUNTIME);
+    PyModule_AddIntConstant(pXbmcPluginModule, (char*)"SORT_METHOD_STUDIO", SORT_METHOD_STUDIO);
+    PyModule_AddIntConstant(pXbmcPluginModule, (char*)"SORT_METHOD_STUDIO_IGNORE_THE", SORT_METHOD_STUDIO_IGNORE_THE);
+    PyModule_AddIntConstant(pXbmcPluginModule, (char*)"SORT_METHOD_UNSORTED", SORT_METHOD_UNSORTED);
   }
 }
 

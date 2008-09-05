@@ -158,6 +158,7 @@
   <string id="222">Cancel</string>
   <string id="224">Speed</string>
   <string id="225">Transition Time</string>
+  <string id="226">Test Patterns...</string>
   <string id="227">Lookup audio CDs on freedb</string>
   <string id="228">Shuffle Playlist on Load</string>
   <string id="229">HD Spindown Time</string>
@@ -226,7 +227,7 @@
   <string id="293">Browse for Subtitles</string>
   <string id="294">Create bookmark</string>
   <string id="296">Clear bookmarks</string>
-  <string id="297">Audio Delay</string>
+  <string id="297">Audio Offset</string>
   <string id="298">Bookmarks</string>
   <string id="303">Delay</string>
   <string id="304">Language</string>
@@ -720,7 +721,7 @@
   <string id="1204">Default Password</string>
 
   <string id="1207">WINS-Server</string>
-  <string id="1208">mount SMB shares</string>
+  <string id="1208">Mount SMB Shares</string>
 
   <string id="1210">Remove</string>
   <string id="1211">Music</string>
@@ -1154,6 +1155,9 @@
   <string id="13409">Top 250</string>
   <string id="13410">Tune in on lastfm</string>
   <string id="13411">Minimum fanspeed</string>
+  <string id="13412">RSS Feeds Contain Right-To-Left Text</string>
+  
+  <string id="13450">Sleep System</string>
   
   <string id="13600">Remote Helper</string>
   <string id="13601">Apple Remote Mode</string>  
@@ -1655,14 +1659,15 @@
   <string id="20189">Enable Auto Scrolling for Plot &amp; Review</string>
   <string id="20190">Custom</string>
   <string id="20191">Enable Debug Logging</string>
-  <string id="20192">Fetch Album Information On Scan</string>
-  <string id="20193">Fetch Artist Information On Scan</string>
+  <string id="20192">Fetch Album Information when adding to Library</string>
+  <string id="20193">Fetch Artist Information when adding to Library</string>
   <string id="20194">Default Scraper</string>
   <string id="20195">Change Scraper</string>
   <string id="20196">Export Music Library</string>
   <string id="20197">Import Music Library</string>
   <string id="20198">No Artist found!</string>
   <string id="20199">Downloading artist info failed</string>
+  <string id="20250">Recent Music Count</string>
 
   <!-- string id's 20200 thru 20211 are reserved for speedstrings (LocalizeStrings.cpp)-->
   
@@ -1796,6 +1801,8 @@
   <string id="20422">Always</string>
   <string id="20423">Has Trailer</string>
   <string id="20424">False</string>
+  
+  <string id="20475">Recent Videos Count</string>
   
   <!-- up to 21329 is reserved for the video db !! !-->
 
@@ -1974,6 +1981,9 @@
   <string id="22001">Always update library in background</string>
   <string id="22002">- DNS Suffix</string>
   <string id="22003">Enable Edit and Decision Lists</string>
+  <string id="22004">Delayed by: %2.3fs</string>
+  <string id="22005">Ahead by: %2.3fs</string>
+  <string id="22006">Subtitle Offset</string>
 
   <string id="29999">Apply Flicker Filter Setting to Games</string>
 

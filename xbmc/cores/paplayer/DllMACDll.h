@@ -90,7 +90,7 @@ public:
   virtual int GetInfo(APE_DECOMPRESS_HANDLE, APE_DECOMPRESS_FIELDS, int, int)=0;
   virtual APE_DECOMPRESS_HANDLE Create(const str_ansi *, int *)=0;
   virtual __int64 GetDuration(const char *filename)=0;
-  virtual IAPETag* GetAPETag(const char *filename, BOOL bCheckID3Tag)=0;
+  virtual IAPETag* GetAPETag(const char *filename, bool bCheckID3Tag)=0;
   virtual void DeleteAPETag(IAPETag* pApeTag)=0;
 };
 
@@ -103,15 +103,15 @@ class DllMACDll : public DllDynamic, DllMACDllInterface
 #else
   DECLARE_DLL_WRAPPER(DllMACDll, Q:\\system\\players\\paplayer\\MACDll.dll)
 #endif
-  DEFINE_METHOD_LINKAGE0(int, __stdcall, GetVersionNumber)
-  DEFINE_METHOD_LINKAGE2(int, __stdcall, Seek, (APE_DECOMPRESS_HANDLE p1, int p2))
-  DEFINE_METHOD_LINKAGE1(void, __stdcall, Destroy, (APE_DECOMPRESS_HANDLE p1))
-  DEFINE_METHOD_LINKAGE4(int, __stdcall, GetData, (APE_DECOMPRESS_HANDLE p1, char *p2, int p3, int *p4))
-  DEFINE_METHOD_LINKAGE4(int, __stdcall, GetInfo, (APE_DECOMPRESS_HANDLE p1, APE_DECOMPRESS_FIELDS p2, int p3, int p4))
-  DEFINE_METHOD_LINKAGE2(APE_DECOMPRESS_HANDLE, __stdcall, Create, (const str_ansi * p1, int * p2))
-  DEFINE_METHOD_LINKAGE1(__int64, __stdcall, GetDuration, (const char *p1))
-  DEFINE_METHOD_LINKAGE2(IAPETag*, __stdcall, GetAPETag, (const char *p1, BOOL p2))
-  DEFINE_METHOD_LINKAGE1(void, __stdcall, DeleteAPETag, (IAPETag* p1))
+  DEFINE_METHOD0(int, GetVersionNumber)
+  DEFINE_METHOD2(int, Seek, (APE_DECOMPRESS_HANDLE p1, int p2))
+  DEFINE_METHOD1(void, Destroy, (APE_DECOMPRESS_HANDLE p1))
+  DEFINE_METHOD4(int, GetData, (APE_DECOMPRESS_HANDLE p1, char *p2, int p3, int *p4))
+  DEFINE_METHOD4(int, GetInfo, (APE_DECOMPRESS_HANDLE p1, APE_DECOMPRESS_FIELDS p2, int p3, int p4))
+  DEFINE_METHOD2(APE_DECOMPRESS_HANDLE, Create, (const str_ansi * p1, int * p2))
+  DEFINE_METHOD1(__int64, GetDuration, (const char *p1))
+  DEFINE_METHOD2(IAPETag*, GetAPETag, (const char *p1, bool p2))
+  DEFINE_METHOD1(void, DeleteAPETag, (IAPETag* p1))
   BEGIN_METHOD_RESOLVE()
     RESOLVE_METHOD(GetVersionNumber)
     RESOLVE_METHOD_RENAME(c_APEDecompress_Create, Create)

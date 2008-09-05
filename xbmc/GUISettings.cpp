@@ -243,9 +243,9 @@ CGUISettings::CGUISettings(void)
   // My Weather settings
   AddGroup(2, 8);
   AddCategory(2, "weather", 16000);
-  AddString(1, "weather.areacode1", 14019, "GMXX0154 - Aachen, Germany", BUTTON_CONTROL_STANDARD);
+  AddString(1, "weather.areacode1", 14019, "USCA0987 - San Francisco, CA", BUTTON_CONTROL_STANDARD);
   AddString(2, "weather.areacode2", 14020, "UKXX0085 - London, United Kingdom", BUTTON_CONTROL_STANDARD);
-  AddString(3, "weather.areacode3", 14021, "CAXX0343 - Ontario, Canada", BUTTON_CONTROL_STANDARD);
+  AddString(3, "weather.areacode3", 14021, "NZXX0049 - Wellington, New Zealand", BUTTON_CONTROL_STANDARD);
   AddSeparator(4, "weather.sep1");
   AddString(5, "weather.jumptolocale", 20026, "", BUTTON_CONTROL_STANDARD);
 
@@ -272,11 +272,12 @@ CGUISettings::CGUISettings(void)
   AddBool(3,"musiclibrary.autoalbuminfo", 20192, false);
   AddBool(4,"musiclibrary.autoartistinfo", 20193, false);
   AddString(5, "musiclibrary.defaultscraper", 20194, "Allmusic", SPIN_CONTROL_TEXT);
-  AddBool(6, "musiclibrary.updateonstartup", 22000, false);
-  AddSeparator(7,"musiclibrary.sep2");
-  AddString(8, "musiclibrary.cleanup", 334, "", BUTTON_CONTROL_STANDARD);
-  AddString(9, "musiclibrary.export", 20196, "", BUTTON_CONTROL_STANDARD);
-  AddString(10, "musiclibrary.import", 20197, "", BUTTON_CONTROL_STANDARD);
+  AddInt(6, "musiclibrary.recentcount", 20250, 25, 10, 5, 250, SPIN_CONTROL_INT_PLUS, -1);
+  AddBool(7, "musiclibrary.updateonstartup", 22000, false);
+  AddSeparator(8,"musiclibrary.sep2");
+  AddString(9, "musiclibrary.cleanup", 334, "", BUTTON_CONTROL_STANDARD);
+  AddString(10, "musiclibrary.export", 20196, "", BUTTON_CONTROL_STANDARD);
+  AddString(11, "musiclibrary.import", 20197, "", BUTTON_CONTROL_STANDARD);
 
   AddCategory(3, "musicplayer", 16003);
   AddString(1, "musicplayer.jumptoaudiohardware", 16001, "", BUTTON_CONTROL_STANDARD);
@@ -457,7 +458,8 @@ CGUISettings::CGUISettings(void)
   AddBool(1, "myvideos.treatstackasfile", 20051, true);
   AddBool(2, "myvideos.autoresume",12017, false);
   AddBool(3, "myvideos.autothumb",12024, false);
-  AddSeparator(4, "myvideos.sep1");
+  AddBool(4, "myvideos.cleanfilenames", 20418, false);
+  AddSeparator(5, "myvideos.sep1");
   AddInt(5, "myvideos.viewmode", 582, DEFAULT_VIEW_AUTO, DEFAULT_VIEW_LIST, DEFAULT_VIEW_LIST, DEFAULT_VIEW_MAX, SPIN_CONTROL_TEXT);
   AddInt(6, "myvideos.sortmethod", 581, SORT_METHOD_LABEL, SORT_METHOD_LABEL, 1, SORT_METHOD_MAX, SPIN_CONTROL_TEXT);
   AddInt(7, "myvideos.sortorder", 580, SORT_ORDER_ASC, SORT_ORDER_ASC, SORT_ORDER_ASC, SORT_ORDER_DESC, SPIN_CONTROL_TEXT);
@@ -470,13 +472,14 @@ CGUISettings::CGUISettings(void)
   AddBool(4, "videolibrary.seasonthumbs", 20382, true);
   AddBool(5, "videolibrary.actorthumbs", 20402, false);
   AddBool(6, "videolibrary.singleseason", 20412, true);
-  AddSeparator(7, "videolibrary.sep1");
-  AddBool(8, "videolibrary.updateonstartup", 22000, false);
-  AddBool(9, "videolibrary.backgroundupdate", 22001, false);
-  AddSeparator(10, "videolibrary.sep2");
-  AddString(11, "videolibrary.cleanup", 334, "", BUTTON_CONTROL_STANDARD);
-  AddString(12, "videolibrary.export", 647, "", BUTTON_CONTROL_STANDARD);
-  AddString(13, "videolibrary.import", 648, "", BUTTON_CONTROL_STANDARD);
+  AddInt(7, "videolibrary.recentcount", 20475, 25, 10, 5, 250, SPIN_CONTROL_INT_PLUS, -1);
+  AddSeparator(8, "videolibrary.sep1");
+  AddBool(9, "videolibrary.updateonstartup", 22000, false);
+  AddBool(10, "videolibrary.backgroundupdate", 22001, false);
+  AddSeparator(11, "videolibrary.sep2");
+  AddString(12, "videolibrary.cleanup", 334, "", BUTTON_CONTROL_STANDARD);
+  AddString(13, "videolibrary.export", 647, "", BUTTON_CONTROL_STANDARD);
+  AddString(14, "videolibrary.import", 648, "", BUTTON_CONTROL_STANDARD);
 
   AddCategory(5, "videoplayer", 16003);
   AddString(1, "videoplayer.calibrate", 214, "", BUTTON_CONTROL_STANDARD);
@@ -513,7 +516,6 @@ CGUISettings::CGUISettings(void)
   AddInt(3, "subtitles.style", 736, FONT_STYLE_BOLD, FONT_STYLE_NORMAL, 1, FONT_STYLE_BOLD_ITALICS, SPIN_CONTROL_TEXT);
   AddInt(4, "subtitles.color", 737, SUBTITLE_COLOR_START + 1, SUBTITLE_COLOR_START, 1, SUBTITLE_COLOR_END, SPIN_CONTROL_TEXT);
   AddString(5, "subtitles.charset", 735, "DEFAULT", SPIN_CONTROL_TEXT);
-  AddBool(6, "subtitles.flipbidicharset", 13304, false);
   AddSeparator(7, "subtitles.sep1");
   AddBool(9, "subtitles.searchrars", 13249, false);
   AddSeparator(10,"subtitles.sep2");
@@ -621,7 +623,7 @@ CGUISettings::CGUISettings(void)
   // appearance settings
   AddGroup(7, 480);
   AddCategory(7,"lookandfeel", 14037);
-  AddString(1, "lookandfeel.skin",166,"Project Mayhem III", SPIN_CONTROL_TEXT);
+  AddString(1, "lookandfeel.skin",166,"MediaStream", SPIN_CONTROL_TEXT);
   AddString(2, "lookandfeel.skintheme",15111,"SKINDEFAULT", SPIN_CONTROL_TEXT);
   AddString(3, "lookandfeel.skincolors",14078, "SKINDEFAULT", SPIN_CONTROL_TEXT);
   AddString(4, "lookandfeel.font",13303,"Default", SPIN_CONTROL_TEXT);
@@ -632,10 +634,11 @@ CGUISettings::CGUISettings(void)
   AddBool(9,"lookandfeel.soundsduringplayback",21370,false);
   AddSeparator(10, "lookandfeel.sep2");
   AddBool(11, "lookandfeel.enablerssfeeds",13305,  true);
-  AddBool(12, "lookandfeel.enablemouse", 21369, true);
+  AddBool(11, "lookandfeel.rssfeedsrtl",13412,  false);
+  AddBool(12, "lookandfeel.enablemouse", 21369, false);
 
   AddCategory(7, "locale", 20026);
-  AddString(1, "locale.country", 20026, "", SPIN_CONTROL_TEXT);
+  AddString(1, "locale.country", 20026, "USA", SPIN_CONTROL_TEXT);
   AddString(2, "locale.language",248,"english", SPIN_CONTROL_TEXT);
   AddString(3, "locale.charset",735,"DEFAULT", SPIN_CONTROL_TEXT); // charset is set by the language file
   AddSeparator(4, "locale.sep1");
@@ -653,8 +656,8 @@ CGUISettings::CGUISettings(void)
 #endif
 #ifndef __APPLE__
   AddSeparator(9, "locale.sep2");
-  AddBool(10,   "locale.timeserver"       , 168  , false);
-  AddString(11, "locale.timeserveraddress"      , 731  , "pool.ntp.org", BUTTON_CONTROL_INPUT);
+  AddBool(10, "locale.timeserver", 168, false);
+  AddString(11, "locale.timeserveraddress", 731, "pool.ntp.org", EDIT_CONTROL_INPUT);
 #endif
 
   AddCategory(7, "videoscreen", 131);
@@ -666,10 +669,8 @@ CGUISettings::CGUISettings(void)
 #endif
 
   AddString(3, "videoscreen.guicalibration",214,"", BUTTON_CONTROL_STANDARD);
-#ifdef HAS_XBOX_HARDWARE
-  AddInt(4, "videoscreen.flickerfilter", 13100, 5, 0, 1, 5, SPIN_CONTROL_INT_PLUS, -1, TEXT_OFF);
-  AddBool(5, "videoscreen.soften", 215, false);
-#endif
+  AddString(4, "videoscreen.testpattern",226,"", BUTTON_CONTROL_STANDARD);
+
 #ifdef __APPLE__
   // Default to vsync always on!
   AddInt(6, "videoscreen.vsync", 13105, 2, 0, 1, 3, SPIN_CONTROL_TEXT);

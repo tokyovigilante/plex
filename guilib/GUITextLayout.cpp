@@ -19,6 +19,7 @@
  *
  */
 
+
 #include "include.h"
 #include "GUITextLayout.h"
 #include "GUIFont.h"
@@ -28,6 +29,8 @@
 #include "StringUtils.h"
 
 using namespace std;
+
+#define WORK_AROUND_NEEDED_FOR_LINE_BREAKS
 
 CGUIString::CGUIString(iString start, iString end, bool carriageReturn)
 {
@@ -172,6 +175,20 @@ bool CGUITextLayout::Update(const CStdString &text, float maxWidth)
   if (text == m_lastText)
     return false;
 
+  // convert to utf16
+  CStdStringW utf16;
+  utf8ToW(text, utf16);
+
+  // update
+  SetText(utf16, maxWidth);
+
+  // and set our parameters to indicate no further update is required
+  m_lastText = text;
+  return true;
+}
+
+void CGUITextLayout::SetText(const CStdStringW &text, float maxWidth)
+{
   vector<DWORD> parsedText;
 
   // empty out our previous string
@@ -182,29 +199,45 @@ bool CGUITextLayout::Update(const CStdString &text, float maxWidth)
   // parse the text into our string objects
   ParseText(text, parsedText);
 
+  // add \n to the end of the string
+  parsedText.push_back(L'\n');
+
   // if we need to wrap the text, then do so
   if (m_wrap && maxWidth > 0)
     WrapText(parsedText, maxWidth);
   else
-    LineBreakText(parsedText);
-
-  // and set our parameters to indicate no further update is required
-  m_lastText = text;
-  return true;
+    LineBreakText(parsedText, m_lines);
 }
 
-void CGUITextLayout::ParseText(const CStdString &text, vector<DWORD> &parsedText)
+void CGUITextLayout::Filter(CStdString &text)
+{
+  CStdStringW utf16;
+  utf8ToW(text, utf16);
+  vector<DWORD> colors;
+  vector<DWORD> parsedText;
+  ParseText(utf16, 0, colors, parsedText);
+  utf16.Empty();
+  for (unsigned int i = 0; i < parsedText.size(); i++)
+    utf16 += (WCHAR)(0xffff & parsedText[i]);
+  g_charsetConverter.wToUTF8(utf16, text);
+}
+
+void CGUITextLayout::ParseText(const CStdStringW &text, vector<DWORD> &parsedText)
 {
   if (!m_font)
     return;
+  ParseText(text, m_font->GetStyle(), m_colors, parsedText);
+}
 
+void CGUITextLayout::ParseText(const CStdStringW &text, DWORD defaultStyle, vector<DWORD> &colors, vector<DWORD> &parsedText)
+{
   // run through the string, searching for:
   // [B] or [/B] -> toggle bold on and off
   // [I] or [/I] -> toggle italics on and off
   // [COLOR ffab007f] or [/COLOR] -> toggle color on and off
   // [CAPS <option>] or [/CAPS] -> toggle capatilization on and off
 
-  DWORD currentStyle = m_font->GetStyle(); // start with the default font's style
+  DWORD currentStyle = defaultStyle; // start with the default font's style
   DWORD currentColor = 0;
 
   stack<DWORD> colorStack;
@@ -217,7 +250,7 @@ void CGUITextLayout::ParseText(const CStdString &text, vector<DWORD> &parsedText
 #define FONT_STYLE_LOWERCASE 8
 
   int startPos = 0;
-  size_t pos = text.Find('[');
+  size_t pos = text.Find(L'[');
   while (pos != CStdString::npos && pos + 1 < text.size())
   {
     DWORD newStyle = 0;
@@ -226,44 +259,44 @@ void CGUITextLayout::ParseText(const CStdString &text, vector<DWORD> &parsedText
     // have a [ - check if it's an ON or OFF switch
     bool on(true);
     int endPos = pos++; // finish of string
-    if (text[pos] == '/')
+    if (text[pos] == L'/')
     {
       on = false;
       pos++;
     }
     // check for each type
-    if (text.Mid(pos,2) == "B]")
+    if (text.Mid(pos,2) == L"B]")
     { // bold - finish the current text block and assign the bold state
       newStyle = FONT_STYLE_BOLD;
       pos += 2;
     }
-    else if (text.Mid(pos,2) == "I]")
+    else if (text.Mid(pos,2) == L"I]")
     { // italics
       newStyle = FONT_STYLE_ITALICS;
       pos += 2;
     }
-    else if (text.Mid(pos,10) == "UPPERCASE]")
+    else if (text.Mid(pos,10) == L"UPPERCASE]")
     {
       newStyle = FONT_STYLE_UPPERCASE;
       pos += 10;
     }
-    else if (text.Mid(pos,10) == "LOWERCASE]")
+    else if (text.Mid(pos,10) == L"LOWERCASE]")
     {
       newStyle = FONT_STYLE_LOWERCASE;
       pos += 10;
     }
-    else if (text.Mid(pos,3) == "CR]" && on)
+    else if (text.Mid(pos,3) == L"CR]" && on)
     {
       newLine = true;
       pos += 3;
     }
-    else if (text.Mid(pos,5) == "COLOR")
+    else if (text.Mid(pos,5) == L"COLOR")
     { // color
-      size_t finish = text.Find("]", pos + 5);
+      size_t finish = text.Find(L']', pos + 5);
       if (on && finish != CStdString::npos)
       { // create new color
-        newColor = m_colors.size();
-        m_colors.push_back(g_colorManager.GetColor(text.Mid(pos + 5, finish - pos - 5)));
+        newColor = colors.size();
+        colors.push_back(g_colorManager.GetColor(text.Mid(pos + 5, finish - pos - 5)));
         colorStack.push(newColor);
       }
       else if (!on && finish == pos + 5)
@@ -277,7 +310,7 @@ void CGUITextLayout::ParseText(const CStdString &text, vector<DWORD> &parsedText
 
     if (newStyle || newColor != currentColor || newLine)
     { // we have a new style or a new color, so format up the previous segment
-      CStdString subText = text.Mid(startPos, endPos - startPos);
+      CStdStringW subText = text.Mid(startPos, endPos - startPos);
       if (currentStyle & FONT_STYLE_UPPERCASE)
         subText.ToUpper();
       if (currentStyle & FONT_STYLE_LOWERCASE)
@@ -294,10 +327,10 @@ void CGUITextLayout::ParseText(const CStdString &text, vector<DWORD> &parsedText
       else
         currentStyle &= ~newStyle;
     }
-    pos = text.Find('[',pos);
+    pos = text.Find(L'[',pos);
   }
   // now grab the remainder of the string
-  CStdString subText = text.Mid(startPos, text.GetLength() - startPos);
+  CStdStringW subText = text.Mid(startPos, text.GetLength() - startPos);
   if (currentStyle & FONT_STYLE_UPPERCASE)
     subText.ToUpper();
   if (currentStyle & FONT_STYLE_LOWERCASE)
@@ -310,7 +343,7 @@ void CGUITextLayout::SetMaxHeight(float fHeight)
   m_maxHeight = fHeight;
 }
 
-void CGUITextLayout::WrapText(vector<DWORD> &text, float maxWidth)
+void CGUITextLayout::WrapText(const vector<DWORD> &text, float maxWidth)
 {
   if (!m_font)
     return;
@@ -318,93 +351,86 @@ void CGUITextLayout::WrapText(vector<DWORD> &text, float maxWidth)
   int nMaxLines = (m_maxHeight > 0 && m_font->GetLineHeight() > 0)?(int)(m_maxHeight / m_font->GetLineHeight()):-1;
 
   m_lines.clear();
-  // add \n to the end of the string
-  text.push_back(L'\n');
-  vector<DWORD> line;
-  unsigned int lastSpaceInLine = 0;
-  vector<DWORD>::iterator lastSpace = text.begin();
-  vector<DWORD>::iterator pos = text.begin();
-  while (pos != text.end() && (nMaxLines <= 0 || m_lines.size() <= (size_t)nMaxLines))
+
+  vector<CGUIString> lines;
+  LineBreakText(text, lines);
+
+  for (unsigned int i = 0; i < lines.size(); i++)
+  {
+    const CGUIString &line = lines[i];
+    vector<DWORD>::const_iterator lastSpace = line.m_text.begin();
+    vector<DWORD>::const_iterator pos = line.m_text.begin();
+    unsigned int lastSpaceInLine = 0;
+    vector<DWORD> curLine;
+    while (pos != line.m_text.end() && (nMaxLines <= 0 || m_lines.size() <= (size_t)nMaxLines))
+    {
+      // Get the current letter in the string
+      DWORD letter = *pos;
+      // check for a space
+      if ((letter & 0xffff) == L' ')
+      {
+        float width = m_font->GetTextWidth(curLine);
+        if (width > maxWidth)
+        {
+          if (lastSpace != line.m_text.begin() && lastSpaceInLine > 0)
+          {
+            CGUIString string(curLine.begin(), curLine.begin() + lastSpaceInLine, false);
+            m_lines.push_back(string);
+            pos = ++lastSpace;
+            curLine.clear();
+            lastSpaceInLine = 0;
+            lastSpace = line.m_text.begin();
+            continue;
+          }
+        }
+        // only add spaces if we're not empty
+        if (curLine.size())
+        {
+          lastSpace = pos;
+          lastSpaceInLine = curLine.size();
+          curLine.push_back(letter);
+        }
+      }
+      else
+        curLine.push_back(letter);
+      pos++;
+    }
+    // now add whatever we have left to the string
+    float width = m_font->GetTextWidth(curLine);
+    if (width > maxWidth)
+    {
+      // too long - put up to the last space on if we can + remove it from what's left.
+      if (lastSpace != line.m_text.begin() && lastSpaceInLine > 0)
+      {
+        CGUIString string(curLine.begin(), curLine.begin() + lastSpaceInLine, false);
+        m_lines.push_back(string);
+        curLine.erase(curLine.begin(), curLine.begin() + lastSpaceInLine);
+        while (curLine.size() && (curLine.at(0) & 0xffff) == L' ')
+          curLine.erase(curLine.begin());
+      }
+    }
+    CGUIString string(curLine.begin(), curLine.end(), true);
+    m_lines.push_back(string);
+  }
+}
+
+void CGUITextLayout::LineBreakText(const vector<DWORD> &text, vector<CGUIString> &lines)
+{
+  vector<DWORD>::const_iterator lineStart = text.begin();
+  vector<DWORD>::const_iterator pos = text.begin();
+  while (pos != text.end())
   {
     // Get the current letter in the string
     DWORD letter = *pos;
 
     // Handle the newline character
     if ((letter & 0xffff) == L'\n' )
-    {
-      float width = m_font->GetTextWidth(line);
-      if (width > maxWidth && lastSpaceInLine > 0)
-      {
-        CGUIString string(line.begin(), line.begin() + lastSpaceInLine, false);
-        m_lines.push_back(string);
-        lastSpaceInLine++;
-        if (lastSpaceInLine < line.size())
-        {
-          CGUIString string(line.begin() + lastSpaceInLine, line.end(), true);
-          m_lines.push_back(string);
-        }
-      }
-      else
-      {
-        CGUIString string(line.begin(), line.end(), true);
-        m_lines.push_back(string);
-      }
-      line.clear();
-      lastSpaceInLine = 0;
-      lastSpace = text.begin();
-    }
-    else
-    {
-      if ((letter & 0xffff) == L' ')
-      {
-        float width = m_font->GetTextWidth(line);
-        if (width > maxWidth)
-        {
-          if (lastSpace != text.begin() && lastSpaceInLine > 0)
-          {
-            CGUIString string(line.begin(), line.begin() + lastSpaceInLine, false);
-            m_lines.push_back(string);
-            pos = ++lastSpace;
-            line.clear();
-            lastSpaceInLine = 0;
-            lastSpace = text.begin();
-            continue;
-          }
-        }
-        // only add spaces if we're not empty
-        if (line.size())
-        {
-          lastSpace = pos;
-          lastSpaceInLine = line.size();
-          line.push_back(letter);
-        }
-      }
-      else
-        line.push_back(letter);
+    { // push back everything up till now
+      CGUIString string(lineStart, pos, true);
+      lines.push_back(string);
+      lineStart = pos + 1;
     }
     pos++;
-  }
-}
-
-void CGUITextLayout::LineBreakText(vector<DWORD> &text)
-{
-  text.push_back(L'\n');
-  vector<DWORD> line;
-  vector<DWORD>::iterator pos = text.begin();
-  while (pos != text.end())
-  {
-    // Get the current letter in the string
-    DWORD letter = *pos++;
-
-    // Handle the newline character
-    if ((letter & 0xffff) == L'\n' )
-    { // push back everything up till now
-      CGUIString string(line.begin(), line.end(), false);
-      m_lines.push_back(string);
-      line.clear();
-    }
-    else
-      line.push_back(letter);
   }
 }
 
@@ -422,6 +448,13 @@ void CGUITextLayout::GetTextExtent(float &width, float &height)
   height = m_font->GetTextHeight(m_lines.size());
 }
 
+float CGUITextLayout::GetTextWidth()
+{
+  float width, height;
+  GetTextExtent(width, height);
+  return width;
+}
+
 unsigned int CGUITextLayout::GetTextLength() const
 {
   unsigned int length = 0;
@@ -435,6 +468,15 @@ void CGUITextLayout::GetFirstText(vector<DWORD> &text) const
   text.clear();
   if (m_lines.size())
     text = m_lines[0].m_text;
+}
+
+float CGUITextLayout::GetTextWidth(const CStdStringW &text) const
+{
+  // NOTE: Assumes a single line of text
+  if (!m_font) return 0;
+  vector<DWORD> utf32;
+  AppendToUTF32(text, (m_font->GetStyle() & 3) << 24, utf32);
+  return m_font->GetTextWidth(utf32);
 }
 
 void CGUITextLayout::DrawText(CGUIFont *font, float x, float y, DWORD color, DWORD shadowColor, const CStdString &text, DWORD align)
@@ -471,35 +513,41 @@ void CGUITextLayout::DrawOutlineText(CGUIFont *font, float x, float y, const vec
   font->DrawText(x, y, colors, 0, text, align, maxWidth);
 }
 
-void CGUITextLayout::AppendToUTF32(const CStdString &text, DWORD colStyle, vector<DWORD> &utf32)
+void CGUITextLayout::AppendToUTF32(const CStdStringW &utf16, DWORD colStyle, vector<DWORD> &utf32)
 {
-  // convert text to utf32
+  // NOTE: Assumes a single line of text
+  utf32.reserve(utf32.size() + utf16.size());
+  for (unsigned int i = 0; i < utf16.size(); i++)
+    utf32.push_back(utf16[i] | colStyle);
+}
+
+void CGUITextLayout::utf8ToW(const CStdString &utf8, CStdStringW &utf16)
+{
 #ifdef WORK_AROUND_NEEDED_FOR_LINE_BREAKS
   // NOTE: This appears to strip \n characters from text.  This may be a consequence of incorrect
   //       expression of the \n in utf8 (we just use character code 10) or it might be something
   //       more sinister.  For now, we use the workaround below.
-  CStdStringW utf16;
-  g_charsetConverter.utf8ToUTF16(text, utf16);
-  utf16.Replace(L"\r", L"");
-  utf32.reserve(utf32.size() + utf16.size());
-  for (unsigned int i = 0; i < utf16.size(); i++)
-    utf32.push_back(utf16[i] | colStyle);
-#else
-  // workaround - break into \n separated, and re-assemble
   CStdStringArray multiLines;
-  StringUtils::SplitString(text, "\n", multiLines);
+  StringUtils::SplitString(utf8, "\n", multiLines);
   for (unsigned int i = 0; i < multiLines.size(); i++)
   {
-    CStdStringW utf16;
-    g_charsetConverter.utf8ToW(multiLines[i], utf16);
-    utf16.Replace(L"\r", L"");  // filter out '\r'
-    utf32.reserve(utf32.size() + utf16.size() + 1);
-    for (unsigned int j = 0; j < utf16.size(); j++)
-      utf32.push_back(utf16[j] | colStyle);
+    CStdStringW line;
+    g_charsetConverter.utf8ToW(multiLines[i], line);
+    line.Replace(L"\r", L"");  // filter out '\r'
+    utf16 += line;
     if (i < multiLines.size() - 1)
-      utf32.push_back(L'\n');
+      utf16.push_back(L'\n');
   }
+#else
+  g_charsetConverter.utf8ToW(utf8, utf16);
 #endif
+}
+
+void CGUITextLayout::AppendToUTF32(const CStdString &utf8, DWORD colStyle, vector<DWORD> &utf32)
+{
+  CStdStringW utf16;
+  utf8ToW(utf8, utf16);
+  AppendToUTF32(utf16, colStyle, utf32);
 }
 
 void CGUITextLayout::Reset()
@@ -507,4 +555,3 @@ void CGUITextLayout::Reset()
   m_lines.clear();
   m_lastText.Empty();
 }
-

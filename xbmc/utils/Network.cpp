@@ -23,6 +23,7 @@
 #include "Network.h"
 #include "../Application.h"
 #include "../lib/libscrobbler/scrobbler.h"
+#include "RssReader.h"
 
 CNetwork::CNetwork()
 {
@@ -121,6 +122,7 @@ void CNetwork::NetworkMessage(EMESSAGE message, DWORD dwParam)
       g_application.StartEventServer();
 #endif
       CScrobbler::GetInstance()->Init();
+      g_rssManager.Start();
     }
     break;
     case SERVICES_DOWN:
@@ -135,10 +137,7 @@ void CNetwork::NetworkMessage(EMESSAGE message, DWORD dwParam)
 #ifdef HAS_FTP_SERVER
       g_application.StopFtpServer();
 #endif
-#ifdef HAS_KAI
-      g_application.StopKai();
-#endif
-#ifndef HAS_UPNP
+#ifdef HAS_UPNP
       g_application.StopUPnP();
 #endif
 #ifdef HAS_EVENT_SERVER
@@ -146,6 +145,8 @@ void CNetwork::NetworkMessage(EMESSAGE message, DWORD dwParam)
 #endif
       CScrobbler::GetInstance()->Term();
       // smb.Deinit(); if any file is open over samba this will break.
+
+      g_rssManager.Stop();
     }
     break;
   }

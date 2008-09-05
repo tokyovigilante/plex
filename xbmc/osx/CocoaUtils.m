@@ -22,8 +22,7 @@
 #import "XBMCMain.h" 
 #include <SDL/SDL.h>
 
-#import <libSmartCrashReports/SmartCrashReportsInstall.h>
-#import <libSmartCrashReports/SmartCrashReportsAPI.h>
+extern int GetProcessPid(const char* processName);
 
 #define MAX_DISPLAYS 32
 static NSWindow* blankingWindows[MAX_DISPLAYS];
@@ -39,19 +38,20 @@ void Cocoa_Initialize(void* pApplication)
     blankingWindows[i] = 0;
 }
 
+void Cocoa_DisplayError(const char* strError)
+{
+  NSAlert *alert = [NSAlert alertWithMessageText:@"Fatal Error"
+                    defaultButton:@"OK" alternateButton:nil otherButton:nil
+                    informativeTextWithFormat:[NSString stringWithUTF8String:strError]];
+                    
+  [alert runModal];
+  [alert release];
+}
+
 void InstallCrashReporter() 
 {
-  Boolean authenticationWillBeRequired = FALSE;
-  if (UnsanitySCR_CanInstall(&authenticationWillBeRequired))
-  {
-    // Always do global install for Leopard.
-    printf("Attempting to install Smart Crash Reporter.\n");
-    UnsanitySCR_Install(kUnsanitySCR_GlobalInstall);
-  }
-  else
-  {
-    printf("Cannot install Smart Crash Reporter.\n");
-  }
+  if (access("/Library/InputManagers/Smart Crash Reports/Smart Crash Reports.bundle", R_OK) != 0)
+    system([[[NSBundle mainBundle] pathForAuxiliaryExecutable:@"CrashReporter"] UTF8String]);
 }
 
 void* InitializeAutoReleasePool()
@@ -119,12 +119,12 @@ void Cocoa_GL_SwapBuffers(void* theContext)
 
 int Cocoa_GetNumDisplays()
 {
-	CGDirectDisplayID displayArray[MAX_DISPLAYS];
-	CGDisplayCount    numDisplays;
-  
-	// Get the list of displays.
-	CGGetActiveDisplayList(MAX_DISPLAYS, displayArray, &numDisplays);
-	return numDisplays;
+  CGDirectDisplayID displayArray[MAX_DISPLAYS];
+  CGDisplayCount    numDisplays;
+
+  // Get the list of displays.
+  CGGetActiveDisplayList(MAX_DISPLAYS, displayArray, &numDisplays);
+  return numDisplays;
 }
 
 int Cocoa_GetDisplay(int screen)
@@ -523,6 +523,7 @@ void* Cocoa_GL_GetWindowPixelFormat()
     NSOpenGLPFAWindow,
     NSOpenGLPFANoRecovery,
     NSOpenGLPFAAccelerated,
+    NSOpenGLPFADepthSize, 8,
     //NSOpenGLPFAColorSize, 32,
     //NSOpenGLPFAAlphaSize, 8,
     0
@@ -539,6 +540,7 @@ void* Cocoa_GL_GetFullScreenPixelFormat(int screen)
     NSOpenGLPFAFullScreen,
     NSOpenGLPFANoRecovery,
     NSOpenGLPFAAccelerated,
+    NSOpenGLPFADepthSize, 8,
     NSOpenGLPFAScreenMask,
     CGDisplayIDToOpenGLDisplayMask((CGDirectDisplayID)Cocoa_GetDisplay(screen)),
     0
@@ -607,16 +609,29 @@ void* Cocoa_GL_ReplaceSDLWindowContext()
 
 int Cocoa_DimDisplayNow()
 {
-	io_registry_entry_t r = IORegistryEntryFromPath(kIOMasterPortDefault, "IOService:/IOResources/IODisplayWrangler");
-	if(!r) return 1;
-	int err = IORegistryEntrySetCFProperty(r, CFSTR("IORequestIdle"), kCFBooleanTrue);
-	IOObjectRelease(r);
-	return err;
+  io_registry_entry_t r = IORegistryEntryFromPath(kIOMasterPortDefault, "IOService:/IOResources/IODisplayWrangler");
+  if(!r) return 1;
+  int err = IORegistryEntrySetCFProperty(r, CFSTR("IORequestIdle"), kCFBooleanTrue);
+  IOObjectRelease(r);
+  return err;
 }
 
 void Cocoa_UpdateSystemActivity()
 {
   UpdateSystemActivity(UsrActivity);   
+}
+
+void Cocoa_TurnOffScreenSaver()
+{
+  if (GetProcessPid("ScreenSaverEngin") != -1)
+  {
+    NSAppleScript* stopScript = [[NSAppleScript alloc] initWithSource:@"tell application \"/System/Library/Frameworks/ScreenSaver.framework/Versions/A/Resources/ScreenSaverEngine.app\" to quit"];
+    [stopScript executeAndReturnError:nil];
+  }
+  else
+  {
+    printf("Not running\n");
+  }
 }
                    
 int Cocoa_SleepSystem()
@@ -698,26 +713,9 @@ void Cocoa_GetSmartFolderResults(const char* strFile, void (*CallbackFunc)(void*
   CFRelease(doc);
 }
 
-static char strVersion[32];
-
 const char* Cocoa_GetAppVersion()
 {
-  // Get the main bundle for the app and return the version.
-  CFBundleRef mainBundle = CFBundleGetMainBundle();
-  CFStringRef versStr = (CFStringRef)CFBundleGetValueForInfoDictionaryKey(mainBundle, kCFBundleVersionKey);
-  
-  strVersion[0] = '\0';
-  
-  if (versStr != NULL && CFGetTypeID(versStr) == CFStringGetTypeID())
-  {
-  	const char* vers = CFStringGetCStringPtr(versStr, kCFStringEncodingMacRoman);
-    if (vers != 0)
-      strcpy(strVersion, vers);
-    else
-      printf("Error converting version string\n");
-  }
-  
-  return strVersion;
+  return [(NSString*)[[NSBundle mainBundle] objectForInfoDictionaryKey:(id)kCFBundleVersionKey] UTF8String];
 }
 
 void* Cocoa_GetDisplayPort()

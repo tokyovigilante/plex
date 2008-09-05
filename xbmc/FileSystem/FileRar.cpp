@@ -18,7 +18,7 @@
  *  http://www.gnu.org/copyleft/gpl.html
  *
  */
-#undef SILENT
+
 #include "stdafx.h"
 #include "FileRar.h"
 #include <sys/stat.h>
@@ -97,25 +97,26 @@ void CFileRarExtractThread::OnExit()
 void CFileRarExtractThread::Process()
 {
   while (WaitForSingleObject(hQuit,1) != WAIT_OBJECT_0)
+  {
     if (WaitForSingleObject(hRestart,1) == WAIT_OBJECT_0)
     {
       bool Repeat = false;
       m_pExtract->ExtractCurrentFile(m_pCmd,*m_pArc,m_iSize,Repeat);
       ResetEvent(hRunning);
     }
-
+  }
   SetEvent(hRestart);
 }
 #endif
 
 CFileRar::CFileRar()
 {
-	m_strCacheDir.Empty();
-	m_strRarPath.Empty();
-	m_strPassword.Empty();
-	m_strPathInRar.Empty();
-	m_bRarOptions = 0;
-	m_bFileOptions = 0;
+  m_strCacheDir.Empty();
+  m_strRarPath.Empty();
+  m_strPassword.Empty();
+  m_strPathInRar.Empty();
+  m_bRarOptions = 0;
+  m_bFileOptions = 0;
 #ifdef HAS_RAR
   m_pArc = NULL;
   m_pCmd = NULL;
@@ -133,7 +134,7 @@ CFileRar::CFileRar()
 //*********************************************************************************************
 CFileRar::~CFileRar()
 {
-#ifdef HAS_RAR	
+#ifdef HAS_RAR  
   if (!m_bOpen)
     return;
   
@@ -170,6 +171,7 @@ bool CFileRar::Open(const CURL& url, bool bBinary)
   }
 
   if (i<items.Size())
+  {
     if (items[i]->m_idepth == 0x30) // stored
     {
       if (!OpenInArchive())
@@ -181,6 +183,7 @@ bool CFileRar::Open(const CURL& url, bool bBinary)
       // perform 'noidx' check
       CFileInfo* pFile = g_RarManager.GetFileInRar(m_strRarPath,m_strPathInRar);
       if (pFile)
+      {
         if (pFile->m_iIsSeekable == -1)
         {
           if (Seek(-1,SEEK_END) == -1)
@@ -190,51 +193,45 @@ bool CFileRar::Open(const CURL& url, bool bBinary)
           }
         }
         else
-         m_bSeekable = (pFile->m_iIsSeekable == 1);
-
-        return true;
+          m_bSeekable = (pFile->m_iIsSeekable == 1);
+      }
+      return true;
     }
     else 
     {
-#ifdef HAS_XBOX_HARDWARE
-      if (items[i]->m_dwSize > ((__int64)4)*1024*1024*1024) // 4 gig limit of fat-x
-      {
-        CGUIDialogOK::ShowAndGetInput(257,21395,-1,-1);
-        CLog::Log(LOGERROR,"CFileRar::Open: Can't cache files bigger than 4GB due to fat-x limits.");
-        return false;
-      }
-#endif
       m_bUseFile = true;
       CStdString strPathInCache;
       
-      if (!g_RarManager.CacheRarredFile(strPathInCache, m_strRarPath, m_strPathInRar, EXFILE_AUTODELETE | m_bFileOptions, m_strCacheDir, items[i]->m_dwSize))
+      if (!g_RarManager.CacheRarredFile(strPathInCache, m_strRarPath, m_strPathInRar, 
+                                        EXFILE_AUTODELETE | m_bFileOptions, m_strCacheDir, 
+                                        items[i]->m_dwSize))
       {
-      	CLog::Log(LOGERROR,"filerar::open failed to cache file %s",m_strPathInRar.c_str());
+        CLog::Log(LOGERROR,"filerar::open failed to cache file %s",m_strPathInRar.c_str());
         return false;
       }
       
       if (!m_File.Open( strPathInCache, bBinary)) 
       {
-		CLog::Log(LOGERROR,"filerar::open failed to open file in cache: %s",strPathInCache.c_str());
+        CLog::Log(LOGERROR,"filerar::open failed to open file in cache: %s",strPathInCache.c_str());
         return false;
       }
       
       m_bOpen = true;
       return true;
     }
-
+  }
   return false;
 }
 
 bool CFileRar::Exists(const CURL& url)
 {
-	InitFromUrl(url);
-	CStdString strPathInCache;
-	bool bResult;
-	
+  InitFromUrl(url);
+  CStdString strPathInCache;
+  bool bResult;
+  
   if (!g_RarManager.IsFileInRar(bResult, m_strRarPath, m_strPathInRar)) 
     return false;
-	
+  
   return bResult;
 }
 //*********************************************************************************************
@@ -434,7 +431,8 @@ __int64 CFileRar::Seek(__int64 iFilePosition, int iWhence)
   if (iFilePosition == m_iFilePosition) // happens a lot
     return m_iFilePosition; 
   
-  if ((iFilePosition >= m_iBufferStart) && (iFilePosition < m_iBufferStart+MAXWINMEMSIZE) && (m_iDataInBuffer > 0)) // we are within current buffer
+  if ((iFilePosition >= m_iBufferStart) && (iFilePosition < m_iBufferStart+MAXWINMEMSIZE) 
+                                        && (m_iDataInBuffer > 0)) // we are within current buffer
   {
     m_iDataInBuffer = MAXWINMEMSIZE-(iFilePosition-m_iBufferStart);
     m_szStartOfBuffer = m_szBuffer+MAXWINMEMSIZE-m_iDataInBuffer;
@@ -509,7 +507,7 @@ __int64 CFileRar::GetPosition()
   if (!m_bOpen)
     return -1;
 
-	if (m_bUseFile)
+  if (m_bUseFile)
     return m_File.GetPosition();
 
   return m_iFilePosition;
@@ -522,7 +520,7 @@ int CFileRar::Write(const void* lpBuf, __int64 uiBufSize)
 
 void CFileRar::Flush()
 {
-	if (m_bUseFile)
+  if (m_bUseFile)
     m_File.Flush();
 }
 void CFileRar::InitFromUrl(const CURL& url)
@@ -531,15 +529,15 @@ void CFileRar::InitFromUrl(const CURL& url)
   m_strCacheDir = g_advancedSettings.m_cachePath;//url.GetDomain();
   if (!CUtil::HasSlashAtEnd(m_strCacheDir))
     m_strCacheDir += "/"; // should work local and remote..
-	m_strRarPath = url.GetHostName();
-	m_strPassword = url.GetUserName();
-	m_strPathInRar = url.GetFileName();  
+  m_strRarPath = url.GetHostName();
+  m_strPassword = url.GetUserName();
+  m_strPathInRar = url.GetFileName();  
 
   std::vector<CStdString> options;
   CUtil::Tokenize(url.GetOptions().Mid(1), options, "&");
   
-	m_bFileOptions = 0;
-	m_bRarOptions = 0;
+  m_bFileOptions = 0;
+  m_bRarOptions = 0;
 
   for( std::vector<CStdString>::iterator it = options.begin();it != options.end(); it++)
   {
@@ -676,7 +674,9 @@ bool CFileRar::OpenInArchive()
       bRes = true;
       break;
     }
-    if (!m_pExtract->ExtractCurrentFile(m_pCmd,*m_pArc,m_iSize,Repeat)) // this does NO extraction, only skips and handles solid volumes
+    
+    // this does NO extraction, only skips and handles solid volumes
+    if (!m_pExtract->ExtractCurrentFile(m_pCmd,*m_pArc,m_iSize,Repeat)) 
     {
       bRes = FALSE;
       break;

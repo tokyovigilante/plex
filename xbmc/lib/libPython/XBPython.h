@@ -27,14 +27,14 @@
 
 #include <vector>
 
+class LibraryLoader;
+
 typedef struct {
   int id;
   bool bDone;
   std::string strFile;
   XBPyThread *pyThread;
 }PyElem;
-
-class LibraryLoader;
 
 typedef std::vector<PyElem> PyList;
 typedef std::vector<PVOID> PlayerCallbackList;

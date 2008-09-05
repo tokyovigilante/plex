@@ -124,7 +124,7 @@ PyAPI_FUNC(void) _PyObject_DebugMallocStats(void);
 #else	/* ! WITH_PYMALLOC */
 #define PyObject_MALLOC		PyMem_MALLOC
 #define PyObject_REALLOC	PyMem_REALLOC
-/* This is an odd one!  For backward compatability with old extensions, the
+/* This is an odd one!  For backward compatibility with old extensions, the
    PyMem "release memory" functions have to invoke the object allocator's
    free() function.  When pymalloc isn't enabled, that leaves us using
    the platform free(). */
@@ -229,7 +229,7 @@ PyAPI_FUNC(PyVarObject *) _PyObject_NewVar(PyTypeObject *, int);
  */
 
 /* C equivalent of gc.collect(). */
-long PyGC_Collect(void);
+PyAPI_FUNC(long) PyGC_Collect(void);
 
 /* Test if a type has a GC head */
 #define PyType_IS_GC(t) PyType_HasFeature((t), Py_TPFLAGS_HAVE_GC)

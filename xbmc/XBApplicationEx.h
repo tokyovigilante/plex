@@ -21,7 +21,7 @@
 //#include "common/SDLMouse.h"
 //#include "common/SDLKeyboard.h"
 #ifdef HAS_SDL_JOYSTICK
-#include "common/SDLJoystick.h"
+//#include "common/SDLJoystick.h"
 #endif
 #else
 //#include "common/DirectInputKeyboard.h"

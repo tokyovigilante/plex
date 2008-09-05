@@ -59,14 +59,14 @@ bool CDirectory::GetDirectory(const CStdString& strPath, CFileItemList &items, C
     {
       //  Should any of the files we read be treated as a directory?
       //  Disable for musicdatabase, it already contains the extracted items
-      if (bUseFileDirectories && !items.IsMusicDb() && !items.IsVideoDb())
+      if (bUseFileDirectories && !items.IsMusicDb() && !items.IsVideoDb() && !items.IsSmartPlayList())
       {
         for (int i=0; i< items.Size(); ++i)
         {
-          CFileItem* pItem=items[i];
+          CFileItemPtr pItem=items[i];
           if ((!pItem->m_bIsFolder) && (!pItem->IsInternetStream()))
           {
-            auto_ptr<IFileDirectory> pDirectory(CFactoryFileDirectory::Create(pItem->m_strPath,pItem,strMask));
+            auto_ptr<IFileDirectory> pDirectory(CFactoryFileDirectory::Create(pItem->m_strPath,pItem.get(),strMask));
             if (pDirectory.get())
               pItem->m_bIsFolder = true;
             else

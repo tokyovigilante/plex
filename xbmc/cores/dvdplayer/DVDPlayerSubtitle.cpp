@@ -198,13 +198,14 @@ void CDVDPlayerSubtitle::Process(double pts)
 {
   if(pts == DVD_NOPTS_VALUE)
     return;
-  if(!AcceptsData())
-    return;
 
   // Clear the container if we're moving backwards in time.
   if (pts < m_lastPts)
     m_pOverlayContainer->Clear();
-  
+
+  if(!AcceptsData())
+    return;
+
   if (m_pSubtitleFileParser)
   {
     CDVDOverlay* pOverlay = m_pSubtitleFileParser->Parse(pts);

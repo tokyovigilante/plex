@@ -68,6 +68,7 @@ CGraphicContext::CGraphicContext(void)
   m_pd3dParams = NULL;
   m_stateBlock = 0xffffffff;
 #endif
+  m_maxTextureSize = 4096;
   m_dwID = 0;
   m_strMediaDir = "D:\\media";
   m_bCalibrating = false;
@@ -320,6 +321,7 @@ bool CGraphicContext::SetViewPort(float fx, float fy , float fwidth, float fheig
   newviewport[2] = newRight - newLeft;
   newviewport[3] = newBottom - newTop;
   glScissor(newviewport[0], newviewport[1], newviewport[2], newviewport[3]);
+  glViewport(newviewport[0], newviewport[1], newviewport[2], newviewport[3]);
   VerifyGLState();
 #endif
 
@@ -342,6 +344,7 @@ void CGraphicContext::RestoreViewPort()
   GLVALIDATE;
   GLint* oldviewport = (GLint*)m_viewStack.top();
   glScissor(oldviewport[0], oldviewport[1], oldviewport[2], oldviewport[3]);
+  glViewport(oldviewport[0], oldviewport[1], oldviewport[2], oldviewport[3]);
   VerifyGLState();
 #endif
 
@@ -562,6 +565,7 @@ void CGraphicContext::SetVideoResolution(RESOLUTION &res, BOOL NeedZ, bool force
   if ((g_settings.m_ResInfo[m_Resolution].iWidth != g_settings.m_ResInfo[res].iWidth) || (g_settings.m_ResInfo[m_Resolution].iHeight != g_settings.m_ResInfo[res].iHeight))
   { // set the mouse resolution
     g_Mouse.SetResolution(g_settings.m_ResInfo[res].iWidth, g_settings.m_ResInfo[res].iHeight, 1, 1);
+    ResetOverscan(g_settings.m_ResInfo[res]);
   }
 
   SetFullScreenViewWindow(res);
@@ -569,7 +573,11 @@ void CGraphicContext::SetVideoResolution(RESOLUTION &res, BOOL NeedZ, bool force
 
   m_Resolution = res;
   if(NeedReset)
+  {
     CLog::Log(LOGDEBUG, "We set resolution %i", m_Resolution);
+    if (m_Resolution != INVALID)
+      g_fontManager.ReloadTTFFonts();
+  }
 
   Unlock();
 }
@@ -693,6 +701,10 @@ void CGraphicContext::SetVideoResolution(RESOLUTION &res, BOOL NeedZ, bool force
     {
       needsResize = false;
       SetFullScreenRoot(false);
+      
+      // Make sure screen saver is off.
+      Cocoa_UpdateSystemActivity();
+      Cocoa_TurnOffScreenSaver();
     }
     
     if (needsResize)
@@ -721,12 +733,13 @@ void CGraphicContext::SetVideoResolution(RESOLUTION &res, BOOL NeedZ, bool force
 
     glClearColor( 0.0f, 0.0f, 0.0f, 0.0f );
 
-    {
-      glViewport(0, 0, m_iScreenWidth, m_iScreenHeight);
-      glScissor(0, 0, m_iScreenWidth, m_iScreenHeight);
-    }
-    glEnable(GL_TEXTURE_2D);
-    glEnable(GL_SCISSOR_TEST);
+    glGetIntegerv(GL_MAX_TEXTURE_SIZE, &m_maxTextureSize);
+
+    glViewport(0, 0, m_iScreenWidth, m_iScreenHeight);
+    glScissor(0, 0, m_iScreenWidth, m_iScreenHeight);
+
+    glEnable(GL_TEXTURE_2D); 
+    glEnable(GL_SCISSOR_TEST); 
 
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
@@ -972,6 +985,20 @@ void CGraphicContext::CaptureStateBlock()
     // Creation failure
     m_stateBlock = 0xffffffff;
   }
+#endif  
+#ifdef HAS_SDL_OPENGL
+  glMatrixMode(GL_PROJECTION);
+  glPushMatrix();
+  glMatrixMode(GL_TEXTURE);
+  glPushMatrix();
+  glMatrixMode(GL_MODELVIEW);
+  glPushMatrix();
+  glDisable(GL_SCISSOR_TEST); // fixes FBO corruption on Macs
+  if (glActiveTextureARB)
+    glActiveTextureARB(GL_TEXTURE0_ARB);
+  glDisable(GL_TEXTURE_2D);
+  glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+  glColor3f(1.0, 1.0, 1.0);
 #endif
 }
 
@@ -982,6 +1009,20 @@ void CGraphicContext::ApplyStateBlock()
   {
     Get3DDevice()->ApplyStateBlock(m_stateBlock);
   }
+#endif
+#ifdef HAS_SDL_OPENGL
+  glMatrixMode(GL_PROJECTION);
+  glPopMatrix();
+  glMatrixMode(GL_TEXTURE);
+  glPopMatrix();
+  glMatrixMode(GL_MODELVIEW);
+  glPopMatrix();
+  if (glActiveTextureARB)
+    glActiveTextureARB(GL_TEXTURE0_ARB);
+  glEnable(GL_TEXTURE_2D);
+  glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+  glEnable(GL_BLEND);
+  glEnable(GL_SCISSOR_TEST);
 #endif
 }
 
@@ -1047,10 +1088,17 @@ void CGraphicContext::SetScalingResolution(RESOLUTION res, float posX, float pos
   while (m_cameras.size())
     m_cameras.pop();
   m_cameras.push(CPoint(0.5f*m_iScreenWidth, 0.5f*m_iScreenHeight));
-  UpdateCameraPosition(m_cameras.top());
 
   // and reset the final transform
   UpdateFinalTransform(m_guiTransform);
+  Unlock();
+}
+
+void CGraphicContext::SetRenderingResolution(RESOLUTION res, float posX, float posY, bool needsScaling)
+{
+  Lock();
+  SetScalingResolution(res, posX, posY, needsScaling);
+  UpdateCameraPosition(m_cameras.top());
   Unlock();
 }
 

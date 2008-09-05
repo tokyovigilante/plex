@@ -20,7 +20,7 @@
 #define _FFT_H_
 
 #define FFT_BUFFER_SIZE_LOG 10
-#define FFT_BUFFER_SIZE (1 << FFT_BUFFER_SIZE_LOG)
+#define FFT_BUFFER_SIZE (1 << FFT_BUFFER_SIZE_LOG) // 1024
 
 /* sound sample - should be an signed 16 bit value */
 typedef short int sound_sample;

@@ -134,23 +134,18 @@ void fft_perform(const sound_sample *input, float *output, fft_state *state)
   fft_output(state->real, state->imag, output);
 }
 
-static float min = 9999;
-static float max = -1;
-
-static float min2 = 9999;
-static float max2 = -1;
+#define FFT_MIN(a,b) (a<b) ? a : b
+#define SCALE_FACTOR 14000.0
 
 void fft_perform_stereo(const sound_sample* input, float* output, fft_state *state)
 {
-  const double yscale = 3.60673760222; // 20.0 / log(256).
-  
   // Demux data.
-  sound_sample channel[1024];
-  float        outChannel[512+1];
+  sound_sample channel[FFT_BUFFER_SIZE];
+  float        outChannel[FFT_BUFFER_SIZE/2+1];
   
   // Preprocess.
   int n=0;
-  for (int i=0; i<2048; i+=2, n++)
+  for (int i=0; i<FFT_BUFFER_SIZE*2; i+=2, n++)
     channel[n] = input[i];
   
   // Perform.
@@ -158,19 +153,12 @@ void fft_perform_stereo(const sound_sample* input, float* output, fft_state *sta
   
   // Postprocess.
   n = 0;
-  for(int j=0; j<1024; j+=2, n++)
-  {
-    output[j] = (((int)::sqrt(outChannel[n+1])) >> 8) * 256.0 / 36130.0;
-    
-    if (output[j] > max)
-      max = output[j];
-    if (output[j] < min)
-      min = output[j];
-  }
+  for(int j=0; j<FFT_BUFFER_SIZE; j+=2, n++)
+    output[j] = FFT_MIN(255.0, ::sqrt(outChannel[n])/SCALE_FACTOR);//*(((float)j/(float)(FFT_BUFFER_SIZE/2))+0.1));
   
   // Preprocess.
   n = 0;
-  for (int i=1; i<2048; i+=2, n++)
+  for (int i=1; i<FFT_BUFFER_SIZE*2; i+=2, n++)
     channel[n] = input[i];
   
   // Perform.
@@ -178,17 +166,8 @@ void fft_perform_stereo(const sound_sample* input, float* output, fft_state *sta
   
   // Postprocess.
   n = 0;
-  for(int j=1; j<1024; j+=2, n++)
-  {
-    output[j] = (((int)::sqrt(outChannel[n+1])) >> 8) * 256.0 / 36130.0;
-    
-    if (output[j] > max2)
-      max2 = output[j];
-    if (output[j] < min2)
-      min2 = output[j];
-  }
-  
-  //printf("Range: %f/%f  %f/%f\n", min, max, min2, max2);
+  for(int j=1; j<FFT_BUFFER_SIZE; j+=2, n++)
+    output[j] = FFT_MIN(255.0, ::sqrt(outChannel[n])/SCALE_FACTOR);//*(((float)j/(float)(FFT_BUFFER_SIZE/2))+0.1));
 }
 
 
@@ -252,6 +231,7 @@ static void fft_output(const float * re, const float * im, float *output)
     realptr++;
     imagptr++;
   }
+  
   /* Do divisions to keep the constant and highest frequency terms in scale
    * with the other terms. */
   *output /= 4;

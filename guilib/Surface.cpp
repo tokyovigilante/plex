@@ -767,6 +767,7 @@ bool CSurface::MakeCurrent()
     // a transition from windowed to full-screen took place).
     //
     m_pShared->MakeCurrent();
+    return true;
   }
   else if (m_glContext)
   {

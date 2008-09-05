@@ -47,11 +47,12 @@ class XBMCHelper
   static std::string ReadFile(const char* fileName);
   static void WriteFile(const char* fileName, const std::string& data);
 
+  static int GetProcessPid(const char* processName);
+  
  private:
 
   bool EnsureLatestHelperInstalled();
-
-  int GetProcessPid(const char* processName);
+  
   std::string GetInstalledHelperVersion();
 
   bool m_alwaysOn;

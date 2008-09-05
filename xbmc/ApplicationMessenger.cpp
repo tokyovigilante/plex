@@ -274,7 +274,11 @@ void CApplicationMessenger::ProcessMessage(ThreadMessage *pMsg)
     case TMSG_MEDIA_RESTART:
       g_application.Restart(true);
       break;
-
+		  
+    case TMSG_SLEEPSYSTEM:
+      g_application.SleepSystem();
+      break;
+		  
     case TMSG_PICTURE_SHOW:
       {
         CGUIWindowSlideShow *pSlideShow = (CGUIWindowSlideShow *)m_gWindowManager.GetWindow(WINDOW_SLIDESHOW);
@@ -306,7 +310,9 @@ void CApplicationMessenger::ProcessMessage(ThreadMessage *pMsg)
           if (items.Size() > 0)
           {
             for (int i=0;i<items.Size();++i)
-              pSlideShow->Add(items[i]);
+            {
+              pSlideShow->Add(items[i].get());
+            }
             pSlideShow->Select(items[0]->m_strPath);
           }
         }
@@ -335,7 +341,7 @@ void CApplicationMessenger::ProcessMessage(ThreadMessage *pMsg)
         if (items.Size() > 0)
         {
           for (int i=0;i<items.Size();++i)
-            pSlideShow->Add(items[i]);
+            pSlideShow->Add(items[i].get());
           pSlideShow->StartSlideShow(); //Start the slideshow!
         }
         if (pMsg->dwMessage == TMSG_SLIDESHOW_SCREENSAVER && g_guiSettings.GetBool("screensaver.slideshowshuffle"))
@@ -375,6 +381,12 @@ void CApplicationMessenger::ProcessMessage(ThreadMessage *pMsg)
     case TMSG_SWITCHTOFULLSCREEN:
       if( m_gWindowManager.GetActiveWindow() != WINDOW_FULLSCREEN_VIDEO )
         g_application.SwitchToFullScreen();
+      break;
+      
+    case TMSG_TOGGLEFULLSCREEN:
+      g_graphicsContext.Lock();
+      g_graphicsContext.ToggleFullScreenRoot();
+      g_graphicsContext.Unlock();
       break;
 
     case TMSG_HTTPAPI:
@@ -459,9 +471,8 @@ void CApplicationMessenger::ProcessMessage(ThreadMessage *pMsg)
     case TMSG_GUI_DO_MODAL:
       {
         CGUIDialog *pDialog = (CGUIDialog *)pMsg->lpVoid;
-        int nId = (int)pMsg->dwParam1;
         if (pDialog)
-          pDialog->DoModal_Internal(nId);
+          pDialog->DoModal_Internal((int)pMsg->dwParam1, pMsg->strParam);
       }
       break;
     case TMSG_GUI_SHOW:
@@ -469,6 +480,11 @@ void CApplicationMessenger::ProcessMessage(ThreadMessage *pMsg)
         CGUIDialog *pDialog = (CGUIDialog *)pMsg->lpVoid;
         if (pDialog)
           pDialog->Show_Internal();
+      }
+      break;
+    case TMSG_GUI_ACTIVATE_WINDOW:
+      {
+        m_gWindowManager.ActivateWindow(pMsg->dwParam1, pMsg->strParam, pMsg->dwParam2 > 0);
       }
       break;
     case TMSG_GUI_WIN_MANAGER_PROCESS:
@@ -523,12 +539,12 @@ CStdString CApplicationMessenger::GetResponse()
   return tmp;
 }
 
-void CApplicationMessenger::HttpApi(string cmd)
+void CApplicationMessenger::HttpApi(string cmd, bool wait)
 {
   SetResponse("");
   ThreadMessage tMsg = {TMSG_HTTPAPI};
   tMsg.strParam = cmd;
-  SendMessage(tMsg, true);
+  SendMessage(tMsg, wait);
 }
 
 void CApplicationMessenger::ExecBuiltIn(const CStdString &command)
@@ -637,6 +653,12 @@ void CApplicationMessenger::RestartApp()
   SendMessage(tMsg);
 }
 
+void CApplicationMessenger::SleepSystem()
+{
+	ThreadMessage tMsg = {TMSG_SLEEPSYSTEM};
+	SendMessage(tMsg);
+}
+
 void CApplicationMessenger::RebootToDashBoard()
 {
   ThreadMessage tMsg = {TMSG_DASHBOARD};
@@ -651,15 +673,25 @@ void CApplicationMessenger::NetworkMessage(DWORD dwMessage, DWORD dwParam)
 
 void CApplicationMessenger::SwitchToFullscreen()
 {
+  /* FIXME: ideally this call should return upon a successfull switch but currently
+     is causing deadlocks between the dvdplayer destructor and the rendermanager
+  */
   ThreadMessage tMsg = {TMSG_SWITCHTOFULLSCREEN};
+  SendMessage(tMsg, false);
+}
+
+void CApplicationMessenger::ToggleFullscreen()
+{
+  ThreadMessage tMsg = {TMSG_TOGGLEFULLSCREEN};
   SendMessage(tMsg, true);
 }
 
-void CApplicationMessenger::DoModal(CGUIDialog *pDialog, int iWindowID)
+void CApplicationMessenger::DoModal(CGUIDialog *pDialog, int iWindowID, const CStdString &param)
 {
   ThreadMessage tMsg = {TMSG_GUI_DO_MODAL};
   tMsg.lpVoid = pDialog;
   tMsg.dwParam1 = (DWORD)iWindowID;
+  tMsg.strParam = param;
   SendMessage(tMsg, true);
 }
 
@@ -667,6 +699,13 @@ void CApplicationMessenger::Show(CGUIDialog *pDialog)
 {
   ThreadMessage tMsg = {TMSG_GUI_SHOW};
   tMsg.lpVoid = pDialog;
+  SendMessage(tMsg, true);
+}
+
+void CApplicationMessenger::ActivateWindow(int windowID, const CStdString &path, bool swappingWindows)
+{
+  ThreadMessage tMsg = {TMSG_GUI_ACTIVATE_WINDOW, windowID, swappingWindows ? 1 : 0};
+  tMsg.strParam = path;
   SendMessage(tMsg, true);
 }
 

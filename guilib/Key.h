@@ -238,6 +238,28 @@
 #define ACTION_NEXT_SCENE             138 // switch to next scene/cutpoint in movie
 #define ACTION_PREV_SCENE             139 // switch to previous scene/cutpoint in movie
 
+#define ACTION_NEXT_LETTER            140 // jump through a list or container by letter
+#define ACTION_PREV_LETTER            141
+
+#define ACTION_JUMP_SMS2              142 // jump direct to a particular letter using SMS-style input
+#define ACTION_JUMP_SMS3              143
+#define ACTION_JUMP_SMS4              144
+#define ACTION_JUMP_SMS5              145
+#define ACTION_JUMP_SMS6              146
+#define ACTION_JUMP_SMS7              147
+#define ACTION_JUMP_SMS8              148
+#define ACTION_JUMP_SMS9              149
+
+#define ACTION_FILTER_CLEAR           150
+#define ACTION_FILTER_SMS2            151
+#define ACTION_FILTER_SMS3            152
+#define ACTION_FILTER_SMS4            153
+#define ACTION_FILTER_SMS5            154
+#define ACTION_FILTER_SMS6            155
+#define ACTION_FILTER_SMS7            156
+#define ACTION_FILTER_SMS8            157
+#define ACTION_FILTER_SMS9            158
+
 #define ACTION_TOGGLE_FULLSCREEN      199 // switch 2 desktop resolution
 
 // Window ID defines to make the code a bit more readable
@@ -250,7 +272,8 @@
 #define WINDOW_MUSIC                      10005 // virtual window to return the music start window.
 #define WINDOW_VIDEOS                     10006
 #define WINDOW_SYSTEM_INFORMATION         10007
-#define WINDOW_SCREEN_CALIBRATION          10011
+#define WINDOW_TEST_PATTERN               10008
+#define WINDOW_SCREEN_CALIBRATION         10011
 
 #define WINDOW_SETTINGS_MYPICTURES        10012
 #define WINDOW_SETTINGS_MYPROGRAMS        10013
@@ -311,6 +334,7 @@
 #define WINDOW_DIALOG_PICTURE_INFO        10139
 #define WINDOW_DIALOG_PLUGIN_SETTINGS     10140
 #define WINDOW_DIALOG_ACCESS_POINTS       10141
+#define WINDOW_DIALOG_FULLSCREEN_INFO     10142
 
 #define WINDOW_MUSIC_PLAYLIST             10500
 #define WINDOW_MUSIC_FILES                10501
@@ -356,8 +380,16 @@
   \ingroup actionkeys
   \brief 
   */
-struct CAction
+class CAction
 {
+public:
+  CAction()
+  {
+    wID = 0;
+    fAmount1 = fAmount2 = fRepeat = 0;
+    m_dwButtonCode = 0;
+    unicode = 0;
+  };
   WORD wID;
   float fAmount1;
   float fAmount2;

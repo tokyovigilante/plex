@@ -293,7 +293,7 @@ void usage()
 {
     printf("%s (version %s)\n", PROGNAME, PROGVERS);
     printf("   Copyright (c) 2008 Plex. All Rights Reserved.\n");
-    printf("   Sends controller events to Plex.\n\n");
+    printf("   Sends control events to Plex.\n\n");
     printf("Usage: %s [OPTIONS...]\n\nOptions:\n", PROGNAME);
     printf("  -h, --help               Print this help message and exit.\n");
     printf("  -s, --server <addr>      Send events to the specified IP.\n");
@@ -470,6 +470,9 @@ void processQueue(IOHIDDeviceInterface **hidDeviceInterface, CFMutableArrayRef c
 	(*queue)->Release(queue);
 }
 
+//
+// The Cocoa run loop.
+//
 void doRun(IOHIDDeviceInterface **hidDeviceInterface, CFMutableArrayRef cookies)
 {
   IOReturn ioReturnValue;
@@ -578,6 +581,8 @@ void createHIDDeviceInterface(io_object_t hidDevice, IOHIDDeviceInterface ***hdi
     (*plugInInterface)->Release(plugInInterface);
 }
 
+IOHIDDeviceInterface **gHidDeviceInterface = 0;
+
 void setupAndRun()
 {
     // Get the Apple Remote setup.
@@ -596,6 +601,7 @@ void setupAndRun()
       hidDevice = (io_object_t)hidService;
 
       createHIDDeviceInterface(hidDevice, &hidDeviceInterface);
+      gHidDeviceInterface = hidDeviceInterface;
       cookies = getHIDCookies((IOHIDDeviceInterface122 **)hidDeviceInterface);
       ioReturnValue = IOObjectRelease(hidDevice);
       print_errmsg_if_io_err(ioReturnValue, (char* )"Failed to release HID.");
@@ -623,10 +629,42 @@ void setupAndRun()
     }
 }
 
+pascal OSStatus switchEventsHandler(EventHandlerCallRef nextHandler,
+                                    EventRef switchEvent,
+                                    void* userData)
+{
+  if (verbose)
+    printf("New app is frontmost, reopening Apple Remote\n");
+    
+  if ((*gHidDeviceInterface)->close(gHidDeviceInterface) != KERN_SUCCESS)
+    printf("ERROR closing Apple Remote device\n");
+    
+  if ((*gHidDeviceInterface)->open(gHidDeviceInterface, kIOHIDOptionsTypeSeizeDevice) != KERN_SUCCESS)
+    printf("ERROR closing Apple Remote device\n");
+  
+  if (verbose)
+    printf("Done reopening Apple Remote in exclusive mode\n");
+  
+  return 0;
+}                
+
+void* RunEventLoop(void* )
+{
+  sigset_t signalSet;
+  sigemptyset (&signalSet);
+  sigaddset (&signalSet, SIGHUP);
+  pthread_sigmask(SIG_BLOCK, &signalSet, NULL);
+  
+  RunApplicationEventLoop();
+  printf("Exiting Carbon event loop.\n");
+  return 0;
+}                    
+
 int main(int argc, char **argv)
 {
   // Handle SIGHUP.  
   signal(SIGHUP, handleSignal);
+  signal(SIGUSR1, handleSignal);
   
   // We should close all file descriptions.
   for (int i=3; i<256; i++)
@@ -638,6 +676,10 @@ int main(int argc, char **argv)
     printf(PROGNAME " is already running.\n");
     exit(-1);
   }
+
+  // Register for events.
+  const EventTypeSpec applicationEvents[]  = { { kEventClassApplication, kEventAppFrontSwitched } };
+  InstallApplicationEventHandler(NewEventHandlerUPP(switchEventsHandler), GetEventTypeCount(applicationEvents), applicationEvents, 0, NULL);
 
 	// Add the keymappings (works for Leopard only).
 	keyMap["31_29_28_18_"] = kRemoteButtonUp;
@@ -720,6 +762,9 @@ int main(int argc, char **argv)
   // Start the XBox 360 thread.
   XBox360 xbox360;
   xbox360.start();
+
+  pthread_t thread;
+  pthread_create(&thread, 0, RunEventLoop, 0);
 
   setupAndRun();
 
@@ -830,7 +875,7 @@ void readConfig()
 void handleSignal(int signal)
 {
   // Re-read config.
-  if (signal == SIGHUP)
+  if (signal == SIGHUP || signal == SIGUSR1)
   {
     // Reset configuration.
     isUniversalMode = false;

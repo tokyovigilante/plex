@@ -34,15 +34,15 @@
 #include "WAVPackcodec.h"
 #include "ModuleCodec.h"
 #include "NSFCodec.h"
-#include "DTSCodec.h"
-#include "DTSCDDACodec.h"
 #include "AC3Codec.h"
 #include "AC3CDDACodec.h"
 #include "SPCCodec.h"
 #include "GYMCodec.h"
 #include "SIDCodec.h"
 #include "AdplugCodec.h"
-#include "CubeCodec.h"
+#ifdef HAS_VGM_CODEC
+#include "VGMCodec.h"
+#endif
 #include "YMCodec.h"
 #include "WMACodec.h"
 #include "AIFFcodec.h"
@@ -74,10 +74,8 @@ ICodec* CodecFactory::CreateCodec(const CStdString& strFileType)
     return new FLACCodec();
   else if (strFileType.Equals("wav"))
     return new WAVCodec();
-#ifdef HAS_DTS_CODEC
   else if (strFileType.Equals("dts"))
-    return new DTSCodec();
-#endif
+    return new DVDPlayerCodec();
 #ifdef HAS_AC3_CODEC
   else if (strFileType.Equals("ac3"))
     return new AC3Codec();
@@ -98,8 +96,10 @@ ICodec* CodecFactory::CreateCodec(const CStdString& strFileType)
     return new SIDCodec();
   else if (AdplugCodec::IsSupportedFormat(strFileType))
     return new AdplugCodec();
-  else if (CubeCodec::IsSupportedFormat(strFileType))
-    return new CubeCodec();
+#ifdef HAS_VGM_CODEC
+  else if (VGMCodec::IsSupportedFormat(strFileType))
+    return new VGMCodec();
+#endif
   else if (strFileType.Equals("ym"))
     return new YMCodec();
   else if (strFileType.Equals("wma"))
@@ -144,18 +144,16 @@ ICodec* CodecFactory::CreateCodecDemux(const CStdString& strFile, const CStdStri
   if (urlFile.GetFileType().Equals("wav"))
   {
     ICodec* codec;
-#ifdef HAS_DTS_CODEC
     //lets see what it contains...
     //this kinda sucks 'cause if it's a plain wav file the file
     //will be opened, sniffed and closed 2 times before it is opened *again* for wav
     //would be better if the papcodecs could work with bitstreams instead of filenames.
-    codec = new DTSCodec();
+    codec = new DVDPlayerCodec();
     if (codec->Init(strFile, filecache))
     {
       return codec;
     }
     delete codec;
-#endif
 #ifdef HAS_AC3_CODEC
     codec = new AC3Codec();
     if (codec->Init(strFile, filecache))
@@ -173,18 +171,16 @@ ICodec* CodecFactory::CreateCodecDemux(const CStdString& strFile, const CStdStri
   }
   if (urlFile.GetFileType().Equals("cdda"))
   {
-#ifdef HAS_DTS_CDDA_CODEC
     //lets see what it contains...
     //this kinda sucks 'cause if it's plain cdda the file
     //will be opened, sniffed and closed 2 times before it is opened *again* for cdda
     //would be better if the papcodecs could work with bitstreams instead of filenames.
-    ICodec* codec = new DTSCDDACodec();
+    ICodec* codec = new DVDPlayerCodec();
     if (codec->Init(strFile, filecache))
     {
       return codec;
     }
     delete codec;
-#endif
 #ifdef HAS_AC3_CDDA_CODEC
     codec = new AC3CDDACodec();
     if (codec->Init(strFile, filecache))

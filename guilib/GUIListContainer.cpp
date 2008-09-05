@@ -50,14 +50,7 @@ void CGUIListContainer::Render()
 
   if (!m_layout || !m_focusedLayout) return;
 
-  m_scrollOffset += m_scrollSpeed * (m_renderTime - m_scrollLastTime);
-  if ((m_scrollSpeed < 0 && m_scrollOffset < m_offset * m_layout->Size(m_orientation)) ||
-      (m_scrollSpeed > 0 && m_scrollOffset > m_offset * m_layout->Size(m_orientation)))
-  {
-    m_scrollOffset = m_offset * m_layout->Size(m_orientation);
-    m_scrollSpeed = 0;
-  }
-  m_scrollLastTime = m_renderTime;
+  UpdateScrollOffset();
 
   int offset = (int)(m_scrollOffset / m_layout->Size(m_orientation));
   // Free memory not used on screen at the moment, do this first so there's more memory for the new items.
@@ -79,13 +72,13 @@ void CGUIListContainer::Render()
 
   float focusedPosX = 0;
   float focusedPosY = 0;
-  CGUIListItem *focusedItem = NULL;
+  CGUIListItemPtr focusedItem;
   int current = offset;
   while (posX < m_posX + m_width && posY < m_posY + m_height && m_items.size())
   {
     if (current >= (int)m_items.size())
       break;
-    CGUIListItem *item = m_items[current];
+    CGUIListItemPtr item = m_items[current];
     bool focused = (current == m_offset + m_cursor);
     // render our item
     if (focused)
@@ -95,7 +88,7 @@ void CGUIListContainer::Render()
       focusedItem = item;
     }
     else
-      RenderItem(posX, posY, item, focused);
+      RenderItem(posX, posY, item.get(), focused);
 
     // increment our position
     if (m_orientation == VERTICAL)
@@ -107,7 +100,7 @@ void CGUIListContainer::Render()
   }
   // and render the focused item last (for overlapping purposes)
   if (focusedItem)
-    RenderItem(focusedPosX, focusedPosY, focusedItem, true);
+    RenderItem(focusedPosX, focusedPosY, focusedItem.get(), true);
 
   g_graphicsContext.RestoreClipRegion();
 

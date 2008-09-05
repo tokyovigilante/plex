@@ -104,9 +104,6 @@ CGUIViewState* CGUIViewState::GetViewState(int windowId, const CFileItemList& it
   if (windowId==WINDOW_SCRIPTS)
     return new CGUIViewStateWindowScripts(items);
 
-  if (windowId==WINDOW_GAMESAVES)
-    return new CGUIViewStateWindowGameSaves(items);
-
   if (windowId==WINDOW_PICTURES)
     return new CGUIViewStateWindowPictures(items);
 

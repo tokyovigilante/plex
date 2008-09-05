@@ -34,11 +34,6 @@ namespace XFILE
   class IFileCallback;
 }
 
-namespace PLAYLIST
-{
-  class CPlayListItem;
-}
-
 class CFileItem;
 class CFileItemList;
 
@@ -263,7 +258,7 @@ public:
   static void RemoveSlashAtEnd(CStdString& strFolder);  
   static void Split(const CStdString& strFileNameAndPath, CStdString& strPath, CStdString& strFileName);
   static void CreateArchivePath(CStdString& strUrlPath, const CStdString& strType, const CStdString& strArchivePath,
-    const CStdString& strFilePathInArchive, const CStdString& strCachePath = "Z:\\", const CStdString strPwd="");
+    const CStdString& strFilePathInArchive, const CStdString strPwd="");
   static bool ThumbExists(const CStdString& strFileName, bool bAddCache = false);
   static bool ThumbCached(const CStdString& strFileName);
   static void ThumbCacheAdd(const CStdString& strFileName, bool bFileExists);
@@ -288,8 +283,7 @@ public:
   static void Stat64ToStat(struct stat *result, struct __stat64 *stat);
 #endif
   static bool CreateDirectoryEx(const CStdString& strPath);
-  static CStdString MakeLegalFileName(const CStdString &strFile, bool isFATX);
-  static void ConvertFileItemToPlayListItem(const CFileItem *pItem, PLAYLIST::CPlayListItem &playlistitem);
+  static CStdString MakeLegalFileName(const CStdString &strFile, bool isFATX=false);
   static void AddDirectorySeperator(CStdString& strPath);
   static char GetDirectorySeperator(const CStdString& strFile);
 

@@ -22,7 +22,11 @@
 #ifndef _LINUX
 #include "lib/libPython/python/Python.h"
 #else
+#ifdef __APPLE__
+#include "lib/libPython/python/Python.h"
+#else
 #include <python2.4/Python.h>
+#endif
 #include "../XBPythonDll.h"
 #endif
 

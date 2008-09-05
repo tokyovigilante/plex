@@ -215,13 +215,12 @@ void CDVDPlayerVideo::Process()
 
   while (!m_bStop)
   {
-    while (!m_bStop && m_speed == DVD_PLAYSPEED_PAUSE && !m_messageQueue.RecievedAbortRequest() && m_iNrOfPicturesNotToSkip==0) Sleep(5);
-
     int iQueueTimeOut = (int)(m_stalled ? frametime / 4 : frametime * 10) / 1000;
-    
+    int iPriority = (m_speed == DVD_PLAYSPEED_PAUSE && m_iNrOfPicturesNotToSkip == 0) ? 1 : 0;
+
     CDVDMsg* pMsg;
-    MsgQueueReturnCode ret = m_messageQueue.Get(&pMsg, iQueueTimeOut);
-   
+    MsgQueueReturnCode ret = m_messageQueue.Get(&pMsg, iQueueTimeOut, iPriority);
+
     if (MSGQ_IS_ERROR(ret) || ret == MSGQ_ABORT) 
     {
       CLog::Log(LOGERROR, "Got MSGQ_ABORT or MSGO_IS_ERROR return true");
@@ -229,6 +228,10 @@ void CDVDPlayerVideo::Process()
     }
     else if (ret == MSGQ_TIMEOUT)
     {
+      // if we only wanted priority messages, this isn't a stall
+      if( iPriority )
+        continue;
+
       //Okey, start rendering at stream fps now instead, we are likely in a stillframe
       if( !m_stalled && m_started )
       {
@@ -268,20 +271,34 @@ void CDVDPlayerVideo::Process()
 
       if(pMsgGeneralResync->m_timestamp != DVD_NOPTS_VALUE)
         pts = pMsgGeneralResync->m_timestamp;
-            
+
+      double delay = m_FlipTimeStamp - m_pClock->GetAbsoluteClock();
+      if( delay > frametime ) delay = frametime;
+      else if( delay < 0 )    delay = 0;
+
       if(pMsgGeneralResync->m_clock)
       {
-        double delay = m_FlipTimeStamp - m_pClock->GetAbsoluteClock();
-        
-        if( delay > frametime ) delay = frametime;
-        else if( delay < 0 ) delay = 0;
-
+        CLog::Log(LOGDEBUG, "CDVDPlayerVideo - CDVDMsg::GENERAL_RESYNC(%f, 1)", pts);
         m_pClock->Discontinuity(CLOCK_DISC_NORMAL, pts, delay);
-        CLog::Log(LOGDEBUG, "CDVDPlayerVideo:: Resync - clock:%f, delay:%f", pts, delay);
       }
+      else
+        CLog::Log(LOGDEBUG, "CDVDPlayerVideo - CDVDMsg::GENERAL_RESYNC(%f, 0)", pts);
 
       pMsgGeneralResync->Release();
       continue;
+    }
+    else if (pMsg->IsType(CDVDMsg::GENERAL_DELAY))
+    {
+      if (m_speed != DVD_PLAYSPEED_PAUSE)
+      {
+        double timeout;
+        timeout  = static_cast<CDVDMsgDouble*>(pMsg)->m_value;
+        timeout *= (double)DVD_PLAYSPEED_NORMAL / abs(m_speed);
+        timeout += CDVDClock::GetAbsoluteClock();
+
+        while(!m_bStop && CDVDClock::GetAbsoluteClock() < timeout)
+          Sleep(1);
+      }
     }
     else if (pMsg->IsType(CDVDMsg::VIDEO_SET_ASPECT))
     {
@@ -302,6 +319,12 @@ void CDVDPlayerVideo::Process()
       // just display those together with the correct one.
       // (setting it to 2 will skip some menu stills, 5 is working ok for me).
       m_iNrOfPicturesNotToSkip = 5;
+    }
+    else if (pMsg->IsType(CDVDMsg::PLAYER_SETSPEED))
+    {
+      m_speed = static_cast<CDVDMsgInt*>(pMsg)->m_value;
+      if(m_speed == DVD_PLAYSPEED_PAUSE)
+        m_iNrOfPicturesNotToSkip = 0;
     }
 
     if (pMsg->IsType(CDVDMsg::DEMUXER_PACKET))
@@ -560,9 +583,10 @@ bool CDVDPlayerVideo::InitializedOutputDevice()
 
 void CDVDPlayerVideo::SetSpeed(int speed)
 {
-  m_speed = speed;
-  if(m_speed == DVD_PLAYSPEED_PAUSE)
-    m_iNrOfPicturesNotToSkip = 0;
+  if(m_messageQueue.IsInited())
+    m_messageQueue.Put( new CDVDMsgInt(CDVDMsg::PLAYER_SETSPEED, speed), 1 );
+  else
+    m_speed = speed;
 }
 
 void CDVDPlayerVideo::StepFrame()

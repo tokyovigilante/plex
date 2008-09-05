@@ -75,7 +75,7 @@ bool CPluginDirectory::AddItem(int handle, const CFileItem *item, int totalItems
   }
   
   CPluginDirectory *dir = globalHandles[handle];
-  CFileItem *pItem = new CFileItem(*item);
+  CFileItemPtr pItem(new CFileItem(*item));
   dir->m_listItems->Add(pItem);
   dir->m_totalItems = totalItems;
 
@@ -181,9 +181,9 @@ void CPluginDirectory::AddSortMethod(int handle, SORT_METHOD sortMethod)
         dir->m_listItems->AddSortMethod(SORT_METHOD_VIDEO_RATING, 563, LABEL_MASKS("%T", "%R"));
         break;
       }
-    case SORT_METHOD_VIDEO_YEAR:
+    case SORT_METHOD_YEAR:
       {
-        dir->m_listItems->AddSortMethod(SORT_METHOD_VIDEO_YEAR, 562, LABEL_MASKS("%T", "%Y"));
+        dir->m_listItems->AddSortMethod(SORT_METHOD_YEAR, 562, LABEL_MASKS("%T", "%Y"));
         break;
       }
     case SORT_METHOD_SONG_RATING:
@@ -332,8 +332,8 @@ bool CPluginDirectory::GetDirectory(const CStdString& strPath, CFileItemList& it
   removeHandle(handle);
 
   // append the items to the list
-  items.AssignPointer(*m_listItems, true); // true to keep the current items
-  m_listItems->ClearKeepPointer();
+  items.Assign(*m_listItems, true); // true to keep the current items
+  m_listItems->Clear();
   return success;
 }
 
@@ -397,7 +397,7 @@ bool CPluginDirectory::HasPlugins(const CStdString &type)
   {
     for (int i = 0; i < items.Size(); i++)
     {
-      CFileItem *item = items[i];
+      CFileItemPtr item = items[i];
       if (item->m_bIsFolder && !item->IsParentFolder() && !item->m_bIsShareOrDrive)
       {
         CStdString defaultPY;
@@ -426,7 +426,7 @@ bool CPluginDirectory::GetPluginsDirectory(const CStdString &type, CFileItemList
   // flatten any folders - TODO: Assigning of thumbs
   for (int i = 0; i < items.Size(); i++)
   {
-    CFileItem* item = items[i];
+    CFileItemPtr item = items[i];
     item->SetThumbnailImage("");
     item->SetCachedProgramThumb();
     if (!item->HasThumbnail())
@@ -540,6 +540,18 @@ void CPluginDirectory::SetContent(int handle, const CStdString &strContent)
 
   CPluginDirectory *dir = globalHandles[handle];
   dir->m_listItems->SetContent(strContent);
+}
+
+void CPluginDirectory::SetProperty(int handle, const CStdString &strProperty, const CStdString &strValue)
+{
+  if (handle < 0 || handle >= (int)globalHandles.size())
+  {
+    CLog::Log(LOGERROR, "%s called with an invalid handle.", __FUNCTION__);
+    return;
+  }
+
+  CPluginDirectory *dir = globalHandles[handle];
+  dir->m_listItems->SetProperty(strProperty, strValue);
 }
 
 void CPluginDirectory::LoadPluginStrings(const CURL &url)

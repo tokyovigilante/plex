@@ -1305,12 +1305,6 @@ void CGUIWindowSettingsCategory::UpdateSettings()
       CGUIControl *pControl = (CGUIControl *)GetControl(GetSetting(strSetting)->GetID());
       pControl->SetEnabled(CUtil::IsUsingTTFSubtitles());
     }
-    else if (strSetting.Equals("subtitles.flipbidicharset"))
-    {
-      CGUIControl *pControl = (CGUIControl *)GetControl(GetSetting(strSetting)->GetID());
-      CStdString strCharset=g_langInfo.GetSubtitleCharSet();
-      pControl->SetEnabled( /*CUtil::IsUsingTTFSubtitles() &&*/ g_charsetConverter.isBidiCharset(strCharset));
-    }
     else if (strSetting.Equals("locale.charset"))
     { // TODO: Determine whether we are using a TTF font or not.
       //   CGUIControl *pControl = (CGUIControl *)GetControl(pSettingControl->GetID());
@@ -1477,6 +1471,11 @@ void CGUIWindowSettingsCategory::UpdateSettings()
       CGUIControl *pControl = (CGUIControl *)GetControl(pSettingControl->GetID());
       if (pControl) pControl->SetEnabled(g_guiSettings.GetBool("videolibrary.enabled"));
     }
+    else if (strSetting.Equals("lookandfeel.rssfeedsrtl"))
+    { // only visible if rss is enabled
+      CGUIControl *pControl = (CGUIControl *)GetControl(pSettingControl->GetID());
+      if (pControl) pControl->SetEnabled(g_guiSettings.GetBool("lookandfeel.enablerssfeeds"));
+    }
   }
 }
 
@@ -1557,11 +1556,13 @@ void CGUIWindowSettingsCategory::OnClick(CBaseSettingControl *pSettingControl)
     if (g_guiSettings.GetBool("system.debuglogging") && g_advancedSettings.m_logLevel < LOG_LEVEL_DEBUG_FREEMEM)
     {
       g_advancedSettings.m_logLevel = LOG_LEVEL_DEBUG_FREEMEM;
+      g_application.SetQuiet(false);
       CLog::Log(LOGNOTICE, "Enabled debug logging due to GUI setting");
     }
     else if (!g_guiSettings.GetBool("system.debuglogging") && g_advancedSettings.m_logLevel == LOG_LEVEL_DEBUG_FREEMEM)
     {
       CLog::Log(LOGNOTICE, "Disabled debug logging due to GUI setting");
+      g_application.SetQuiet(true);
       g_advancedSettings.m_logLevel = LOG_LEVEL_NORMAL;
     }
   }
@@ -1841,7 +1842,6 @@ void CGUIWindowSettingsCategory::OnClick(CBaseSettingControl *pSettingControl)
     g_application.StopFtpServer();
     if (g_guiSettings.GetBool("servers.ftpserver"))
       g_application.StartFtpServer();
-
   }
   else if (strSetting.Equals("servers.ftpserverpassword"))
   {
@@ -1898,6 +1898,10 @@ void CGUIWindowSettingsCategory::OnClick(CBaseSettingControl *pSettingControl)
   else if (strSetting.Equals("videoplayer.calibrate") || strSetting.Equals("videoscreen.guicalibration"))
   { // activate the video calibration screen
     m_gWindowManager.ActivateWindow(WINDOW_SCREEN_CALIBRATION);
+  }
+  else if (strSetting.Equals("videoscreen.testpattern"))
+  { // activate the test pattern
+    m_gWindowManager.ActivateWindow(WINDOW_TEST_PATTERN);
   }
   else if (strSetting.Equals("videoplayer.externaldvdplayer"))
   {
@@ -2169,7 +2173,10 @@ void CGUIWindowSettingsCategory::OnClick(CBaseSettingControl *pSettingControl)
     CSettingString *pSettingString = (CSettingString *)pSettingControl->GetSetting();
     CStdString path = g_guiSettings.GetString(strSetting,false);
     VECSOURCES shares;
+
+    g_mediaManager.GetNetworkLocations(shares);
     g_mediaManager.GetLocalDrives(shares);
+
     UpdateSettings();
     bool bWriteOnly = true;
 #ifdef HAS_TRAINER
@@ -2713,7 +2720,7 @@ void CGUIWindowSettingsCategory::FillInSubtitleHeights(CSetting *pSetting)
       int iSize = 0;
       for (int i = 0; i < items.Size(); ++i)
       {
-        CFileItem* pItem = items[i];
+        CFileItemPtr pItem = items[i];
         if (pItem->m_bIsFolder)
         {
           if (strcmpi(pItem->GetLabel().c_str(), ".svn") == 0) continue;
@@ -2746,7 +2753,7 @@ void CGUIWindowSettingsCategory::FillInSubtitleFonts(CSetting *pSetting)
     directory.GetDirectory(strPath, items);
     for (int i = 0; i < items.Size(); ++i)
     {
-      CFileItem* pItem = items[i];
+      CFileItemPtr pItem = items[i];
       if (pItem->m_bIsFolder)
       {
         if (strcmpi(pItem->GetLabel().c_str(), ".svn") == 0) continue;
@@ -2768,7 +2775,7 @@ void CGUIWindowSettingsCategory::FillInSubtitleFonts(CSetting *pSetting)
     {
       for (int i = 0; i < items.Size(); ++i)
       {
-        CFileItem* pItem = items[i];
+        CFileItemPtr pItem = items[i];
 
         if (!pItem->m_bIsFolder)
         {
@@ -2911,7 +2918,7 @@ void CGUIWindowSettingsCategory::FillInSkins(CSetting *pSetting)
   vector<CStdString> vecSkins;
   for (int i = 0; i < items.Size(); ++i)
   {
-    CFileItem* pItem = items[i];
+    CFileItemPtr pItem = items[i];
     if (pItem->m_bIsFolder)
     {
       if (strcmpi(pItem->GetLabel().c_str(), ".svn") == 0) continue;
@@ -2960,7 +2967,7 @@ void CGUIWindowSettingsCategory::FillInSoundSkins(CSetting *pSetting)
   int i;
   for (i = 0; i < items.Size(); ++i)
   {
-    CFileItem* pItem = items[i];
+    CFileItemPtr pItem = items[i];
     if (pItem->m_bIsFolder)
     {
       if (strcmpi(pItem->GetLabel().c_str(), ".svn") == 0) continue;
@@ -3042,7 +3049,7 @@ void CGUIWindowSettingsCategory::FillInVisualisations(CSetting *pSetting, int iC
 
   for (int i = 0; i < items.Size(); ++i)
   {
-    CFileItem* pItem = items[i];
+    CFileItemPtr pItem = items[i];
     if (!pItem->m_bIsFolder)
     {
       CStdString strExtension;
@@ -3308,7 +3315,7 @@ void CGUIWindowSettingsCategory::FillInLanguages(CSetting *pSetting)
   vector<CStdString> vecLanguage;
   for (int i = 0; i < items.Size(); ++i)
   {
-    CFileItem* pItem = items[i];
+    CFileItemPtr pItem = items[i];
     if (pItem->m_bIsFolder)
     {
       if (strcmpi(pItem->GetLabel().c_str(), ".svn") == 0) continue;
@@ -3354,7 +3361,7 @@ void CGUIWindowSettingsCategory::FillInScreenSavers(CSetting *pSetting)
   int i = 0;
   for (i = 0; i < items.Size(); ++i)
   {
-    CFileItem* pItem = items[i];
+    CFileItemPtr pItem = items[i];
     if (!pItem->m_bIsFolder)
     {
       CStdString strExtension;
@@ -3621,7 +3628,7 @@ void CGUIWindowSettingsCategory::FillInSkinColors(CSetting *pSetting)
   // Search for Themes in the Current skin!
   for (int i = 0; i < items.Size(); ++i)
   {
-    CFileItem* pItem = items[i];
+    CFileItemPtr pItem = items[i];
     if (!pItem->m_bIsFolder && pItem->GetLabel().CompareNoCase("defaults.xml") != 0)
     { // not the default one
       CStdString strLabel = pItem->GetLabel();
@@ -3803,7 +3810,7 @@ void CGUIWindowSettingsCategory::FillInNetworkInterfaces(CSetting *pSetting)
   CGUISpinControlEx *pControl = (CGUISpinControlEx *)GetControl(GetSetting(pSetting->GetSetting())->GetID());
   pControl->Clear();
 
-#ifdef HAS_LINUX_NETWORK
+#if defined(HAS_LINUX_NETWORK) || defined(HAS_WIN32_NETWORK)
   // query list of interfaces
   vector<CStdString> vecInterfaces;
   std::vector<CNetworkInterface*>& ifaces = g_application.getNetwork().GetInterfaceList();

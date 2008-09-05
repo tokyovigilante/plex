@@ -44,8 +44,8 @@ public:
   const CFileItemList &CurrentDirectory() const;
   int GetViewContainerID() const { return m_viewControl.GetCurrentControl(); };
   virtual bool HasListItems() const { return true; };
-  virtual CFileItem *GetCurrentListItem(int offset = 0);
-  int GetContainerSortMethod();
+  const CGUIViewState *GetViewState() const;
+  virtual CFileItemPtr GetCurrentListItem(int offset = 0);
 
 protected:
   CGUIControl *GetFirstFocusableControl(int id);
@@ -79,6 +79,7 @@ protected:
   void OnRenameItem(int iItem);
 
 protected:
+  bool WaitForNetwork() const;
   DIRECTORY::CVirtualDirectory m_rootDir;
   CGUIViewControl m_viewControl;
 

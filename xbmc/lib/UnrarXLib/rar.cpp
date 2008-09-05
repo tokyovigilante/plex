@@ -239,7 +239,8 @@ int urarlib_get(char *rarfile, char *targetPath, char *fileToExtract, char *libp
 
           if (bShowProgress)
           {
-            pExtract->GetDataIO().m_pDlgProgress = (CGUIDialogProgress*)m_gWindowManager.GetWindow(WINDOW_DIALOG_PROGRESS);
+            // temporary workaround to avoid deadlocks caused by dvdplayer halting app thread
+            pExtract->GetDataIO().m_pDlgProgress = NULL;//(CGUIDialogProgress*)m_gWindowManager.GetWindow(WINDOW_DIALOG_PROGRESS);
           }
 
           __int64 iOff=0;
@@ -309,7 +310,7 @@ int urarlib_get(char *rarfile, char *targetPath, char *fileToExtract, char *libp
 	              The list should be freed with urarlib_freelist().
 	libpassword - Password (for encrypted archives)
 \*-------------------------------------------------------------------------*/
-int urarlib_list(char *rarfile, ArchiveList_struct **ppList, char *libpassword)
+int urarlib_list(char *rarfile, ArchiveList_struct **ppList, char *libpassword, bool stopattwo)
 {
   if (!ppList)
 		return 0;
@@ -385,11 +386,13 @@ int urarlib_list(char *rarfile, ArchiveList_struct **ppList, char *libpassword)
               pCurr->next = NULL;
               pPrev = pCurr;
               FileCount++;
+              if (stopattwo && FileCount > 1)
+                break;
             }
             iOffset = pArc->NextBlockPos;
             pArc->SeekToNext();
           }
-          if (pCmd->VolSize!=0 && ((pArc->NewLhd.Flags & LHD_SPLIT_AFTER) || pArc->GetHeaderType()==ENDARC_HEAD && (pArc->EndArcHead.Flags & EARC_NEXT_VOLUME)!=0))
+          if (pCmd->VolSize!=0 && ((pArc->NewLhd.Flags & LHD_SPLIT_AFTER) || (pArc->GetHeaderType()==ENDARC_HEAD && (pArc->EndArcHead.Flags & EARC_NEXT_VOLUME)!=0)))
           {
             if (FileCount == 1 && iArchive==0)
             {
@@ -445,47 +448,12 @@ int urarlib_list(char *rarfile, ArchiveList_struct **ppList, char *libpassword)
 
 bool urarlib_hasmultiple(const char *rarfile, char *libpassword)
 {
-	uint FileCount = 0;
-	InitCRC();
+  ArchiveList_struct* pplist = NULL;
+  urarlib_list(const_cast<char*>(rarfile),&pplist,libpassword,true);
+  bool bResult = (pplist && pplist->next);
+  urarlib_freelist(pplist);
 
-	// Set the arguments for the extract command
-  auto_ptr<CommandData> pCmd( new CommandData );
-
-	{
-		strcpy(pCmd->Command, "L");
-		pCmd->AddArcName(const_cast<char*>(rarfile), NULL);
-		pCmd->FileArgs->AddString(MASKALL);
-
-		// Set password for encrypted archives
-		if (libpassword)
-		{
-			strncpy(pCmd->Password, libpassword, sizeof(pCmd->Password) - 1);
-			pCmd->Password[sizeof(pCmd->Password) - 1] = '\0';
-		}
-
-		// Opent the archive
-		auto_ptr<Archive> pArc( new Archive(pCmd.get()) );
-		if ( pArc.get() )
-		{
-			if (!pArc->WOpen(rarfile,NULL))
-				return 0;
-
-			FileCount=0;
-			if (pArc->IsOpened() && pArc->IsArchive(true))
-			{
-				while(pArc->ReadHeader()>0 && FileCount < 2)
-				{
-					if (pArc->GetHeaderType() == FILE_HEAD)
-						FileCount++;
-
-					pArc->SeekToNext();
-				}
-			}
-		}
-	}
-
-	File::RemoveCreated();
-	return FileCount>1;
+  return bResult;
 }
 
 /*-------------------------------------------------------------------------*\

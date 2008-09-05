@@ -191,7 +191,7 @@ HANDLE CreateFile(LPCTSTR lpFileName, DWORD dwDesiredAccess,
     return INVALID_HANDLE_VALUE;
   }
 
-  int flags = 0, mode=S_IRUSR;
+  int flags = 0, mode=S_IRUSR | S_IRGRP | S_IROTH;
   if (dwDesiredAccess & FILE_WRITE_DATA) {
     flags = O_RDWR;
     mode |= S_IWUSR;
@@ -345,6 +345,15 @@ BOOL MoveFile(LPCTSTR lpExistingFileName, LPCTSTR lpNewFileName)
       CLog::Log(LOGDEBUG,"%s - successfuly moved file <%s>", __FUNCTION__, strLower.c_str());
       return 1;
     }
+  }
+
+  // try the stupid
+  if (CopyFile(lpExistingFileName,lpNewFileName,TRUE))
+  {
+    if (DeleteFile(lpExistingFileName))
+      return 1;
+    // failed to remove original file - delete the copy we made
+    DeleteFile(lpNewFileName);
   }
 
   return 0;

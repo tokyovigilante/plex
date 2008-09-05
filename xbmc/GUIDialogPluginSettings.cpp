@@ -223,7 +223,11 @@ bool CGUIDialogPluginSettings::ShowVirtualKeyboard(int iControl)
               else if (strcmpi(type, "music") == 0)
                 strMask = g_stSettings.m_musicExtensions;
               else if (strcmpi(type, "programs") == 0)
-                strMask = ".xbe|.py";
+#if defined(_WIN32_WINNT)
+                strMask = ".exe|.bat|.cmd|.py";
+#else
+                strMask = "";
+#endif
             }
 
             // get any options
@@ -440,7 +444,7 @@ void CGUIDialogPluginSettings::CreateControls()
       int iItem = 0;
       for (int i = 0; i < items.Size(); ++i)
       {
-        CFileItem* pItem = items[i];
+        CFileItemPtr pItem = items[i];
         if ((mask.Equals("/") && pItem->m_bIsFolder) || !pItem->m_bIsFolder)
         {
           ((CGUISpinControlEx *)pControl)->AddLabel(pItem->GetLabel(), iItem);

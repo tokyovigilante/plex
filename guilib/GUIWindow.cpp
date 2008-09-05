@@ -487,10 +487,8 @@ void CGUIWindow::Render()
 bool CGUIWindow::OnAction(const CAction &action)
 {
   if (action.wID == ACTION_MOUSE)
-  {
-    OnMouseAction();
-    return true;
-  }
+    return OnMouseAction();
+
   CGUIControl *focusedControl = GetFocusedControl();
   if (focusedControl)
     return focusedControl->OnAction(action);
@@ -503,7 +501,7 @@ bool CGUIWindow::OnAction(const CAction &action)
 }
 
 // OnMouseAction - called by OnAction()
-void CGUIWindow::OnMouseAction()
+bool CGUIWindow::OnMouseAction()
 {
   // we need to convert the mouse coordinates to window coordinates
   float posX = m_posX;
@@ -518,7 +516,7 @@ void CGUIWindow::OnMouseAction()
       break;
     }
   }
-  g_graphicsContext.SetScalingResolution(m_coordsRes, posX, posY, m_needsScaling);
+  g_graphicsContext.SetRenderingResolution(m_coordsRes, posX, posY, m_needsScaling);
   CPoint mousePoint(g_Mouse.GetLocation());
   g_graphicsContext.InvertFinalCoords(mousePoint.x, mousePoint.y);
   m_transform.InverseTransformPosition(mousePoint.x, mousePoint.y);
@@ -531,7 +529,7 @@ void CGUIWindow::OnMouseAction()
     if (pControl)
     { // this control has exclusive access to the mouse
       HandleMouse(pControl, mousePoint + g_Mouse.GetExclusiveOffset());
-      return;
+      return true;
     }
   }
 
@@ -559,11 +557,12 @@ void CGUIWindow::OnMouseAction()
   }
   if (!bHandled)
   { // haven't handled this action - call the window message handlers
-    OnMouse(mousePoint);
+    bHandled = OnMouse(mousePoint);
   }
   // and unfocus everything otherwise
   if (!controlUnderPointer)
     m_focusedControl = 0;
+  return bHandled;
 }
 
 // Handles any mouse actions that are not handled by a control
@@ -632,6 +631,10 @@ void CGUIWindow::OnInitWindow()
 {
   // set our rendered state
   m_hasRendered = false;
+  ResetAnimations();  // we need to reset our animations as those windows that don't dynamically allocate
+                      // need their anims reset. An alternative solution is turning off all non-dynamic
+                      // allocation (which in some respects may be nicer, but it kills hdd spindown and the like)
+
   // set our initial control visibility before restoring control state and
   // focusing the default control, and again afterward to make sure that
   // any controls that depend on the state of the focused control (and or on
@@ -841,6 +844,8 @@ bool CGUIWindow::OnMessage(CGUIMessage& message)
 
 void CGUIWindow::AllocResources(bool forceLoad /*= FALSE */)
 {
+  CSingleLock lock(g_graphicsContext);
+
   LARGE_INTEGER start;
   QueryPerformanceCounter(&start);
 
@@ -1141,6 +1146,15 @@ bool CGUIWindow::HasAnimation(ANIMATION_TYPE animType)
   for (unsigned int i = 0; i < m_vecControls.size(); i++)
     if (m_vecControls[i]->GetAnimation(animType)) return true;
   return false;
+}
+
+void CGUIWindow::ResetAnimations()
+{
+  for (unsigned int i = 0; i < m_animations.size(); i++)
+    m_animations[i].ResetAnimation();
+
+  for (ivecControls it = m_vecControls.begin(); it != m_vecControls.end(); ++it)
+    (*it)->ResetAnimations();
 }
 
 // returns true if the control group with id groupID has controlID as

@@ -43,7 +43,7 @@ public:
 #else
   CGLTexture  * GetImage(const CStdString &path, int &width, int &height, int &orientation, bool firstRequest);
 #endif
-  void ReleaseImage(const CStdString &path);
+  void ReleaseImage(const CStdString &path, bool immediately = false);
 
   void CleanupUnusedImages();
 
@@ -123,7 +123,7 @@ protected:
     unsigned int m_timeToDelete;
   };
 
-  void QueueImage(CLargeTexture *image);
+  void QueueImage(const CStdString &path);
 
 private:
   std::vector<CLargeTexture *> m_queued;

@@ -30,9 +30,10 @@
  */
 
 #include "GUIControl.h"
+#include "boost/shared_ptr.hpp"
 
 class CGUIControlGroup;
-class CFileItem;
+class CFileItem; typedef boost::shared_ptr<CFileItem> CFileItemPtr;
 
 #include "GUICallback.h"  // for GUIEvent
 
@@ -128,7 +129,7 @@ public:
   virtual bool IsModalDialog() const { return false; };
   virtual bool IsMediaWindow() const { return false; };
   virtual bool HasListItems() const { return false; };
-  virtual CFileItem *GetCurrentListItem(int offset = 0) { return NULL; };
+  virtual CFileItemPtr GetCurrentListItem(int offset = 0) { return CFileItemPtr(); };
   virtual int GetViewContainerID() const { return 0; };
   void GetContainers(std::vector<CGUIControl *> &containers) const;
   virtual bool IsActive() const;
@@ -149,6 +150,7 @@ public:
 
   virtual void QueueAnimation(ANIMATION_TYPE animType);
   virtual bool IsAnimating(ANIMATION_TYPE animType);
+  virtual void ResetAnimations();
 
   virtual void ResetControlStates();
 
@@ -162,7 +164,7 @@ protected:
   virtual void OnWindowLoaded();
   virtual void OnInitWindow();
   virtual void OnDeinitWindow(int nextWindowID);
-  virtual void OnMouseAction();
+  virtual bool OnMouseAction();
   virtual bool RenderAnimation(DWORD time);
   virtual void UpdateStates(ANIMATION_TYPE type, ANIMATION_PROCESS currentProcess, ANIMATION_STATE currentState);
   bool HasAnimation(ANIMATION_TYPE animType);

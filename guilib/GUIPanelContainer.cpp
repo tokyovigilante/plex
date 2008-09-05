@@ -51,14 +51,7 @@ void CGUIPanelContainer::Render()
 
   if (!m_layout || !m_focusedLayout) return;
 
-  m_scrollOffset += m_scrollSpeed * (m_renderTime - m_scrollLastTime);
-  if ((m_scrollSpeed < 0 && m_scrollOffset < m_offset * m_layout->Size(m_orientation)) ||
-      (m_scrollSpeed > 0 && m_scrollOffset > m_offset * m_layout->Size(m_orientation)))
-  {
-    m_scrollOffset = m_offset * m_layout->Size(m_orientation);
-    m_scrollSpeed = 0;
-  }
-  m_scrollLastTime = m_renderTime;
+  UpdateScrollOffset();
 
   int offset = (int)(m_scrollOffset / m_layout->Size(m_orientation));
 
@@ -75,14 +68,14 @@ void CGUIPanelContainer::Render()
 
   float focusedPosX = 0;
   float focusedPosY = 0;
-  CGUIListItem *focusedItem = NULL;
+  CGUIListItemPtr focusedItem;
   int current = offset * m_itemsPerRow;
   int row = 1;
   while (posX < m_posX + m_width && posY < m_posY + m_height && m_items.size())
   {
     if (current >= (int)m_items.size())
       break;
-    CGUIListItem *item = m_items[current];
+    CGUIListItemPtr item = m_items[current];
     bool focused = (current == m_offset * m_itemsPerRow + m_cursor) && m_bHasFocus;
     // render our item
     if (focused)
@@ -92,7 +85,7 @@ void CGUIPanelContainer::Render()
       focusedItem = item;
     }
     else
-      RenderItem(posX, posY, item, focused);
+      RenderItem(posX, posY, item.get(), focused);
 
     // increment our position
     if (row < m_itemsPerRow)
@@ -121,7 +114,7 @@ void CGUIPanelContainer::Render()
   }
   // and render the focused item last (for overlapping purposes)
   if (focusedItem)
-    RenderItem(focusedPosX, focusedPosY, focusedItem, true);
+    RenderItem(focusedPosX, focusedPosY, focusedItem.get(), true);
 
   g_graphicsContext.RestoreClipRegion();
 

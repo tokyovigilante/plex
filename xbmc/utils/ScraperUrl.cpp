@@ -62,81 +62,83 @@ void CScraperUrl::Clear()
 
 bool CScraperUrl::Parse()
 {
-  return ParseString(m_xml);
+  CStdString strToParse = m_xml;
+  m_xml.Empty();
+  return ParseString(strToParse);
 }
 
 bool CScraperUrl::ParseElement(const TiXmlElement* element)
 {
-	if (!element || !element->FirstChild()) return false;
+  if (!element || !element->FirstChild()) return false;
 
-	std::stringstream stream;
-	stream << *element;
-	m_xml += stream.str();
-	bool bHasChilds = false;
-	if (element->FirstChildElement("thumb")) 
-	{
-		element = element->FirstChildElement("thumb");
-		bHasChilds = true;
-	}
-	else if (element->FirstChildElement("url")) 
-	{
-		element = element->FirstChildElement("url");
-		bHasChilds = true;
-	}
-	while (element)
-	{
-		SUrlEntry url;
-		url.m_url = element->FirstChild()->Value();
-		const char* pSpoof = element->Attribute("spoof");
-		if (pSpoof)
-			url.m_spoof = pSpoof;
-		const char* szPost=element->Attribute("post");
-		if (szPost && stricmp(szPost,"yes") == 0)
-			url.m_post = true;
-		else
-			url.m_post = false;
+  std::stringstream stream;
+  stream << *element;
+  m_xml += stream.str();
+  bool bHasChilds = false;
+  if (element->FirstChildElement("thumb"))
+  {
+    element = element->FirstChildElement("thumb");
+    bHasChilds = true;
+  }
+  else if (element->FirstChildElement("url"))
+  {
+    element = element->FirstChildElement("url");
+    bHasChilds = true;
+  }
+  while (element)
+  {
+    SUrlEntry url;
+    url.m_url = element->FirstChild()->Value();
+    const char* pSpoof = element->Attribute("spoof");
+    if (pSpoof)
+      url.m_spoof = pSpoof;
+    const char* szPost=element->Attribute("post");
+    if (szPost && stricmp(szPost,"yes") == 0)
+      url.m_post = true;
+    else
+      url.m_post = false;
     const char* pCache = element->Attribute("cache");
     if (pCache)
       url.m_cache = pCache;
 
-		const char* szType = element->Attribute("type");
-		url.m_type = URL_TYPE_GENERAL;
-		if (szType && stricmp(szType,"season") == 0)
-		{
-			url.m_type = URL_TYPE_SEASON;
-			const char* szSeason = element->Attribute("season");
-			if (szSeason)
-				url.m_season = atoi(szSeason);
-			else
-				url.m_season = -1;
-		}
-		else
-			url.m_season = -1;
+    const char* szType = element->Attribute("type");
+    url.m_type = URL_TYPE_GENERAL;
+    if (szType && stricmp(szType,"season") == 0)
+    {
+      url.m_type = URL_TYPE_SEASON;
+      const char* szSeason = element->Attribute("season");
+      if (szSeason)
+        url.m_season = atoi(szSeason);
+      else
+        url.m_season = -1;
+    }
+    else
+      url.m_season = -1;
 
-		m_url.push_back(url);
-		if (bHasChilds)
-		{
-			const TiXmlElement* temp = element->NextSiblingElement("thumb");
-			if (temp)
-				element = temp;
-			else
-				element = element->NextSiblingElement("url");
-		}
-		else
-			element = NULL;
-	}
-	return true;
+    m_url.push_back(url);
+    if (bHasChilds)
+    {
+      const TiXmlElement* temp = element->NextSiblingElement("thumb");
+      if (temp)
+        element = temp;
+      else
+        element = element->NextSiblingElement("url");
+    }
+    else
+      element = NULL;
+  }
+  return true;
 }
 
 bool CScraperUrl::ParseString(CStdString strUrl)
 {
   if (strUrl.IsEmpty())
     return false;
-  
+
   // ok, now parse the xml file
   if (strUrl.Find("encoding=\"utf-8\"") < 0)
     g_charsetConverter.stringCharsetToUtf8(strUrl);
-  
+
   TiXmlDocument doc;
   doc.Parse(strUrl.c_str(),0,TIXML_ENCODING_UTF8);
   m_xml += strUrl;
@@ -213,7 +215,7 @@ bool CScraperUrl::Get(const SUrlEntry& scrURL, string& strHTML, CHTTP& http)
     if (!http.Post(strUrl, strOptions, strHTML))
       return false;
   }
-  else 
+  else
     if (!http.Get(scrURL.m_url, strHTML))
       return false;
 
@@ -225,7 +227,7 @@ bool CScraperUrl::Get(const SUrlEntry& scrURL, string& strHTML, CHTTP& http)
     if (iSize)
     {
       strHTML.clear();
-      strHTML.append(strBuffer.c_str(),strBuffer.data()+iSize);      
+      strHTML.append(strBuffer.c_str(),strBuffer.data()+iSize);
     }
   }
 
@@ -245,6 +247,21 @@ bool CScraperUrl::DownloadThumbnail(const CStdString &thumb, const CScraperUrl::
 {
   if (entry.m_url.IsEmpty())
     return false;
+
+  CURL url(entry.m_url);
+  if (url.GetProtocol() != "http")
+  { // do a direct file copy
+    try
+    {
+      CPicture picture;
+      return picture.DoCreateThumbnail(entry.m_url, thumb);
+    }
+    catch (...)
+    {
+      ::DeleteFile(thumb.c_str());
+    }
+    return false;
+  }
 
   CHTTP http;
   http.SetReferer(entry.m_spoof);
@@ -284,9 +301,10 @@ bool CScraperUrl::ParseEpisodeGuide(CStdString strUrls)
     {
       ParseElement(link);
       link = link->NextSiblingElement("url");
-    } 
+    }
   }
   else
     return false;
+
   return true;
 }

@@ -246,6 +246,13 @@ void AC3Codec::SetupChannels(unsigned flags)
   static const int ac3Channels[8] = { 2, 1, 2, 3, 3, 4, 4, 5 };
   m_iSourceChannels = ac3Channels[m_iFlags & 7];
   if (m_iFlags & A52_LFE) m_iSourceChannels++;
+  
+#ifdef __APPLE__
+  // Setup passthrough here...
+  m_iOutputChannels = 2;
+  m_iOutputMapping = 0x21;
+  m_iFlags = A52_STEREO;
+#endif
 }
 
 int AC3Codec::ReadInput()

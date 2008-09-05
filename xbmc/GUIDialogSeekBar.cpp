@@ -63,17 +63,12 @@ bool CGUIDialogSeekBar::OnAction(const CAction &action)
     // calculate our seek amount
     if (g_application.m_pPlayer && !g_infoManager.m_performingSeek)
     {
-      //100% over 1 second.
-      float speed = 100.0f;
-      if( action.fRepeat )
-        speed *= action.fRepeat;
-      else
-        speed /= g_infoManager.GetFPS();
+      // 100% over a couple seconds.
+      float speed = 1.0f;
 
-      if (action.wID == ACTION_ANALOG_SEEK_FORWARD)
-        m_fSeekPercentage += action.fAmount1 * action.fAmount1 * speed;
-      else
-        m_fSeekPercentage -= action.fAmount1 * action.fAmount1 * speed;
+      // This is a bit of hack right now, to match what we're getting.
+      m_fSeekPercentage += action.fAmount1 * speed;
+      
       if (m_fSeekPercentage > 100.0f) m_fSeekPercentage = 100.0f;
       if (m_fSeekPercentage < 0.0f) m_fSeekPercentage = 0.0f;
       CGUISliderControl *pSlider = (CGUISliderControl*)GetControl(POPUP_SEEK_SLIDER);

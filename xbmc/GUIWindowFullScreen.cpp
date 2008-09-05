@@ -34,6 +34,7 @@
 #include "GUIFontManager.h"
 #include "GUITextLayout.h"
 #include "GUIWindowManager.h"
+#include "GUIDialogFullScreenInfo.h"
 #include "Settings.h"
 #include "FileItem.h"
 
@@ -202,12 +203,12 @@ bool CGUIWindowFullScreen::OnAction(const CAction &action)
     break;
 
   case ACTION_BIG_STEP_BACK:
-    SeekChapter(g_application.m_pPlayer->GetChapter() - 1);
+    Seek(false, true);
     return true;
     break;
 
   case ACTION_BIG_STEP_FORWARD:
-    SeekChapter(g_application.m_pPlayer->GetChapter() + 1);
+    Seek(true, true);
     return true;
     break;
 
@@ -245,6 +246,17 @@ bool CGUIWindowFullScreen::OnAction(const CAction &action)
     }
     return true;
     break;
+
+  case ACTION_SHOW_INFO:
+    {
+      CGUIDialogFullScreenInfo* pDialog = (CGUIDialogFullScreenInfo*)m_gWindowManager.GetWindow(WINDOW_DIALOG_FULLSCREEN_INFO);
+      if (pDialog)
+      {
+        pDialog->DoModal();
+        return true;
+      }
+      break;
+    }
 
   case ACTION_NEXT_SUBTITLE:
     {
@@ -469,6 +481,8 @@ bool CGUIWindowFullScreen::OnMessage(CGUIMessage& message)
 
       CGUIDialog *pDialog = (CGUIDialog *)m_gWindowManager.GetWindow(WINDOW_OSD);
       if (pDialog) pDialog->Close(true);
+      pDialog = (CGUIDialog *)m_gWindowManager.GetWindow(WINDOW_DIALOG_FULLSCREEN_INFO);
+      if (pDialog) pDialog->Close(true);
 
       FreeResources(true);
 
@@ -516,10 +530,19 @@ bool CGUIWindowFullScreen::OnMouse(const CPoint &point)
     return true;
   }
   if (g_Mouse.bClick[MOUSE_LEFT_BUTTON])
-  { // no control found to absorb this click - toggle the OSD
+  { // no control found to absorb this click - pause video
     CAction action;
-    action.wID = ACTION_SHOW_OSD;
-    OnAction(action);
+    action.wID = ACTION_PAUSE;
+    return g_application.OnAction(action);
+  }
+  if (g_Mouse.HasMoved())
+  { // movement - toggle the OSD
+    CGUIWindowOSD *pOSD = (CGUIWindowOSD *)m_gWindowManager.GetWindow(WINDOW_OSD);
+    if (pOSD)
+    {
+      pOSD->SetAutoClose(3000);
+      pOSD->DoModal();
+    }
   }
   return true;
 }
@@ -558,7 +581,7 @@ bool CGUIWindowFullScreen::NeedRenderFullScreen()
   if (m_bShowCurrentTime) return true;
   if (g_infoManager.GetDisplayAfterSeek()) return true;
   if (g_infoManager.GetBool(PLAYER_SEEKBAR, GetID())) return true;
-  if (CUtil::IsUsingTTFSubtitles() && g_application.m_pPlayer->GetSubtitleVisible() && m_subsLayout)
+  if (CUtil::IsUsingTTFSubtitles() && g_application.m_pPlayer && g_application.m_pPlayer->GetSubtitleVisible() && m_subsLayout)
     return true;
   if (m_bLastRender)
   {
@@ -755,7 +778,7 @@ void CGUIWindowFullScreen::RenderTTFSubtitles()
       subtitleText.Replace("</u", "");
 
       RESOLUTION res = g_graphicsContext.GetVideoResolution();
-      g_graphicsContext.SetScalingResolution(res, 0, 0, false);
+      g_graphicsContext.SetRenderingResolution(res, 0, 0, false);
 
       float maxWidth = (float) g_settings.m_ResInfo[res].Overscan.right - g_settings.m_ResInfo[res].Overscan.left;
       m_subsLayout->Update(subtitleText, maxWidth * 0.9f);

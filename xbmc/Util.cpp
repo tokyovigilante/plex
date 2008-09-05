@@ -389,44 +389,66 @@ CStdString CUtil::GetTitleFromPath(const CStdString& strFileNameAndPath, bool bI
   CStdString path(strFileNameAndPath);
   RemoveSlashAtEnd(path);
   CStdString strFilename = GetFileName(path);
-
-  // if upnp:// we can ask for the friendlyname
-#ifdef HAS_UPNP
-  if (strFileNameAndPath.Left(7).Compare("upnp://") == 0) {
-      strFilename = CUPnPDirectory::GetFriendlyName(strFileNameAndPath.c_str());
-  }
-#endif
+  
   CURL url(strFileNameAndPath);
-  if (strFileNameAndPath.Compare("lastfm://") == 0)
+  CStdString strHostname = url.GetHostName();
+
+#ifdef HAS_UPNP
+  // UPNP
+  if (url.GetProtocol() == "upnp")
+    strFilename = CUPnPDirectory::GetFriendlyName(strFileNameAndPath.c_str());
+#endif
+
+  // LastFM
+  if (url.GetProtocol() == "lastfm")
   {
-    strFilename = g_localizeStrings.Get(15200);
-  }
-  else if (strFileNameAndPath.Compare("smb://") == 0)
-  {
-    strFilename = g_localizeStrings.Get(20171); // Windows SMB Network (SMB)
+    if (strFilename.IsEmpty()) 
+      strFilename = g_localizeStrings.Get(15200); 
+    else 
+      strFilename = g_localizeStrings.Get(15200) + " - " + strFilename; 
   }
 
-  /*else if (strFileNameAndPath.Compare("soundtrack://") == 0)
+  // Shoutcast
+  else if (url.GetProtocol() == "shout")
   {
-    strFilename = "MS Soundtracks";  // Would need localizing
-  }*/
+    const int genre = strFileNameAndPath.find_first_of('=');
+    if(genre <0) 
+      strFilename = g_localizeStrings.Get(260);
+    else
+      strFilename = g_localizeStrings.Get(260) + " - " + strFileNameAndPath.substr(genre+1).c_str();
+  }
 
-  else if (strFileNameAndPath.Compare("shout://") == 0)
-  {
-    strFilename = g_localizeStrings.Get(260); // Shoutcast
-  }
-  else if (strFileNameAndPath.Compare("ftp://") == 0 || strFileNameAndPath.Compare("ftps://") == 0)
-  {
-    strFilename = g_localizeStrings.Get(20174); // FTP Server
-  }
-  else if (strFileNameAndPath.Compare("xbms://") == 0)
-  {
+  // Windows SMB Network (SMB)
+  else if (url.GetProtocol() == "smb" && strFilename.IsEmpty())
+    strFilename = g_localizeStrings.Get(20171);
+
+  // XBMSP Network
+  else if (url.GetProtocol() == "xbms" && strFilename.IsEmpty()) 
     strFilename = "XBMSP Network";
-  }
-  else if (strFileNameAndPath.Compare("daap://") == 0)
-  {
-    strFilename = g_localizeStrings.Get(20174); // iTunes music share (DAAP)
-  }
+
+  // iTunes music share (DAAP)
+  else if (url.GetProtocol() == "daap" && strFilename.IsEmpty()) 
+    strFilename = g_localizeStrings.Get(20174);
+
+  // HDHomerun Devices
+  else if (url.GetProtocol() == "hdhomerun" && strFilename.IsEmpty()) 
+    strFilename = "HDHomerun Devices";
+  
+  // ReplayTV Devices
+  else if (url.GetProtocol() == "rtv") 
+    strFilename = "ReplayTV Devices";
+
+  // SAP Streams
+  else if (url.GetProtocol() == "sap" && strFilename.IsEmpty()) 
+    strFilename = "SAP Streams";
+
+  // Music Playlists
+  else if (path.Left(24).Equals("special://musicplaylists")) 
+    strFilename = g_localizeStrings.Get(20011);
+
+  // Video Playlists
+  else if (path.Left(24).Equals("special://videoplaylists")) 
+    strFilename = g_localizeStrings.Get(20012);
 
   // now remove the extension if needed
   if (g_guiSettings.GetBool("filelists.hideextensions") && !bIsFolder)
@@ -2935,7 +2957,6 @@ void CUtil::Split(const CStdString& strFileNameAndPath, CStdString& strPath, CSt
 void CUtil::CreateArchivePath(CStdString& strUrlPath, const CStdString& strType,
                               const CStdString& strArchivePath,
                               const CStdString& strFilePathInArchive,
-                              const CStdString& strCachePath,
                               const CStdString strPwd)
 {
   CStdString strBuffer;
@@ -3119,20 +3140,19 @@ void CUtil::SetBrightnessContrastGamma(float Brightness, float Contrast, float G
 void CUtil::Tokenize(const CStdString& path, vector<CStdString>& tokens, const string& delimiters)
 {
   // Tokenize ripped from http://www.linuxselfhelp.com/HOWTO/C++Programming-HOWTO-7.html
-  string str = _P(path);
   // Skip delimiters at beginning.
-  string::size_type lastPos = str.find_first_not_of(delimiters, 0);
+  string::size_type lastPos = path.find_first_not_of(delimiters, 0);
   // Find first "non-delimiter".
-  string::size_type pos = str.find_first_of(delimiters, lastPos);
+  string::size_type pos = path.find_first_of(delimiters, lastPos);
 
   while (string::npos != pos || string::npos != lastPos)
   {
     // Found a token, add it to the vector.
-    tokens.push_back(str.substr(lastPos, pos - lastPos));
+    tokens.push_back(path.substr(lastPos, pos - lastPos));
     // Skip delimiters.  Note the "not_of"
-    lastPos = str.find_first_not_of(delimiters, pos);
+    lastPos = path.find_first_not_of(delimiters, pos);
     // Find next "non-delimiter"
-    pos = str.find_first_of(delimiters, lastPos);
+    pos = path.find_first_of(delimiters, lastPos);
   }
 }
 
@@ -3486,24 +3506,21 @@ bool CUtil::CreateDirectoryEx(const CStdString& strPath)
 
 CStdString CUtil::MakeLegalFileName(const CStdString &strFile, bool isFATX)
 {
-  CStdString result = strFile;
-  // check if the filename is a legal FATX one.
-  if (isFATX)
-  {
-    CUtil::GetFatXQualifiedPath(result);
-  }
-  else
-  { // just filter out some illegal characters on windows
-    result.Remove('\\');
-    result.Remove('/');
-    result.Remove(':');
-    result.Remove('*');
-    result.Remove('?');
-    result.Remove('\"');
-    result.Remove('<');
-    result.Remove('>');
-    result.Remove('|');
-  }
+  CStdString strPath;
+  GetDirectory(strFile,strPath);
+  CStdString result = GetFileName(strFile);
+  
+  // just filter out some illegal characters on windows
+  result.Remove(':');
+  result.Remove('*');
+  result.Remove('?');
+  result.Remove('\"');
+  result.Remove('<');
+  result.Remove('>');
+  result.Remove('|');
+    
+  result = strPath+result;
+
   return result;
 }
 
@@ -3516,18 +3533,6 @@ char CUtil::GetDirectorySeperator(const CStdString &strFilename)
 {
   CURL url(strFilename);
   return url.GetDirectorySeparator();
-}
-
-void CUtil::ConvertFileItemToPlayListItem(const CFileItem *pItem, CPlayListItem &playlistitem)
-{
-  *(CFileItem*)&playlistitem = *pItem;
-
-  if (pItem->HasMusicInfoTag())
-    playlistitem.SetDuration(pItem->GetMusicInfoTag()->GetDuration());
-  if (playlistitem.HasVideoInfoTag())
-    playlistitem.SetDuration(StringUtils::TimeStringToSeconds(pItem->GetVideoInfoTag()->m_strRuntime));
-  if (pItem->IsVideoDb())
-    playlistitem.m_strPath = pItem->GetVideoInfoTag()->m_strFileNameAndPath;
 }
 
 bool CUtil::IsUsingTTFSubtitles()
@@ -3552,6 +3557,7 @@ const BUILT_IN commands[] = {
   { "Reboot",                     false,  "Reboot the xbox (power cycle)" },
   { "Restart",                    false,  "Restart the xbox (power cycle)" },
   { "ShutDown",                   false,  "Shutdown the xbox" },
+  { "SleepSystem",                false,  "Go to standby mode"},
   { "Dashboard",                  false,  "Run your dashboard" },
   { "RestartApp",                 false,  "Restart XBMC" },
   { "Credits",                    false,  "Run XBMCs Credits" },
@@ -3610,7 +3616,9 @@ const BUILT_IN commands[] = {
   { "Container.NextSortMethod",   false,  "Change to the next sort method" },
   { "Container.PreviousSortMethod",false, "Change to the previous sort method" },
   { "Container.SetSortMethod",    true,   "Change to the specified sort method" },
+  { "Container.SortDirection",    false,  "Toggle the sort direction" },
   { "Control.Move",               true,   "Tells the specified control to 'move' to another entry specified by offset" },
+  { "SendClick",                  true,   "Send a click message from the given control to the given window" },
 };
 
 bool CUtil::IsBuiltIn(const CStdString& execString)
@@ -3673,6 +3681,12 @@ int CUtil::ExecBuiltIn(const CStdString& execString)
   else if (execute.Equals("shutdown"))
   {
     g_application.getApplicationMessenger().Shutdown();
+  }
+  else if (execute.Equals("sleepSystem"))
+  {
+#ifdef __APPLE__
+	g_application.getApplicationMessenger().SleepSystem();
+#endif
   }
   else if (execute.Equals("dashboard"))
   {
@@ -4581,6 +4595,28 @@ int CUtil::ExecBuiltIn(const CStdString& execString)
     CGUIMessage message(GUI_MSG_CHANGE_SORT_METHOD, m_gWindowManager.GetActiveWindow(), 0, atoi(parameter.c_str()));
     g_graphicsContext.SendMessage(message);
   }
+  else if (execute.Equals("container.sortdirection"))
+  {
+    CGUIMessage message(GUI_MSG_CHANGE_SORT_DIRECTION, m_gWindowManager.GetActiveWindow(), 0, 0);
+    g_graphicsContext.SendMessage(message);
+  }
+  else if (execute.Equals("sendclick"))
+  {
+    CStdStringArray params;
+    StringUtils::SplitString(parameter, ",", params);
+    if (params.size() == 2)
+    {
+      // have a window - convert it
+      int windowID = g_buttonTranslator.TranslateWindowString(params[0].c_str());
+      CGUIMessage message(GUI_MSG_CLICKED, atoi(params[1].c_str()), windowID);
+      g_graphicsContext.SendMessage(message);
+    }
+    else if (params.size() == 1)
+    { // single param - assume you meant the active window
+      CGUIMessage message(GUI_MSG_CLICKED, atoi(params[0].c_str()), m_gWindowManager.GetActiveWindow());
+      g_graphicsContext.SendMessage(message);
+    }
+  }
   else
     return -1;
   return 0;
@@ -4604,6 +4640,8 @@ int CUtil::GetMatchingSource(const CStdString& strPath1, VECSOURCES& VECSOURCES,
 
   if (checkURL.GetProtocol() == "shout")
     strPath = checkURL.GetHostName();
+  if (checkURL.GetProtocol() == "lastfm")
+    return 1;
   if (checkURL.GetProtocol() == "tuxbox")
     return 1;
   if (checkURL.GetProtocol() == "plugin")
@@ -5475,7 +5513,7 @@ void CUtil::GetRecursiveListing(const CStdString& strPath, CFileItemList& items,
     if (myItems[i]->m_bIsFolder)
       CUtil::GetRecursiveListing(myItems[i]->m_strPath,items,strMask,bUseFileDirectories);
     else if (!myItems[i]->IsRAR() && !myItems[i]->IsZIP())
-      items.Add(new CFileItem(*myItems[i]));
+      items.Add(myItems[i]);
   }
 }
 
@@ -5487,8 +5525,7 @@ void CUtil::GetRecursiveDirsListing(const CStdString& strPath, CFileItemList& it
   {
     if (myItems[i]->m_bIsFolder && !myItems[i]->m_strPath.Equals(".."))
     {
-      CFileItem* pItem = new CFileItem(*myItems[i]);
-      item.Add(pItem);
+      item.Add(myItems[i]);
       CUtil::GetRecursiveDirsListing(myItems[i]->m_strPath,item);
     }
   }
@@ -5687,7 +5724,7 @@ void CUtil::GetSkinThemes(std::vector<CStdString>& vecTheme)
   // Search for Themes in the Current skin!
   for (int i = 0; i < items.Size(); ++i)
   {
-    CFileItem* pItem = items[i];
+    CFileItemPtr pItem = items[i];
     if (!pItem->m_bIsFolder)
     {
       CStdString strExtension;
@@ -5834,7 +5871,7 @@ CStdString CUtil::TranslatePath(const CStdString& path)
       if (lowerPath.Find("q:\\plugins") == 0)
       {
         CStdString str = getenv("HOME");
-        str.append("/Library/Application Support/XBMC/Plugins");
+        str.append("/Library/Application Support/Plex/Plugins");
         str.append(path.substr(10));
         str.Replace('\\', '/');
         return str;

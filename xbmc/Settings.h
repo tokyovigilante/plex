@@ -80,6 +80,11 @@ public:
 class CSkinBool
 {
 public:
+  CSkinBool() {}
+  CSkinBool(const char* name, bool value)
+    : name(name)
+    , value(value) {}
+  
   CStdString name;
   bool value;
 };
@@ -106,6 +111,7 @@ public:
   bool LoadProfile(int index);
   bool SaveSettingsToProfile(int index);
   bool DeleteProfile(int index);
+  void CreateProfileFolders();
 
   VECSOURCES *GetSourcesFromType(const CStdString &type);
   CStdString GetDefaultSourceFromType(const CStdString &type);
@@ -208,6 +214,7 @@ public:
     bool m_bVideoLibraryAllItemsOnBottom;
     bool m_bVideoLibraryHideRecentlyAddedItems;
     bool m_bVideoLibraryHideEmptySeries;
+    bool m_bVideoLibraryCleanOnUpdate;
 
     bool m_bUseEvilB;
     std::vector<CStdString> m_vecTokens; // cleaning strings tied to language
@@ -228,6 +235,7 @@ public:
     bool m_fakeFullScreen;
 #endif
     int m_playlistRetries;
+    int m_playlistTimeout;
   };
 
   struct stSettings
@@ -280,7 +288,6 @@ public:
     int m_iVideoStartWindow;
 
     int m_iMyVideoStack;
-    bool m_bMyVideoCleanTitles;
     char m_szMyVideoCleanTokens[256];
     char m_szMyVideoCleanSeparators[32];
 
@@ -362,7 +369,6 @@ public:
   CStdString GetVideoFanartFolder() const;
 
   CStdString GetSettingsFile() const;
-  CStdString GetAvpackSettingsFile() const;
 
   bool LoadUPnPXml(const CStdString& strSettingsFile);
   bool SaveUPnPXml(const CStdString& strSettingsFile) const;
@@ -370,11 +376,16 @@ public:
   bool LoadProfiles(const CStdString& strSettingsFile);
   bool SaveProfiles(const CStdString& strSettingsFile) const;
 
-  bool SaveSettings(const CStdString& strSettingsFile) const;
+  bool SaveSettings(const CStdString& strSettingsFile, CGUISettings *localSettings = NULL) const;
 
   bool SaveSources();
 
 protected:
+  // these 3 don't have a default - used for advancedsettings.xml
+  bool GetInteger(const TiXmlElement* pRootElement, const char *strTagName, int& iValue, const int iMin, const int iMax);
+  bool GetFloat(const TiXmlElement* pRootElement, const char *strTagName, float& fValue, const float fMin, const float fMax);
+  bool GetString(const TiXmlElement* pRootElement, const char *strTagName, CStdString& strValue);
+
   bool GetInteger(const TiXmlElement* pRootElement, const char *strTagName, int& iValue, const int iDefault, const int iMin, const int iMax);
   bool GetFloat(const TiXmlElement* pRootElement, const char *strTagName, float& fValue, const float fDefault, const float fMin, const float fMax);
   bool GetString(const TiXmlElement* pRootElement, const char *strTagName, CStdString& strValue, const CStdString& strDefaultValue);
@@ -382,7 +393,7 @@ protected:
   bool GetSource(const CStdString &category, const TiXmlNode *source, CMediaSource &share);
   void GetSources(const TiXmlElement* pRootElement, const CStdString& strTagName, VECSOURCES& items, CStdString& strDefault);
   bool SetSources(TiXmlNode *root, const char *section, const VECSOURCES &shares, const char *defaultPath);
-  void GetViewState(const TiXmlElement* pRootElement, const CStdString& strTagName, CViewState &viewState);
+  void GetViewState(const TiXmlElement* pRootElement, const CStdString& strTagName, CViewState &viewState, SORT_METHOD defaultSort = SORT_METHOD_LABEL);
 
   void ConvertHomeVar(CStdString& strText);
   // functions for writing xml files
@@ -409,12 +420,6 @@ protected:
   void LoadUserFolderLayout();
 
   void LoadRSSFeeds();
-
-  bool SaveAvpackXML() const;
-  bool SaveNewAvpackXML() const;
-  bool SaveAvpackSettings(TiXmlNode *io_pRoot) const;
-  bool LoadAvpackXML();
-
 };
 
 extern class CSettings g_settings;

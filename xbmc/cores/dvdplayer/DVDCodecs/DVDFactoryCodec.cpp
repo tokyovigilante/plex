@@ -125,8 +125,11 @@ CDVDVideoCodec* CDVDFactoryCodec::CreateVideoCodec( CDVDStreamInfo &hint )
   }
   else 
 #endif
-  { // non halfres mode, we can use other decoders
-    if (hint.codec == CODEC_ID_MPEG2VIDEO || hint.codec == CODEC_ID_MPEG1VIDEO)
+  { 
+    // Non halfres mode, we can use other decoders. Don't use libmpeg2 for previewing, because the seeking
+    // involved in creating a thumbnail causes lots of crashes.
+    //
+    if ((hint.codec == CODEC_ID_MPEG2VIDEO || hint.codec == CODEC_ID_MPEG1VIDEO) && hint.forPreview == false)
     {
       CDVDCodecOptions dvdOptions;
       if( (pCodec = OpenCodec(new CDVDVideoCodecLibMpeg2(), hint, dvdOptions)) ) return pCodec;

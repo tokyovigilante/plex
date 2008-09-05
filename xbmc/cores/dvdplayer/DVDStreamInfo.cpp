@@ -36,6 +36,7 @@ CDVDStreamInfo::~CDVDStreamInfo()
 
   extradata = NULL;
   extrasize = 0;
+  forPreview = false;
 }
 
 

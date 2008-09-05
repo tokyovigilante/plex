@@ -51,7 +51,7 @@ bool CVideoDatabaseDirectory::GetDirectory(const CStdString& strPath, CFileItemL
   bool bResult = pNode->GetChilds(items);
   for (int i=0;i<items.Size();++i)
   {
-    CFileItem* item = items[i];
+    CFileItemPtr item = items[i];
     if (item->m_bIsFolder && !item->HasThumbnail())
     {
       CStdString strImage = GetIcon(item->m_strPath);
