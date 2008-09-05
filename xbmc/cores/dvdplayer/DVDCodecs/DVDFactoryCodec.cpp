@@ -155,12 +155,14 @@ CDVDAudioCodec* CDVDFactoryCodec::CreateAudioCodec( CDVDStreamInfo &hint )
       if( pCodec ) return pCodec;
       break;
     }
+#if 0
   case CODEC_ID_DTS:
     {
       pCodec = OpenCodec( new CDVDAudioCodecLibDts(), hint, options );
       if( pCodec ) return pCodec;
       break;
     }
+#endif
   case CODEC_ID_MP2:
   case CODEC_ID_MP3:
     {

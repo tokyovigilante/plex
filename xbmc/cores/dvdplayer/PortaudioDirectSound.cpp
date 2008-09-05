@@ -285,8 +285,8 @@ DWORD PortAudioDirectSound::AddPackets(unsigned char *data, DWORD len)
   //
   if (samplesToWrite > samplesPassedIn)
 	  samplesToWrite = samplesPassedIn;
-	
-  if (m_bEncodeAC3)
+//#warning AC3 disabled
+	if (m_bEncodeAC3)
   {	  
 	  int ac3_frame_count = 0;
 	  if ((ac3_frame_count = ac3encoder_write_samples(&m_ac3encoder, pcmPtr, samplesToWrite)) == 0)
