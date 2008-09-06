@@ -97,7 +97,7 @@ bool RTSPTVDirectory::GetDirectory(const CStdString& strPath, CFileItemList &ite
  CFileItem* item(new CFileItem(base, false));
  item->SetLabel("Live Stream");
  item->SetLabelPreformated(true);
- items.Add(item);
+ //items.Add(item);
 	/*if(url.GetFileName().IsEmpty())
 	{
 		CFileItemPtr item(new CFileItem(base + "/groups/", true));

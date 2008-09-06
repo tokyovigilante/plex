@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		946A03E70E71485F0012D7E9 /* PlexDelegate.mm in Sources */ = {isa = PBXBuildFile; fileRef = E371CB8E0E303C7100FBF841 /* PlexDelegate.mm */; };
+		94BF234C0E723B9400F613AE /* CoreAudioAUHAL.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 94BF234B0E723B9400F613AE /* CoreAudioAUHAL.cpp */; };
 		94F3AFFD0E383E3F00940327 /* RTSPTVDirectory.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 944379670E27096400FB8C08 /* RTSPTVDirectory.cpp */; };
 		94F3AFFF0E383E7000940327 /* DVDInputStreamRTSP.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9443781B0E26DF8900FB8C08 /* DVDInputStreamRTSP.cpp */; };
 		E336EF2F0E60256000270758 /* GUIViewStatePictures.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E336EF000E60250700270758 /* GUIViewStatePictures.cpp */; };
@@ -632,7 +634,6 @@
 		E371C46A0E2F2D5400FBF841 /* PltUPnP.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E38E1AF70D25F9FB00618676 /* PltUPnP.cpp */; };
 		E371C46B0E2F2D5400FBF841 /* PluginDirectory.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E38E17440D25F9FA00618676 /* PluginDirectory.cpp */; };
 		E371C46C0E2F2D5400FBF841 /* PluginSettings.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E38E1DEF0D25F9FD00618676 /* PluginSettings.cpp */; };
-		E371C46D0E2F2D5400FBF841 /* PortaudioDirectSound.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E38E159D0D25F9FA00618676 /* PortaudioDirectSound.cpp */; };
 		E371C46E0E2F2D5400FBF841 /* posmap.c in Sources */ = {isa = PBXBuildFile; fileRef = 810C9F7F0D67BDE20095F5DD /* posmap.c */; };
 		E371C46F0E2F2D5400FBF841 /* Profile.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E38E1DF10D25F9FD00618676 /* Profile.cpp */; };
 		E371C4700E2F2D5400FBF841 /* proginfo.c in Sources */ = {isa = PBXBuildFile; fileRef = 810C9F800D67BDE20095F5DD /* proginfo.c */; };
@@ -836,7 +837,6 @@
 		E371C53A0E2F2DF500FBF841 /* QuickTime.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E35EF2540D380C3D00DB5CD5 /* QuickTime.framework */; };
 		E371C53B0E2F2DF500FBF841 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EFF0820D0E106C11004114E6 /* Security.framework */; };
 		E371CB160E2F39CD00FBF841 /* Plex.xib in Resources */ = {isa = PBXBuildFile; fileRef = E371C1160E2F130900FBF841 /* Plex.xib */; };
-		E371CB900E303C7100FBF841 /* PlexDelegate.mm in Sources */ = {isa = PBXBuildFile; fileRef = E371CB8E0E303C7100FBF841 /* PlexDelegate.mm */; };
 		E371CBB10E3044D900FBF841 /* Plex.icns in Resources */ = {isa = PBXBuildFile; fileRef = E371CBB00E3044D900FBF841 /* Plex.icns */; };
 		E371CC1A0E33473A00FBF841 /* AppleRemote.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E371CC190E33473A00FBF841 /* AppleRemote.cpp */; };
 		E38AAB560E5D441000C1B750 /* SmartCrashReportsInstall.o in Frameworks */ = {isa = PBXBuildFile; fileRef = E38AAB550E5D441000C1B750 /* SmartCrashReportsInstall.o */; };
@@ -996,6 +996,8 @@
 		94437B060E283D1900FB8C08 /* GUIWindowEPG.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = GUIWindowEPG.cpp; sourceTree = "<group>"; };
 		94B9CC7C0E201D6200FA073E /* DVDDemuxMPEGTS.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = DVDDemuxMPEGTS.cpp; sourceTree = "<group>"; };
 		94B9CC7D0E201D6200FA073E /* DVDDemuxMPEGTS.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DVDDemuxMPEGTS.h; sourceTree = "<group>"; };
+		94BF234A0E723B9400F613AE /* CoreAudioAUHAL.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CoreAudioAUHAL.h; sourceTree = "<group>"; };
+		94BF234B0E723B9400F613AE /* CoreAudioAUHAL.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CoreAudioAUHAL.cpp; sourceTree = "<group>"; };
 		B1A921F30DF6D14F0024CC4F /* libbz2.1.0.4.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libbz2.1.0.4.dylib; path = /opt/local/lib/libbz2.1.0.4.dylib; sourceTree = "<absolute>"; };
 		E306D12C0DDF7B590052C2AD /* XBMCHelper.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = XBMCHelper.cpp; sourceTree = "<group>"; };
 		E306D12D0DDF7B590052C2AD /* XBMCHelper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = XBMCHelper.h; sourceTree = "<group>"; };
@@ -4115,6 +4117,8 @@
 				E38E159A0D25F9FA00618676 /* IDVDPlayer.h */,
 				E38E159D0D25F9FA00618676 /* PortaudioDirectSound.cpp */,
 				E38E159E0D25F9FA00618676 /* PortaudioDirectSound.h */,
+				94BF234A0E723B9400F613AE /* CoreAudioAUHAL.h */,
+				94BF234B0E723B9400F613AE /* CoreAudioAUHAL.cpp */,
 			);
 			path = dvdplayer;
 			sourceTree = "<group>";
@@ -6322,7 +6326,8 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "./build-number.py";
+			shellScript = "
+";
 			showEnvVarsInLog = 0;
 		};
 /* End PBXShellScriptBuildPhase section */
@@ -6950,7 +6955,6 @@
 				E371C46A0E2F2D5400FBF841 /* PltUPnP.cpp in Sources */,
 				E371C46B0E2F2D5400FBF841 /* PluginDirectory.cpp in Sources */,
 				E371C46C0E2F2D5400FBF841 /* PluginSettings.cpp in Sources */,
-				E371C46D0E2F2D5400FBF841 /* PortaudioDirectSound.cpp in Sources */,
 				E371C46E0E2F2D5400FBF841 /* posmap.c in Sources */,
 				E371C46F0E2F2D5400FBF841 /* Profile.cpp in Sources */,
 				E371C4700E2F2D5400FBF841 /* proginfo.c in Sources */,
@@ -7109,10 +7113,8 @@
 				E371C5090E2F2D5400FBF841 /* YUV2RGBShader.cpp in Sources */,
 				E371C50A0E2F2D5400FBF841 /* ZipDirectory.cpp in Sources */,
 				E371C50B0E2F2D5400FBF841 /* ZipManager.cpp in Sources */,
-				E371CB900E303C7100FBF841 /* PlexDelegate.mm in Sources */,
 				94F3AFFD0E383E3F00940327 /* RTSPTVDirectory.cpp in Sources */,
 				94F3AFFF0E383E7000940327 /* DVDInputStreamRTSP.cpp in Sources */,
-				E371CB900E303C7100FBF841 /* PlexDelegate.mm in Sources */,
 				E3B963B70E3863CB0022F663 /* AMFObject.cpp in Sources */,
 				E3B963B80E3863D80022F663 /* rtmp.cpp in Sources */,
 				E3B963B90E3863E00022F663 /* rtmppacket.cpp in Sources */,
@@ -7124,6 +7126,8 @@
 				E3B2218C0E58F42100939882 /* DVDFileInfo.cpp in Sources */,
 				E336EF4C0E602A8B00270758 /* GUIDialogFullScreenInfo.cpp in Sources */,
 				E336F09F0E62D36200270758 /* FileMMS.cpp in Sources */,
+				946A03E70E71485F0012D7E9 /* PlexDelegate.mm in Sources */,
+				94BF234C0E723B9400F613AE /* CoreAudioAUHAL.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

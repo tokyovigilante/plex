@@ -25,7 +25,8 @@
 #include "cores/mplayer/ASyncDirectSound.h"
 #include "cores/mplayer/ac97directsound.h"
 #elif defined(__APPLE__)
-#include "PortaudioDirectSound.h"
+#include "CoreAudioAUHAL.h"
+//#include "PortaudioDirectSound.h"
 #elif _LINUX
 #include "ALSADirectSound.h"
 #else
@@ -101,7 +102,7 @@ bool CDVDAudio::Create(const DVDAudioFrame &audioframe, CodecID codec)
     m_pAudioDecoder = new CASyncDirectSound(m_pCallback, audioframe.channels, audioframe.sample_rate, audioframe.bits_per_sample, codecstring);
 #elif __APPLE__
 
-  PortAudioDirectSound* paDecoder = new PortAudioDirectSound(m_pCallback, audioframe.channels, audioframe.sample_rate, audioframe.bits_per_sample, false, codecstring, false, audioframe.passthrough);
+  CoreAudioAUHAL* paDecoder = new CoreAudioAUHAL(m_pCallback, audioframe.channels, audioframe.sample_rate, audioframe.bits_per_sample, false, codecstring, false, audioframe.passthrough);
   if (paDecoder->IsValid() == false)
   {
     delete paDecoder;

@@ -969,8 +969,8 @@ void CDVDDemuxFFmpeg::AddStream(int iId)
     }
 
     //FFMPEG has an error doesn't set type properly for DTS
-    if( m_streams[iId]->codec == CODEC_ID_AC3 && (pStream->id >= 136 && pStream->id <= 143) )
-      m_streams[iId]->codec = CODEC_ID_DTS;
+	if( m_streams[iId]->codec == CODEC_ID_AC3 && (pStream->id >= 136 && pStream->id <= 143) )
+	  m_streams[iId]->codec = CODEC_ID_DTS;
 
     if( m_pInput->IsStreamType(DVDSTREAM_TYPE_DVD) )
     {

@@ -536,7 +536,7 @@ int CFileSMB::Stat(struct __stat64* buffer)
 #endif
 
   CSingleLock lock(smb);
-  int iResult = smbc_fstat(m_fd, &tmpBuffer);
+	int iResult = 0;//smbc_fstat(m_fd, &tmpBuffer);
 
   buffer->st_dev = tmpBuffer.st_dev;
   buffer->st_ino = tmpBuffer.st_ino;  
