@@ -76,7 +76,7 @@
 #endif
 #endif
 #ifdef __APPLE__
-#include "CPortAudio.h"
+#include "CoreAudioAUHAL.h"
 #include "XBMCHelper.h"
 #include "CocoaUtils.h"
 #endif
@@ -3837,18 +3837,15 @@ void CGUIWindowSettingsCategory::FillInAudioDevices(CSetting* pSetting)
   CGUISpinControlEx *pControl = (CGUISpinControlEx *)GetControl(GetSetting(pSetting->GetSetting())->GetID());
   pControl->Clear();
 
-  std::vector<PaDeviceInfo* > deviceList = CPortAudio::GetDeviceList();
-  std::vector<PaDeviceInfo* >::const_iterator iter = deviceList.begin();
+  AudioDeviceArray* deviceList = CoreAudioPlexSupport::GetDeviceArray();
 
-  for (int i=0; iter != deviceList.end(); i++)
+  for (int i=0; i < deviceList->deviceCount; i++)
   {
-    PaDeviceInfo* dev = *iter;
-    pControl->AddLabel(dev->name, i);
+   // PaDeviceInfo* dev = *iter;
+	  pControl->AddLabel(deviceList->device[i]->deviceName, i);
 
-    if (g_guiSettings.GetString("audiooutput.audiodevice").Equals(dev->name))
+    if (g_guiSettings.GetString("audiooutput.audiodevice").Equals(deviceList->device[i]->deviceName))
         pControl->SetValue(i);
-
-    ++iter;
   }
 
 #endif
