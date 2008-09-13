@@ -33,17 +33,15 @@
 //#include "portaudio.h"
 #include "ringbuffer.h"
 #include "../mplayer/IDirectSoundRenderer.h"
-//#include "../mplayer/IAudioCallback.h"
-//#include "../ssrc.h"
+#include "../mplayer/IAudioCallback.h"
+#include "../ssrc.h"
 //#include "../../utils/PCMAmplifier.h"
 extern "C" {
 #include "ac3encoder.h"
 }
 
-#include "CoreAudioPlexSupport.h"
-
-//extern void RegisterAudioCallback(IAudioCallback* pCallback);
-//extern void UnRegisterAudioCallback();
+extern void RegisterAudioCallback(IAudioCallback* pCallback);
+extern void UnRegisterAudioCallback();
 
 class CoreAudioAUHAL : public IDirectSoundRenderer
 	{
@@ -73,15 +71,16 @@ class CoreAudioAUHAL : public IDirectSoundRenderer
 		virtual void SwitchChannels(int iAudioStream, bool bAudioOnAllSpeakers);
 		virtual void Flush();
 		
-		static AudioDeviceInfo* GetDeviceArray();
-		
 		bool IsValid() { return outputBuffer != 0; }
 		
 	private:
 		OutRingBuffer* outputBuffer;
+		//PaStream*  m_pStream;
+		//snd_pcm_uframes_t 	m_maxFrames;
 		
-		//IAudioCallback* m_pCallback;
+		IAudioCallback* m_pCallback;
 		
+		//CPCMAmplifier 	m_amp;
 		LONG m_nCurrentVolume;
 		DWORD m_dwPacketSize;
 		DWORD m_dwNumPackets;
@@ -93,15 +92,12 @@ class CoreAudioAUHAL : public IDirectSoundRenderer
 		unsigned int m_uiBitsPerSample;
 		unsigned int m_uiChannels;
 		
+		//snd_pcm_uframes_t m_BufferSize;
+		
 		bool m_bPassthrough;
 		
 		bool m_bEncodeAC3;
 		AC3Encoder m_ac3encoder;
-		
-		AudioDeviceArray* deviceArray;
-		AudioDeviceID defaultDevice;
-		AudioDeviceID selectedDevice;
-		AudioStreamID selectedStream;
 	};
 
 #endif 

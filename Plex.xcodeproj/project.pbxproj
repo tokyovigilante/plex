@@ -8,7 +8,6 @@
 
 /* Begin PBXBuildFile section */
 		946A03E70E71485F0012D7E9 /* PlexDelegate.mm in Sources */ = {isa = PBXBuildFile; fileRef = E371CB8E0E303C7100FBF841 /* PlexDelegate.mm */; };
-		94BA707A0E73959200B4CB04 /* CoreAudioPlexSupport.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 94BA70790E73959200B4CB04 /* CoreAudioPlexSupport.cpp */; };
 		94BF234C0E723B9400F613AE /* CoreAudioAUHAL.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 94BF234B0E723B9400F613AE /* CoreAudioAUHAL.cpp */; };
 		94F3AFFD0E383E3F00940327 /* RTSPTVDirectory.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 944379670E27096400FB8C08 /* RTSPTVDirectory.cpp */; };
 		94F3AFFF0E383E7000940327 /* DVDInputStreamRTSP.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9443781B0E26DF8900FB8C08 /* DVDInputStreamRTSP.cpp */; };
@@ -997,8 +996,6 @@
 		94437B060E283D1900FB8C08 /* GUIWindowEPG.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = GUIWindowEPG.cpp; sourceTree = "<group>"; };
 		94B9CC7C0E201D6200FA073E /* DVDDemuxMPEGTS.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = DVDDemuxMPEGTS.cpp; sourceTree = "<group>"; };
 		94B9CC7D0E201D6200FA073E /* DVDDemuxMPEGTS.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DVDDemuxMPEGTS.h; sourceTree = "<group>"; };
-		94BA6FFC0E7385C200B4CB04 /* CoreAudioPlexSupport.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CoreAudioPlexSupport.h; sourceTree = "<group>"; };
-		94BA70790E73959200B4CB04 /* CoreAudioPlexSupport.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CoreAudioPlexSupport.cpp; sourceTree = "<group>"; };
 		94BF234A0E723B9400F613AE /* CoreAudioAUHAL.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CoreAudioAUHAL.h; sourceTree = "<group>"; };
 		94BF234B0E723B9400F613AE /* CoreAudioAUHAL.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CoreAudioAUHAL.cpp; sourceTree = "<group>"; };
 		B1A921F30DF6D14F0024CC4F /* libbz2.1.0.4.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libbz2.1.0.4.dylib; path = /opt/local/lib/libbz2.1.0.4.dylib; sourceTree = "<absolute>"; };
@@ -4122,8 +4119,6 @@
 				E38E159E0D25F9FA00618676 /* PortaudioDirectSound.h */,
 				94BF234A0E723B9400F613AE /* CoreAudioAUHAL.h */,
 				94BF234B0E723B9400F613AE /* CoreAudioAUHAL.cpp */,
-				94BA6FFC0E7385C200B4CB04 /* CoreAudioPlexSupport.h */,
-				94BA70790E73959200B4CB04 /* CoreAudioPlexSupport.cpp */,
 			);
 			path = dvdplayer;
 			sourceTree = "<group>";
@@ -7133,7 +7128,6 @@
 				E336F09F0E62D36200270758 /* FileMMS.cpp in Sources */,
 				946A03E70E71485F0012D7E9 /* PlexDelegate.mm in Sources */,
 				94BF234C0E723B9400F613AE /* CoreAudioAUHAL.cpp in Sources */,
-				94BA707A0E73959200B4CB04 /* CoreAudioPlexSupport.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
