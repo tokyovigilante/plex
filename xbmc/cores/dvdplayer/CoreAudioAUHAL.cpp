@@ -820,7 +820,7 @@ int CoreAudioAUHAL::OpenAnalog(struct CoreAudioDeviceParameters *deviceParameter
 									   &DeviceFormat,
 									   i_param_size ));
 	
-//			CLog::Log(LOGINFO, STREAM_FORMAT_MSG( "we set the AU format: " , DeviceFormat ) );
+	CLog::Log(LOGINFO, STREAM_FORMAT_MSG( "we set the AU format: " , DeviceFormat ) );
 	
     /* Retrieve actual format */
     verify_noerr( AudioUnitGetProperty(deviceParameters->au_unit,
@@ -830,7 +830,7 @@ int CoreAudioAUHAL::OpenAnalog(struct CoreAudioDeviceParameters *deviceParameter
 									   &DeviceFormat,
 									   &i_param_size ));
 	
-//			CLog::Log(LOGINFO, STREAM_FORMAT_MSG( "the actual set AU format is " , DeviceFormat ) );
+	CLog::Log(LOGINFO, STREAM_FORMAT_MSG( "the actual set AU format is " , DeviceFormat ) );
 	
     /* Do the last VLC aout setups */
     //aout_FormatPrepare( &p_aout->output.output );
@@ -838,17 +838,15 @@ int CoreAudioAUHAL::OpenAnalog(struct CoreAudioDeviceParameters *deviceParameter
     //aout_VolumeSoftInit( p_aout );
 	
     /* set the IOproc callback */
-    input.inputProc = (AURenderCallback) RenderCallbackAnalog;
-    input.inputProcRefCon = deviceParameters;
+	input.inputProc = (AURenderCallback) RenderCallbackAnalog;
+	input.inputProcRefCon = NULL;//deviceParameters;
 	
     verify_noerr( AudioUnitSetProperty(deviceParameters->au_unit,
 									   kAudioUnitProperty_SetRenderCallback,
-									   kAudioUnitScope_Input,
-									   0, &input, sizeof( input ) ) );
+									   kAudioUnitScope_Global,
+									   0, &input, sizeof(input)));
 	
-    input.inputProc = (AURenderCallback) RenderCallbackAnalog;
-    input.inputProcRefCon = deviceParameters;
-	
+    
     /* Set the new_layout as the layout VLC will use to feed the AU unit */
     verify_noerr( AudioUnitSetProperty(deviceParameters->au_unit,
 									   kAudioUnitProperty_AudioChannelLayout,
@@ -893,7 +891,7 @@ OSStatus CoreAudioAUHAL::RenderCallbackAnalog(struct CoreAudioDeviceParameters *
 	
     //aout_instance_t * p_aout = (aout_instance_t *)_p_aout;
     //struct aout_sys_t * p_sys = p_aout->output.p_sys;
-	
+	fprintf(stderr, "callback\n");
     host_time.mFlags = kAudioTimeStampHostTimeValid;
     AudioDeviceTranslateTime( deviceParameters->device_id, inTimeStamp, &host_time );
 	
