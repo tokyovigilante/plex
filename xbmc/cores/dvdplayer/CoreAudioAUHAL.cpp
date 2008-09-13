@@ -957,13 +957,13 @@ OSStatus CoreAudioAUHAL::RenderCallbackAnalog(struct CoreAudioDeviceParameters *
             }
             aout_BufferFree( p_buffer );
         }
-        else
+        else*/
         {
-			vlc_memset( (uint8_t *)ioData->mBuffers[0].mData +i_mData_bytes,
+			memset( (uint8_t *)ioData->mBuffers[0].mData +i_mData_bytes,
 					   0,ioData->mBuffers[0].mDataByteSize - i_mData_bytes );
 			i_mData_bytes += ioData->mBuffers[0].mDataByteSize - i_mData_bytes;
         }
-    }*/
+    //}
     return( noErr );
 }
 		
