@@ -35,13 +35,12 @@
 #include "../mplayer/IDirectSoundRenderer.h"
 //#include "../mplayer/IAudioCallback.h"
 //#include "../ssrc.h"
-//#include "../../utils/PCMAmplifier.h"
+#include "../../utils/PCMAmplifier.h"
 extern "C" {
 #include "ac3encoder.h"
 }
 
 #include "CoreAudioPlexSupport.h"
-//#include <AudioUnit/AUComponent.h>
 
 //extern void RegisterAudioCallback(IAudioCallback* pCallback);
 //extern void UnRegisterAudioCallback();
@@ -90,6 +89,8 @@ class CoreAudioAUHAL : public IDirectSoundRenderer
 
 		
 		OutRingBuffer* outputBuffer;
+		
+		CPCMAmplifier 	m_amp;
 		
 		//IAudioCallback* m_pCallback;
 		

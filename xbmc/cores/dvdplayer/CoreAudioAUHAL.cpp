@@ -101,8 +101,6 @@ CoreAudioAUHAL::CoreAudioAUHAL(IAudioCallback* pCallback, int iChannels, unsigne
 	
 	bool bAudioOnAllSpeakers = false;
 	
-	// This should be in the base class.
-	//g_audioContext.SetupSpeakerConfig(iChannels, bAudioOnAllSpeakers, bIsMusic);
 	g_audioContext.SetActiveDevice(CAudioContext::DIRECTSOUND_DEVICE);
 	
 	m_bPause = false;
@@ -126,6 +124,10 @@ CoreAudioAUHAL::CoreAudioAUHAL(IAudioCallback* pCallback, int iChannels, unsigne
 		m_bEncodeAC3 = false;
 	}
 	
+	// initialise the CoreAudio sink buffer
+	rb_init(&outputBuffer, uiSamplesPerSec * iChannels * uiBitsPerSample); // buffer 1 sec for now
+	
+	// set the stream parameters
 	m_uiChannels = iChannels;
 	m_uiSamplesPerSec = uiSamplesPerSec;
 	m_uiBitsPerSample = uiBitsPerSample;
@@ -133,7 +135,7 @@ CoreAudioAUHAL::CoreAudioAUHAL(IAudioCallback* pCallback, int iChannels, unsigne
 	
 	m_nCurrentVolume = g_stSettings.m_nVolumeLevel;
 	if (!m_bPassthrough)
-	//	m_amp.SetVolume(m_nCurrentVolume);
+		m_amp.SetVolume(m_nCurrentVolume);
 	
 	m_dwPacketSize = iChannels*(uiBitsPerSample/8)*512;
 	m_dwNumPackets = 16;
@@ -291,7 +293,7 @@ HRESULT CoreAudioAUHAL::SetCurrentVolume(LONG nVolume)
 {
 	if (!m_bIsAllocated || m_bPassthrough) return -1;
 	m_nCurrentVolume = nVolume;
-	//m_amp.SetVolume(nVolume);
+	m_amp.SetVolume(nVolume);
 	return S_OK;
 }
 
@@ -313,10 +315,10 @@ DWORD CoreAudioAUHAL::AddPackets(unsigned char *data, DWORD len)
 {
 	//if (!m_pStream) 
 	{
-		CLog::Log(LOGERROR,"CoreAudioAUHAL::AddPackets - sanity failed. no play handle!");
-		return len; 
+	//	CLog::Log(LOGERROR,"CoreAudioAUHAL::AddPackets - sanity failed. no play handle!");
+	//	return len; 
 	}
-	/*
+	
 	DWORD samplesPassedIn;
 	unsigned char* pcmPtr = data;
 	
@@ -330,15 +332,12 @@ DWORD CoreAudioAUHAL::AddPackets(unsigned char *data, DWORD len)
 	}
 	
 	// Find out how much space we have available.
-	DWORD samplesToWrite  = Pa_GetStreamWriteAvailable(m_pStream);
+	DWORD samplesToWrite  = 0;//Pa_GetStreamWriteAvailable(m_pStream);
 	
-	// Clip to the amount we got passed in. I was using MIN above, but that
-	// was a very bad idea since Pa_GetStreamWriteAvailable would get called
-	// twice and could return different answers!
-	//
-	if (samplesToWrite > samplesPassedIn)
+	// Clip to the amount we got passed in. 
+	//if (samplesToWrite > samplesPassedIn)
+#warning need to get from buffer
 		samplesToWrite = samplesPassedIn;
-	//#warning AC3 disabled
 	if (m_bEncodeAC3)
 	{	  
 		int ac3_frame_count = 0;
@@ -359,7 +358,8 @@ DWORD CoreAudioAUHAL::AddPackets(unsigned char *data, DWORD len)
 			}
 			else
 			{
-				SAFELY(Pa_WriteStream(m_pStream, ac3_framebuffer, samplesToWrite));
+				rb_write(outputBuffer, ac3_framebuffer, samplesToWrite);
+				//SAFELY(Pa_WriteStream(m_pStream, ac3_framebuffer, samplesToWrite));
 			}
 			return samplesToWrite * ac3encoder_channelcount(&m_ac3encoder) * (m_uiBitsPerSample/8);
 		}
@@ -371,9 +371,10 @@ DWORD CoreAudioAUHAL::AddPackets(unsigned char *data, DWORD len)
 			m_amp.DeAmplify((short *)pcmPtr, samplesToWrite * m_uiChannels);
 		
 		// Write data to the stream.
-		SAFELY(Pa_WriteStream(m_pStream, pcmPtr, samplesToWrite));	  
+		rb_write(outputBuffer, pcmPtr, samplesToWrite);
+		//SAFELY(Pa_WriteStream(m_pStream, pcmPtr, samplesToWrite));	  
 		return samplesToWrite * m_uiChannels * (m_uiBitsPerSample/8);
-	}*/
+	}
 }
 
 //***********************************************************************************************
