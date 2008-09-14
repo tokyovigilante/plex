@@ -30,20 +30,14 @@
 #ifndef __COREAUDIO_AUHAL_H__
 #define __COREAUDIO_AUHAL_H__
 
-//#include "portaudio.h"
 #include "ringbuffer.h"
 #include "../mplayer/IDirectSoundRenderer.h"
-//#include "../mplayer/IAudioCallback.h"
-//#include "../ssrc.h"
 #include "../../utils/PCMAmplifier.h"
 extern "C" {
 #include "ac3encoder.h"
 }
 
 #include "CoreAudioPlexSupport.h"
-
-//extern void RegisterAudioCallback(IAudioCallback* pCallback);
-//extern void UnRegisterAudioCallback();
 
 class CoreAudioAUHAL : public IDirectSoundRenderer
 	{
@@ -69,7 +63,6 @@ class CoreAudioAUHAL : public IDirectSoundRenderer
 		virtual HRESULT SetCurrentVolume(LONG nVolume);
 		virtual int SetPlaySpeed(int iSpeed);
 		virtual void WaitCompletion();
-		virtual void DoWork();
 		virtual void SwitchChannels(int iAudioStream, bool bAudioOnAllSpeakers);
 		virtual void Flush();
 		
@@ -78,8 +71,8 @@ class CoreAudioAUHAL : public IDirectSoundRenderer
 		bool IsValid();
 		
 	private:
-		virtual int CreateOutputStream(const CStdString& strName, int channels, int sampleRate, int bitsPerSample, bool isDigital, bool useCoreAudio, int packetSize);
-		virtual int OpenAnalog(struct CoreAudioDeviceParameters *deviceParameters, const CStdString& strName, int channels, int sampleRate, int bitsPerSample, bool isDigital, bool useCoreAudio, int packetSize);
+		virtual bool CreateOutputStream(const CStdString& strName, int channels, int sampleRate, int bitsPerSample, bool isDigital, bool useCoreAudio, int packetSize);
+		virtual int OpenPCM(struct CoreAudioDeviceParameters *deviceParameters, const CStdString& strName, int channels, int sampleRate, int bitsPerSample, bool isDigital, bool useCoreAudio, int packetSize);
 		static OSStatus RenderCallbackAnalog(struct CoreAudioDeviceParameters *deviceParameters,
 															  int *ioActionFlags,
 															  const AudioTimeStamp *inTimeStamp,
@@ -88,8 +81,6 @@ class CoreAudioAUHAL : public IDirectSoundRenderer
 											  AudioBufferList *ioData );
 
 		CPCMAmplifier 	m_amp;
-		
-		//IAudioCallback* m_pCallback;
 		
 		LONG m_nCurrentVolume;
 		DWORD m_dwPacketSize;

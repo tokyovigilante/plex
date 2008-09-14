@@ -3,7 +3,7 @@
  *  Plex
  *
  *  Created by Ryan Walklin on 9/6/08.
- *  Copyright 2008 __MyCompanyName__. All rights reserved.
+ *  Copyright 2008 Ryan Walklin. All rights reserved.
  *
  */
 
@@ -34,13 +34,11 @@
 #include <AudioUnit/AudioOutputUnit.h>
 #include <AudioToolbox/AudioFormat.h>
 
-//#include "CPortAudio.h"
 #include "stdafx.h"
 #include "CoreAudioAUHAL.h"
 #include "AudioContext.h"
 #include "Settings.h"
-//#include "Util.h"
-//#include "XBAudioConfig.h"
+
 
 /**
  * High precision date or time interval
@@ -79,27 +77,12 @@ struct CoreAudioDeviceParameters
     bool                  b_changed_mixing;/* Wether we need to set the mixing mode back */
 };
 
-
-
-void CoreAudioAUHAL::DoWork()
-{
-	
-}
-
-//////////////////////////////////////////////////////////////////////////////
-//
-// History:
-//   12.14.07   ESF  Created.
-//
-//////////////////////////////////////////////////////////////////////////////
 CoreAudioAUHAL::CoreAudioAUHAL(IAudioCallback* pCallback, int iChannels, unsigned int uiSamplesPerSec, unsigned int uiBitsPerSample, bool bResample, const char* strAudioCodec, bool bIsMusic, bool bPassthrough)
 {
 	CLog::Log(LOGDEBUG,"CoreAudioAUHAL::CoreAudioAUHAL - opening device");
 	
 	if (iChannels == 0)
 		iChannels = 2;
-	
-	bool bAudioOnAllSpeakers = false;
 	
 	g_audioContext.SetActiveDevice(CAudioContext::DIRECTSOUND_DEVICE);
 	
@@ -139,10 +122,7 @@ CoreAudioAUHAL::CoreAudioAUHAL(IAudioCallback* pCallback, int iChannels, unsigne
 	
 	/* Open the device */
 	CStdString device, deviceuse;
-	//if (!m_bPassthrough)
-    device = g_guiSettings.GetString("audiooutput.audiodevice");
-	//else
-	//  device = g_guiSettings.GetString("audiooutput.passthroughdevice");
+	device = g_guiSettings.GetString("audiooutput.audiodevice");
 	
 	CLog::Log(LOGINFO, "Asked to open device: [%s]\n", device.c_str());
 	
@@ -151,28 +131,25 @@ CoreAudioAUHAL::CoreAudioAUHAL(IAudioCallback* pCallback, int iChannels, unsigne
 		iChannels > 2 &&
 		!m_bPassthrough)
 	{
-		/*m_pStream =*/ CreateOutputStream(device,
-												   SPDIF_CHANNELS, 
-												   SPDIF_SAMPLERATE, 
-												   SPDIF_SAMPLESIZE,
-												   true,
-												   g_guiSettings.GetInt("audiooutput.digitalaudiomode") == DIGITAL_COREAUDIO,
-												   SPDIF_CHANNELS*(SPDIF_SAMPLESIZE/8)*512);
+		CreateOutputStream(device,
+						   SPDIF_CHANNELS, 
+						   SPDIF_SAMPLERATE, 
+						   SPDIF_SAMPLESIZE,
+						   true,
+						   g_guiSettings.GetInt("audiooutput.digitalaudiomode") == DIGITAL_COREAUDIO,
+						   SPDIF_CHANNELS*(SPDIF_SAMPLESIZE/8)*512);
 	}
 	else
 	{
-		/*m_pStream =*/ CreateOutputStream(device,
-												   m_uiChannels, 
-												   m_uiSamplesPerSec, 
-												   m_uiBitsPerSample,
-												   m_bPassthrough,
-												   g_guiSettings.GetInt("audiooutput.digitalaudiomode") == DIGITAL_COREAUDIO,
-												   m_dwPacketSize);
+		CreateOutputStream(device,
+						   m_uiChannels, 
+						   m_uiSamplesPerSec, 
+						   m_uiBitsPerSample,
+						   m_bPassthrough,
+						   g_guiSettings.GetInt("audiooutput.digitalaudiomode") == DIGITAL_COREAUDIO,
+						   m_dwPacketSize);
 	}
     
-	// Start the stream.
-//	SAFELY(Pa_StartStream(m_pStream));
-	
 	m_bCanPause = false;
 	m_bIsAllocated = true;
 	
@@ -196,12 +173,9 @@ bool CoreAudioAUHAL::IsValid()
 HRESULT CoreAudioAUHAL::Deinitialize()
 {
 	CLog::Log(LOGDEBUG,"CoreAudioAUHAL::Deinitialize");
-	/*
-	if (m_pStream)
-	{
-		SAFELY(Pa_StopStream(m_pStream));
-		SAFELY(Pa_CloseStream(m_pStream));
-	}*/
+	
+#warning close output
+#warning free structs
 	if (m_bEncodeAC3)
 	{
 		ac3encoder_free(&m_ac3encoder);
@@ -209,7 +183,6 @@ HRESULT CoreAudioAUHAL::Deinitialize()
 #warning free device array
 	
 	m_bIsAllocated = false;
-	//m_pStream = 0;
 	
  	CLog::Log(LOGDEBUG,"CoreAudioAUHAL::Deinitialize - set active");
 	g_audioContext.SetActiveDevice(CAudioContext::DEFAULT_DEVICE);
@@ -219,12 +192,9 @@ HRESULT CoreAudioAUHAL::Deinitialize()
 
 //***********************************************************************************************
 void CoreAudioAUHAL::Flush() 
-{/*
-	if (m_pStream)
-	{
-		SAFELY(Pa_AbortStream(m_pStream));
-		SAFELY(Pa_StartStream(m_pStream));
-	}*/
+{
+	CLog::Log(LOGDEBUG, "Flushing %i bytes from buffer", rb_data_size(deviceParameters->outputBuffer));
+	rb_clear(deviceParameters->outputBuffer);
 }
 
 //***********************************************************************************************
@@ -253,10 +223,7 @@ HRESULT CoreAudioAUHAL::Resume()
 //***********************************************************************************************
 HRESULT CoreAudioAUHAL::Stop()
 {
-	/*if (m_pStream)
-		SAFELY(Pa_StopStream(m_pStream));
-	
-	m_bPause = false;*/
+#warning Stop stream
 	return S_OK;
 }
 
@@ -303,13 +270,16 @@ HRESULT CoreAudioAUHAL::SetCurrentVolume(LONG nVolume)
 //***********************************************************************************************
 DWORD CoreAudioAUHAL::GetSpace()
 {
-#warning replace with buffer check
-	//if (!m_pStream)
-		return 0;
-	
-	// Figure out how much space is available.
-	//DWORD numFrames = Pa_GetStreamWriteAvailable(m_pStream);
-	//return numFrames * (m_uiBitsPerSample/8);
+	DWORD freeBufferSpace = deviceParameters->outputBuffer->size - rb_data_size(deviceParameters->outputBuffer) ;
+	if (m_bEncodeAC3)
+	{
+		freeBufferSpace /= (ac3encoder_channelcount(&m_ac3encoder) * m_uiBitsPerSample/8);
+	}
+	else
+	{
+		freeBufferSpace /= (m_uiChannels * m_uiBitsPerSample/8);
+	}
+	return freeBufferSpace;
 }
 
 //***********************************************************************************************
@@ -321,30 +291,23 @@ DWORD CoreAudioAUHAL::AddPackets(unsigned char *data, DWORD len)
 	//	return len; 
 	}
 	
-	int samplesPassedIn, freeBufferSpace;
+	int samplesPassedIn, sampleByteFactor;
 	unsigned char* pcmPtr = data;
-	
-	freeBufferSpace = (deviceParameters->outputBuffer->size - rb_data_size(deviceParameters->outputBuffer));
 	
 	if (m_bEncodeAC3) // use the raw PCM channel count to get the number of samples to play
 	{
-		samplesPassedIn = len / (ac3encoder_channelcount(&m_ac3encoder) * m_uiBitsPerSample/8);
-		freeBufferSpace /= (ac3encoder_channelcount(&m_ac3encoder) * m_uiBitsPerSample/8);		
+		sampleByteFactor = ac3encoder_channelcount(&m_ac3encoder) * m_uiBitsPerSample/8;
 	}
 	else // the PCM input and stream output should match
 	{
-		samplesPassedIn = len / (m_uiChannels * m_uiBitsPerSample/8);
-		freeBufferSpace /= (m_uiChannels * m_uiBitsPerSample/8);		
+		sampleByteFactor = m_uiChannels * m_uiBitsPerSample/8;
 	}
+	samplesPassedIn = len / sampleByteFactor;
 	
-	// Find out how much space we have available.
-	//int freeSpace = (deviceParameters->outputBuffer->size - rb_data_size(deviceParameters->outputBuffer));
-	DWORD samplesToWrite  = freeBufferSpace;//Pa_GetStreamWriteAvailable(m_pStream);
+	// Find out how much space we have available and clip to the amount we got passed in. 
+	DWORD samplesToWrite  = GetSpace();
+	if (samplesToWrite > samplesPassedIn) samplesToWrite = samplesPassedIn;
 	
-	// Clip to the amount we got passed in. 
-	if (samplesToWrite > samplesPassedIn)
-#warning need to get from buffer
-		samplesToWrite = samplesPassedIn;
 	if (m_bEncodeAC3)
 	{	  
 		int ac3_frame_count = 0;
@@ -366,9 +329,7 @@ DWORD CoreAudioAUHAL::AddPackets(unsigned char *data, DWORD len)
 			else
 			{
 				rb_write(deviceParameters->outputBuffer, ac3_framebuffer, samplesToWrite * ac3encoder_channelcount(&m_ac3encoder) * (m_uiBitsPerSample/8));
-				//SAFELY(Pa_WriteStream(m_pStream, ac3_framebuffer, samplesToWrite));
 			}
-			return samplesToWrite * ac3encoder_channelcount(&m_ac3encoder) * (m_uiBitsPerSample/8);
 		}
 	}
 	else
@@ -379,23 +340,16 @@ DWORD CoreAudioAUHAL::AddPackets(unsigned char *data, DWORD len)
 		
 		// Write data to the stream.
 		rb_write(deviceParameters->outputBuffer, pcmPtr, samplesToWrite * m_uiChannels * (m_uiBitsPerSample/8));
-		//SAFELY(Pa_WriteStream(m_pStream, pcmPtr, samplesToWrite));	  
-		return samplesToWrite * m_uiChannels * (m_uiBitsPerSample/8);
 	}
+	return samplesToWrite * sampleByteFactor;
+
 }
 
 //***********************************************************************************************
 FLOAT CoreAudioAUHAL::GetDelay()
 {
-	//if (m_pStream == 0)
-		return 0.0;
-	
-	// This always returns zero, so it's totally useless.
-	//const PaStreamInfo* streamInfo = Pa_GetStreamInfo(m_pStream);
-	//FLOAT delay = (FLOAT)streamInfo->outputLatency;
-	
 	// For now hardwire to about +15ms from "base", which is what we're observing.
-	FLOAT delay = 0.015;
+	FLOAT delay = 0.115;
 	
 	if (g_audioContext.IsAC3EncoderActive())
 		delay += 0.049;
@@ -420,12 +374,12 @@ int CoreAudioAUHAL::SetPlaySpeed(int iSpeed)
 
 void CoreAudioAUHAL::RegisterAudioCallback(IAudioCallback *pCallback)
 {
-	//m_pCallback = pCallback;
+
 }
 
 void CoreAudioAUHAL::UnRegisterAudioCallback()
 {
-	//m_pCallback = NULL;
+
 }
 
 void CoreAudioAUHAL::WaitCompletion()
@@ -441,50 +395,25 @@ void CoreAudioAUHAL::SwitchChannels(int iAudioStream, bool bAudioOnAllSpeakers)
 /*****************************************************************************
  * Open: open macosx audio output
  *****************************************************************************/
-int CoreAudioAUHAL::CreateOutputStream(const CStdString& strName, int channels, int sampleRate, int bitsPerSample, bool isDigital, bool useCoreAudio, int packetSize)
+bool CoreAudioAUHAL::CreateOutputStream(const CStdString& strName, int channels, int sampleRate, int bitsPerSample, bool isDigital, bool useCoreAudio, int packetSize)
 {
     OSStatus                err = noErr;
     UInt32                  i_param_size = 0;
-    //struct aout_sys_t       *p_sys = NULL;
-    //int             val;
-    //aout_instance_t         *p_aout = (aout_instance_t *)p_this;
-	
-    /* Use int here, to match kAudioDevicePropertyDeviceIsAlive
-     * property size */
-    int                     b_alive = false; 
+	int                     b_alive = false; 
 	
     /* Allocate structure */
     deviceParameters = (CoreAudioDeviceParameters*)calloc(sizeof(CoreAudioDeviceParameters), 1);
-    if (!deviceParameters) return -1;
+    if (!deviceParameters) return false;
 	
 	deviceParameters->b_digital = isDigital;
-    //deviceParameters->au_unit = NULL;
-	//deviceParameters->au_component = NULL;
-    //deviceParameters->clock_diff = (mtime_t) 0;
-    //deviceParameters->i_read_bytes = 0;
-    //deviceParameters->i_total_bytes = 0;
     deviceParameters->i_hog_pid = -1;
-    //deviceParameters->i_stream_id = 0;
     deviceParameters->i_stream_index = -1;
-    //p_sys->b_revert = false;
-    //p_sys->b_changed_mixing = false;
-    //memset( p_sys->p_remainder_buffer, 0, sizeof(uint8_t) * BUFSIZE );
-	
-    //p_aout->output.pf_play = Play;
-	
-    //aout_FormatPrint( p_aout, "VLC is looking for:", (audio_sample_format_t *)&p_aout->output.output );
-	
-    /* Persistent device variable */
-    //if( var_Type( p_aout->p_libvlc, "macosx-audio-device" ) == 0 )
-    {
-      //  var_Create( p_aout->p_libvlc, "macosx-audio-device", VLC_VAR_INTEGER | VLC_VAR_DOINHERIT );
-    }
 	
     /* Build a list of devices */
     if (deviceArray); // free device array
-	
 	deviceArray = CoreAudioPlexSupport::GetDeviceArray();
-#warning check for invalid returns
+	if (!deviceArray) return false;
+	
 	// Pick the default device if one's not pre-selected
 	deviceArray->selectedDevice = -1;
 	for (int i=0; i < deviceArray->deviceCount; i++)
@@ -495,17 +424,12 @@ int CoreAudioAUHAL::CreateOutputStream(const CStdString& strName, int channels, 
 			deviceArray->selectedDeviceIndex = i;
 		}
 	}
-		// should have already selected the default
 	if (deviceArray->selectedDevice == -1)
 	{
 		deviceArray->selectedDevice = deviceArray->defaultDevice;
 	}
     	
-    //p_sys->i_selected_dev = val.i_int & ~AOUT_VAR_SPDIF_FLAG; /* remove SPDIF flag to get the true DeviceID */
-    //p_sys->b_supports_digital = ( val.i_int & AOUT_VAR_SPDIF_FLAG ) ? true : false;
-	
     /* Check if the desired device is alive and usable */
-    /* TODO: add a callback to the device to alert us if the device dies */
     i_param_size = sizeof( b_alive );
     err = AudioDeviceGetProperty(deviceArray->selectedDevice, 0, FALSE,
 								 kAudioDevicePropertyDeviceIsAlive,
@@ -522,11 +446,11 @@ int CoreAudioAUHAL::CreateOutputStream(const CStdString& strName, int channels, 
 	
     if( b_alive == false )
     {
-		CLog::Log(LOGWARNING, "selected audio device is not alive, switching to default device" );
+		CLog::Log(LOGWARNING, "selected audio device is not alive, switching to default device");
         deviceArray->selectedDevice = deviceArray->defaultDevice;
     }
 	
-    i_param_size = sizeof( deviceParameters->i_hog_pid );
+    i_param_size = sizeof(deviceParameters->i_hog_pid);
     err = AudioDeviceGetProperty( deviceArray->selectedDevice, 0, FALSE,
 								 kAudioDevicePropertyHogMode,
 								 &i_param_size, &deviceParameters->i_hog_pid );
@@ -541,8 +465,8 @@ int CoreAudioAUHAL::CreateOutputStream(const CStdString& strName, int channels, 
 	
     if( deviceParameters->i_hog_pid != -1 && deviceParameters->i_hog_pid != getpid() )
     {
-		CLog::Log(LOGERROR, "Selected audio device is exclusively in use by another program." );
-		return -1;
+		CLog::Log(LOGERROR, "Selected audio device is exclusively in use by another program.");
+		return false;
     }
 	
 	deviceParameters->device_id = deviceArray->selectedDevice;
@@ -550,15 +474,13 @@ int CoreAudioAUHAL::CreateOutputStream(const CStdString& strName, int channels, 
     /* Check for Digital mode or Analog output mode */
 	if (isDigital && 
 		deviceArray->device[deviceArray->selectedDeviceIndex]->supportsDigital)
-    //if( AOUT_FMT_NON_LINEAR( &p_aout->output.output ) && dev->b_supports_digital )
     {
-        //if( OpenSPDIF( deviceParameters ) )
-          //  return 1;
+        //if (OpenSPDIF(deviceParameters)) return true;
     }
     //else
     {
-        if( OpenAnalog(deviceParameters, strName, channels, sampleRate, bitsPerSample, isDigital, useCoreAudio, packetSize) )
-            return 1;
+        if (OpenPCM(deviceParameters, strName, channels, sampleRate, bitsPerSample, isDigital, useCoreAudio, packetSize))
+            return true;
     }
 	
 error:
@@ -572,7 +494,7 @@ error:
 /*****************************************************************************
  * Open: open and setup a HAL AudioUnit to do analog (multichannel) audio output
  *****************************************************************************/
-int CoreAudioAUHAL::OpenAnalog(struct CoreAudioDeviceParameters *deviceParameters, const CStdString& strName, int channels, int sampleRate, int bitsPerSample, bool isDigital, bool useCoreAudio, int packetSize)
+int CoreAudioAUHAL::OpenPCM(struct CoreAudioDeviceParameters *deviceParameters, const CStdString& strName, int channels, int sampleRate, int bitsPerSample, bool isDigital, bool useCoreAudio, int packetSize)
 {
     //struct aout_sys_t           *p_sys = p_aout->output.p_sys;
     OSStatus                    err = noErr;
@@ -626,11 +548,11 @@ int CoreAudioAUHAL::OpenAnalog(struct CoreAudioDeviceParameters *deviceParameter
 							   kAudioUnitProperty_StreamFormat,
 							   kAudioUnitScope_Input,
 							   0,
-							   &DeviceFormat,
+							   &deviceParameters->sfmt_revert,
 							   &i_param_size );
 	
     if( err != noErr ) return false;
-    else CLog::Log(LOGINFO, STREAM_FORMAT_MSG("current format is: ", DeviceFormat) );
+    else CLog::Log(LOGINFO, STREAM_FORMAT_MSG("current format is: ", deviceParameters->sfmt_revert) );
 #if 0
     /* Get the channel layout of the device side of the unit (vlc -> unit -> device) */
     err = AudioUnitGetPropertyInfo( deviceParameters->au_unit,
@@ -803,14 +725,14 @@ int CoreAudioAUHAL::OpenAnalog(struct CoreAudioDeviceParameters *deviceParameter
             }
 #endif
     /* Set up the format to be used */
-	DeviceFormat.mSampleRate = sampleRate;//p_aout->output.output.i_rate;
+	DeviceFormat.mSampleRate = sampleRate;
     DeviceFormat.mFormatID = kAudioFormatLinearPCM;
 	
-    /* We use float 32. It's the best supported format by both VLC and Coreaudio */
-    //p_aout->output.output.i_format = VLC_FOURCC( 'f','l','3','2');
-    DeviceFormat.mFormatFlags = kLinearPCMFormatFlagIsSignedInteger | kAudioFormatFlagIsBigEndian | kAudioFormatFlagIsPacked;
+    DeviceFormat.mFormatFlags = kLinearPCMFormatFlagIsSignedInteger | 
+								kAudioFormatFlagIsBigEndian | 
+								kAudioFormatFlagIsPacked;
     DeviceFormat.mBitsPerChannel = 16;
-	DeviceFormat.mChannelsPerFrame = channels; //aout_FormatNbChannels( &p_aout->output.output );
+	DeviceFormat.mChannelsPerFrame = channels;
 	
     /* Calculate framesizes and stuff */
     DeviceFormat.mFramesPerPacket = 1;
@@ -833,16 +755,11 @@ int CoreAudioAUHAL::OpenAnalog(struct CoreAudioDeviceParameters *deviceParameter
 									   kAudioUnitProperty_StreamFormat,
 									   kAudioUnitScope_Input,
 									   0,
-									   &DeviceFormat,
+									   &deviceParameters->stream_format,
 									   &i_param_size ));
 	
 	CLog::Log(LOGINFO, STREAM_FORMAT_MSG( "the actual set AU format is " , DeviceFormat ) );
-#if 0
-    /* Do the last VLC aout setups */
-    //aout_FormatPrepare( &p_aout->output.output );
-    //p_aout->output.i_nb_samples = 2048;
-    //aout_VolumeSoftInit( p_aout );
-#endif
+
     /* set the IOproc callback */
 	input.inputProc = (AURenderCallback) RenderCallbackAnalog;
 	input.inputProcRefCon = deviceParameters;
@@ -871,7 +788,7 @@ int CoreAudioAUHAL::OpenAnalog(struct CoreAudioDeviceParameters *deviceParameter
     //deviceParameters->clock_diff += mdate();
 	
 	// initialise the CoreAudio sink buffer
-	rb_init(&deviceParameters->outputBuffer, sampleRate * channels * bitsPerSample / 8); // buffer 1 sec for now
+	rb_init(&deviceParameters->outputBuffer, sampleRate * channels * bitsPerSample / 8 / 10 ); // buffer 0.1 sec for now
 	
 	
     /* Start the AU */
@@ -916,7 +833,7 @@ OSStatus CoreAudioAUHAL::RenderCallbackAnalog(struct CoreAudioDeviceParameters *
 	
     //if( ioData == NULL && ioData->mNumberBuffers < 1 )
     {
-	//	CLog::Log(LOGERROR, "no iodata or buffers");
+	////	CLog::Log(LOGERROR, "no iodata or buffers");
     //    return 0;
     }
     //if( ioData->mNumberBuffers > 1 )
@@ -968,20 +885,17 @@ OSStatus CoreAudioAUHAL::RenderCallbackAnalog(struct CoreAudioDeviceParameters *
             aout_BufferFree( p_buffer );
         }
 		*/
-		if (rb_data_size(deviceParameters->outputBuffer) >= inNumberFrames * 4)
+		if (rb_data_size(deviceParameters->outputBuffer) >= inNumberFrames * deviceParameters->stream_format.mBytesPerFrame)
 		{
 			rb_read(deviceParameters->outputBuffer, 
-			(uint8_t *)ioData->mBuffers[0].mData, 
-			inNumberFrames * 4);
-			//i_mData_bytes += ioData->mBuffers[0].mDataByteSize - i_mData_bytes;
+					(uint8_t *)ioData->mBuffers[0].mData, 
+					inNumberFrames * deviceParameters->stream_format.mBytesPerFrame);
 		}
         else
         {
 			memset( (uint8_t *)ioData->mBuffers[0].mData,
-				   0, inNumberFrames * 4);//ioData->mBuffers[0].mDataByteSize - i_mData_bytes );
-			//i_mData_bytes += ioData->mBuffers[0].mDataByteSize - i_mData_bytes;
+				   0, inNumberFrames * deviceParameters->stream_format.mBytesPerFrame);
         }
-    //}
     return( noErr );
 }
 		
