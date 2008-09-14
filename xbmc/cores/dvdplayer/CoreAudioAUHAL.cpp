@@ -63,7 +63,7 @@ struct CoreAudioDeviceParameters
 	AudioDeviceID				device_id; 
     Component                   au_component;   /* The Audiocomponent we use */
     AudioUnit                   au_unit;        /* The AudioUnit we use */
-    uint8_t                     p_remainder_buffer[BUFSIZE];
+	OutRingBuffer*				outputBuffer;
     uint32_t                    i_read_bytes;
     uint32_t                    i_total_bytes;
 	bool						b_digital;      /* Are we running in digital mode? */
@@ -123,9 +123,6 @@ CoreAudioAUHAL::CoreAudioAUHAL(IAudioCallback* pCallback, int iChannels, unsigne
 	{
 		m_bEncodeAC3 = false;
 	}
-	
-	// initialise the CoreAudio sink buffer
-	rb_init(&outputBuffer, uiSamplesPerSec * iChannels * uiBitsPerSample); // buffer 1 sec for now
 	
 	// set the stream parameters
 	m_uiChannels = iChannels;
@@ -187,6 +184,11 @@ CoreAudioAUHAL::~CoreAudioAUHAL()
 {
 	CLog::Log(LOGDEBUG,"CoreAudioAUHAL() dtor");
 	Deinitialize();
+}
+
+bool CoreAudioAUHAL::IsValid()
+{
+	return (deviceParameters->outputBuffer != NULL && m_bIsAllocated); 
 }
 
 
@@ -319,23 +321,28 @@ DWORD CoreAudioAUHAL::AddPackets(unsigned char *data, DWORD len)
 	//	return len; 
 	}
 	
-	DWORD samplesPassedIn;
+	int samplesPassedIn, freeBufferSpace;
 	unsigned char* pcmPtr = data;
+	
+	freeBufferSpace = (deviceParameters->outputBuffer->size - rb_data_size(deviceParameters->outputBuffer));
 	
 	if (m_bEncodeAC3) // use the raw PCM channel count to get the number of samples to play
 	{
 		samplesPassedIn = len / (ac3encoder_channelcount(&m_ac3encoder) * m_uiBitsPerSample/8);
+		freeBufferSpace /= (ac3encoder_channelcount(&m_ac3encoder) * m_uiBitsPerSample/8);		
 	}
 	else // the PCM input and stream output should match
 	{
 		samplesPassedIn = len / (m_uiChannels * m_uiBitsPerSample/8);
+		freeBufferSpace /= (m_uiChannels * m_uiBitsPerSample/8);		
 	}
 	
 	// Find out how much space we have available.
-	DWORD samplesToWrite  = 0;//Pa_GetStreamWriteAvailable(m_pStream);
+	//int freeSpace = (deviceParameters->outputBuffer->size - rb_data_size(deviceParameters->outputBuffer));
+	DWORD samplesToWrite  = freeBufferSpace;//Pa_GetStreamWriteAvailable(m_pStream);
 	
 	// Clip to the amount we got passed in. 
-	//if (samplesToWrite > samplesPassedIn)
+	if (samplesToWrite > samplesPassedIn)
 #warning need to get from buffer
 		samplesToWrite = samplesPassedIn;
 	if (m_bEncodeAC3)
@@ -358,7 +365,7 @@ DWORD CoreAudioAUHAL::AddPackets(unsigned char *data, DWORD len)
 			}
 			else
 			{
-				rb_write(outputBuffer, ac3_framebuffer, samplesToWrite);
+				rb_write(deviceParameters->outputBuffer, ac3_framebuffer, samplesToWrite * ac3encoder_channelcount(&m_ac3encoder) * (m_uiBitsPerSample/8));
 				//SAFELY(Pa_WriteStream(m_pStream, ac3_framebuffer, samplesToWrite));
 			}
 			return samplesToWrite * ac3encoder_channelcount(&m_ac3encoder) * (m_uiBitsPerSample/8);
@@ -371,7 +378,7 @@ DWORD CoreAudioAUHAL::AddPackets(unsigned char *data, DWORD len)
 			m_amp.DeAmplify((short *)pcmPtr, samplesToWrite * m_uiChannels);
 		
 		// Write data to the stream.
-		rb_write(outputBuffer, pcmPtr, samplesToWrite);
+		rb_write(deviceParameters->outputBuffer, pcmPtr, samplesToWrite * m_uiChannels * (m_uiBitsPerSample/8));
 		//SAFELY(Pa_WriteStream(m_pStream, pcmPtr, samplesToWrite));	  
 		return samplesToWrite * m_uiChannels * (m_uiBitsPerSample/8);
 	}
@@ -601,7 +608,7 @@ int CoreAudioAUHAL::OpenAnalog(struct CoreAudioDeviceParameters *deviceParameter
     /* Set the device we will use for this output unit */
     err = AudioUnitSetProperty(deviceParameters->au_unit,
 							   kAudioOutputUnitProperty_CurrentDevice,
-							   kAudioUnitScope_Global,
+							   kAudioUnitScope_Input,
 							   0,
 							   &deviceArray->selectedDevice,
 							   sizeof(AudioDeviceID));
@@ -623,8 +630,8 @@ int CoreAudioAUHAL::OpenAnalog(struct CoreAudioDeviceParameters *deviceParameter
 							   &i_param_size );
 	
     if( err != noErr ) return false;
-    //else CLog::Log(LOGERROR, STREAM_FORMAT_MSG("current format is: ", DeviceFormat) );
-	
+    else CLog::Log(LOGINFO, STREAM_FORMAT_MSG("current format is: ", DeviceFormat) );
+#if 0
     /* Get the channel layout of the device side of the unit (vlc -> unit -> device) */
     err = AudioUnitGetPropertyInfo( deviceParameters->au_unit,
                                    kAudioDevicePropertyPreferredChannelLayout,
@@ -663,7 +670,7 @@ int CoreAudioAUHAL::OpenAnalog(struct CoreAudioDeviceParameters *deviceParameter
         }
 		
 		CLog::Log(LOGINFO, "layout of AUHAL has %d channels" , (int)layout->mNumberChannelDescriptions );
-		
+#endif
         /* Initialize the VLC core channel count */
         //deviceParameters->output.output.i_physical_channels = 0;
         //i_original = p_aout->output.output.i_original_channels & AOUT_CHAN_PHYSMASK;
@@ -736,10 +743,9 @@ int CoreAudioAUHAL::OpenAnalog(struct CoreAudioDeviceParameters *deviceParameter
         p_aout->output.output.i_physical_channels = AOUT_CHAN_LEFT | AOUT_CHAN_RIGHT;
     }*/
 		}
-	}
     //msg_Dbg( p_aout, "selected %d physical channels for device output", aout_FormatNbChannels( &p_aout->output.output ) );
     //msg_Dbg( p_aout, "VLC will output: %s", aout_FormatPrintChannels( &p_aout->output.output ));
-	
+#if 0
     memset (&new_layout, 0, sizeof(new_layout));
     switch(channels)
     {
@@ -795,14 +801,14 @@ int CoreAudioAUHAL::OpenAnalog(struct CoreAudioDeviceParameters *deviceParameter
             }
             break;*/
             }
-	
+#endif
     /* Set up the format to be used */
 	DeviceFormat.mSampleRate = sampleRate;//p_aout->output.output.i_rate;
     DeviceFormat.mFormatID = kAudioFormatLinearPCM;
 	
     /* We use float 32. It's the best supported format by both VLC and Coreaudio */
     //p_aout->output.output.i_format = VLC_FOURCC( 'f','l','3','2');
-    DeviceFormat.mFormatFlags = kAudioFormatFlagsNativeFloatPacked;
+    DeviceFormat.mFormatFlags = kLinearPCMFormatFlagIsSignedInteger | kAudioFormatFlagIsBigEndian | kAudioFormatFlagIsPacked;
     DeviceFormat.mBitsPerChannel = 16;
 	DeviceFormat.mChannelsPerFrame = channels; //aout_FormatNbChannels( &p_aout->output.output );
 	
@@ -831,28 +837,28 @@ int CoreAudioAUHAL::OpenAnalog(struct CoreAudioDeviceParameters *deviceParameter
 									   &i_param_size ));
 	
 	CLog::Log(LOGINFO, STREAM_FORMAT_MSG( "the actual set AU format is " , DeviceFormat ) );
-	
+#if 0
     /* Do the last VLC aout setups */
     //aout_FormatPrepare( &p_aout->output.output );
     //p_aout->output.i_nb_samples = 2048;
     //aout_VolumeSoftInit( p_aout );
-	
+#endif
     /* set the IOproc callback */
 	input.inputProc = (AURenderCallback) RenderCallbackAnalog;
-	input.inputProcRefCon = NULL;//deviceParameters;
+	input.inputProcRefCon = deviceParameters;
 	
     verify_noerr( AudioUnitSetProperty(deviceParameters->au_unit,
 									   kAudioUnitProperty_SetRenderCallback,
 									   kAudioUnitScope_Global,
 									   0, &input, sizeof(input)));
 	
-    
+#if 0
     /* Set the new_layout as the layout VLC will use to feed the AU unit */
     verify_noerr( AudioUnitSetProperty(deviceParameters->au_unit,
 									   kAudioUnitProperty_AudioChannelLayout,
 									   kAudioUnitScope_Input,
 									   0, &new_layout, sizeof(new_layout) ) );
-	
+#endif
     if( new_layout.mNumberChannelDescriptions > 0 )
         free( new_layout.mChannelDescriptions );
 	
@@ -863,6 +869,10 @@ int CoreAudioAUHAL::OpenAnalog(struct CoreAudioDeviceParameters *deviceParameter
     deviceParameters->clock_diff = - (mtime_t)
 	AudioConvertHostTimeToNanos( AudioGetCurrentHostTime() ) / 1000;
     //deviceParameters->clock_diff += mdate();
+	
+	// initialise the CoreAudio sink buffer
+	rb_init(&deviceParameters->outputBuffer, sampleRate * channels * bitsPerSample / 8); // buffer 1 sec for now
+	
 	
     /* Start the AU */
     verify_noerr( AudioOutputUnitStart(deviceParameters->au_unit) );
@@ -891,26 +901,26 @@ OSStatus CoreAudioAUHAL::RenderCallbackAnalog(struct CoreAudioDeviceParameters *
 	
     //aout_instance_t * p_aout = (aout_instance_t *)_p_aout;
     //struct aout_sys_t * p_sys = p_aout->output.p_sys;
-	fprintf(stderr, "callback\n");
-    host_time.mFlags = kAudioTimeStampHostTimeValid;
-    AudioDeviceTranslateTime( deviceParameters->device_id, inTimeStamp, &host_time );
+	//fprintf(stderr, "callback\n");
+    //host_time.mFlags = kAudioTimeStampHostTimeValid;
+    //AudioDeviceTranslateTime( deviceParameters->device_id, inTimeStamp, &host_time );
 	
     /* Check for the difference between the Device clock and mdate */
     //p_sys->clock_diff = - (mtime_t)
 	//AudioConvertHostTimeToNanos( AudioGetCurrentHostTime() ) / 1000;
     //p_sys->clock_diff += mdate();
 	
-    current_date = deviceParameters->clock_diff +
-	AudioConvertHostTimeToNanos( host_time.mHostTime ) / 1000;
+    //current_date = deviceParameters->clock_diff +
+	//AudioConvertHostTimeToNanos( host_time.mHostTime ) / 1000;
 	//- ((mtime_t) 1000000 / p_aout->output.output.i_rate * 31 ); // 31 = Latency in Frames. retrieve somewhere
 	
-    if( ioData == NULL && ioData->mNumberBuffers < 1 )
+    //if( ioData == NULL && ioData->mNumberBuffers < 1 )
     {
-		CLog::Log(LOGERROR, "no iodata or buffers");
-        return 0;
+	//	CLog::Log(LOGERROR, "no iodata or buffers");
+    //    return 0;
     }
-    if( ioData->mNumberBuffers > 1 )
-        CLog::Log(LOGERROR, "well this is weird. seems like there is more than one buffer..." );
+    //if( ioData->mNumberBuffers > 1 )
+     //   CLog::Log(LOGERROR, "well this is weird. seems like there is more than one buffer..." );
 	
 	/*
     if( deviceParameters->i_total_bytes > 0 )
@@ -957,11 +967,19 @@ OSStatus CoreAudioAUHAL::RenderCallbackAnalog(struct CoreAudioDeviceParameters *
             }
             aout_BufferFree( p_buffer );
         }
-        else*/
+		*/
+		if (rb_data_size(deviceParameters->outputBuffer) >= inNumberFrames * 4)
+		{
+			rb_read(deviceParameters->outputBuffer, 
+			(uint8_t *)ioData->mBuffers[0].mData, 
+			inNumberFrames * 4);
+			//i_mData_bytes += ioData->mBuffers[0].mDataByteSize - i_mData_bytes;
+		}
+        else
         {
-			memset( (uint8_t *)ioData->mBuffers[0].mData +i_mData_bytes,
-					   0,ioData->mBuffers[0].mDataByteSize - i_mData_bytes );
-			i_mData_bytes += ioData->mBuffers[0].mDataByteSize - i_mData_bytes;
+			memset( (uint8_t *)ioData->mBuffers[0].mData,
+				   0, inNumberFrames * 4);//ioData->mBuffers[0].mDataByteSize - i_mData_bytes );
+			//i_mData_bytes += ioData->mBuffers[0].mDataByteSize - i_mData_bytes;
         }
     //}
     return( noErr );

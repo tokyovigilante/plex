@@ -75,7 +75,7 @@ class CoreAudioAUHAL : public IDirectSoundRenderer
 		
 		static AudioDeviceInfo* GetDeviceArray();
 		
-		bool IsValid() { return outputBuffer != 0; }
+		bool IsValid();
 		
 	private:
 		virtual int CreateOutputStream(const CStdString& strName, int channels, int sampleRate, int bitsPerSample, bool isDigital, bool useCoreAudio, int packetSize);
@@ -87,9 +87,6 @@ class CoreAudioAUHAL : public IDirectSoundRenderer
 															  unsigned int inNumberFrames,
 											  AudioBufferList *ioData );
 
-		
-		OutRingBuffer* outputBuffer;
-		
 		CPCMAmplifier 	m_amp;
 		
 		//IAudioCallback* m_pCallback;
