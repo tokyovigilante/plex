@@ -285,24 +285,20 @@ DWORD CoreAudioAUHAL::GetSpace()
 //***********************************************************************************************
 DWORD CoreAudioAUHAL::AddPackets(unsigned char *data, DWORD len)
 {
-	//if (!m_pStream) 
-	{
-	//	CLog::Log(LOGERROR,"CoreAudioAUHAL::AddPackets - sanity failed. no play handle!");
-	//	return len; 
-	}
-	
-	int samplesPassedIn, sampleByteFactor;
+	int samplesPassedIn, inputByteFactor, outputByteFactor;
 	unsigned char* pcmPtr = data;
 	
 	if (m_bEncodeAC3) // use the raw PCM channel count to get the number of samples to play
 	{
-		sampleByteFactor = ac3encoder_channelcount(&m_ac3encoder) * m_uiBitsPerSample/8;
+		inputByteFactor = ac3encoder_channelcount(&m_ac3encoder) * m_uiBitsPerSample/8;
+		outputByteFactor = SPDIF_CHANNELS * m_uiBitsPerSample/8;
 	}
 	else // the PCM input and stream output should match
 	{
-		sampleByteFactor = m_uiChannels * m_uiBitsPerSample/8;
+		inputByteFactor = m_uiChannels * m_uiBitsPerSample/8;
+		outputByteFactor = inputByteFactor;
 	}
-	samplesPassedIn = len / sampleByteFactor;
+	samplesPassedIn = len / inputByteFactor;
 	
 	// Find out how much space we have available and clip to the amount we got passed in. 
 	DWORD samplesToWrite  = GetSpace();
@@ -328,7 +324,7 @@ DWORD CoreAudioAUHAL::AddPackets(unsigned char *data, DWORD len)
 			}
 			else
 			{
-				rb_write(deviceParameters->outputBuffer, ac3_framebuffer, samplesToWrite * ac3encoder_channelcount(&m_ac3encoder) * (m_uiBitsPerSample/8));
+				rb_write(deviceParameters->outputBuffer, ac3_framebuffer, samplesToWrite * outputByteFactor);
 			}
 		}
 	}
@@ -336,12 +332,12 @@ DWORD CoreAudioAUHAL::AddPackets(unsigned char *data, DWORD len)
 	{
 		// Handle volume de-amplification.
 		if (!m_bPassthrough)
-			m_amp.DeAmplify((short *)pcmPtr, samplesToWrite * m_uiChannels);
+			m_amp.DeAmplify((short *)pcmPtr, samplesToWrite);
 		
 		// Write data to the stream.
-		rb_write(deviceParameters->outputBuffer, pcmPtr, samplesToWrite * m_uiChannels * (m_uiBitsPerSample/8));
+		rb_write(deviceParameters->outputBuffer, pcmPtr, samplesToWrite * outputByteFactor);
 	}
-	return samplesToWrite * sampleByteFactor;
+	return samplesToWrite * inputByteFactor;
 
 }
 
@@ -349,11 +345,9 @@ DWORD CoreAudioAUHAL::AddPackets(unsigned char *data, DWORD len)
 FLOAT CoreAudioAUHAL::GetDelay()
 {
 	// For now hardwire to about +15ms from "base", which is what we're observing.
-	FLOAT delay = 0.115;
+	FLOAT delay = 0.415;
 	
-	if (g_audioContext.IsAC3EncoderActive())
-		delay += 0.049;
-	else if (m_bEncodeAC3)
+	if (m_bEncodeAC3)
 		delay += 0.072; // 3072/48000 = 0.064 (two AC3 packets plus 8ms)
 	else
 		delay += 0.008;
@@ -728,10 +722,8 @@ int CoreAudioAUHAL::OpenPCM(struct CoreAudioDeviceParameters *deviceParameters, 
 	DeviceFormat.mSampleRate = sampleRate;
     DeviceFormat.mFormatID = kAudioFormatLinearPCM;
 	
-    DeviceFormat.mFormatFlags = kLinearPCMFormatFlagIsSignedInteger | 
-								kAudioFormatFlagIsBigEndian | 
-								kAudioFormatFlagIsPacked;
-    DeviceFormat.mBitsPerChannel = 16;
+    DeviceFormat.mFormatFlags = kLinearPCMFormatFlagIsSignedInteger | kLinearPCMFormatFlagIsBigEndian | kAudioFormatFlagIsPacked;
+    DeviceFormat.mBitsPerChannel = bitsPerSample;
 	DeviceFormat.mChannelsPerFrame = channels;
 	
     /* Calculate framesizes and stuff */
@@ -775,10 +767,9 @@ int CoreAudioAUHAL::OpenPCM(struct CoreAudioDeviceParameters *deviceParameters, 
 									   kAudioUnitProperty_AudioChannelLayout,
 									   kAudioUnitScope_Input,
 									   0, &new_layout, sizeof(new_layout) ) );
-#endif
     if( new_layout.mNumberChannelDescriptions > 0 )
         free( new_layout.mChannelDescriptions );
-	
+#endif
     /* AU initiliaze */
     verify_noerr( AudioUnitInitialize(deviceParameters->au_unit) );
 	
@@ -788,7 +779,7 @@ int CoreAudioAUHAL::OpenPCM(struct CoreAudioDeviceParameters *deviceParameters, 
     //deviceParameters->clock_diff += mdate();
 	
 	// initialise the CoreAudio sink buffer
-	rb_init(&deviceParameters->outputBuffer, sampleRate * channels * bitsPerSample / 8 / 10 ); // buffer 0.1 sec for now
+	rb_init(&deviceParameters->outputBuffer, sampleRate * channels * bitsPerSample / 8 / 2.5 ); // buffer 0.4 sec for now
 	
 	
     /* Start the AU */
@@ -806,7 +797,7 @@ int CoreAudioAUHAL::OpenPCM(struct CoreAudioDeviceParameters *deviceParameters, 
 OSStatus CoreAudioAUHAL::RenderCallbackAnalog(struct CoreAudioDeviceParameters *deviceParameters,
 									  int *ioActionFlags,
 									  const AudioTimeStamp *inTimeStamp,
-									  unsigned int inBusNummer,
+									  unsigned int inBusNumber,
 									  unsigned int inNumberFrames,
 									  AudioBufferList *ioData )
 {
@@ -885,17 +876,20 @@ OSStatus CoreAudioAUHAL::RenderCallbackAnalog(struct CoreAudioDeviceParameters *
             aout_BufferFree( p_buffer );
         }
 		*/
-		if (rb_data_size(deviceParameters->outputBuffer) >= inNumberFrames * deviceParameters->stream_format.mBytesPerFrame)
-		{
-			rb_read(deviceParameters->outputBuffer, 
-					(uint8_t *)ioData->mBuffers[0].mData, 
-					inNumberFrames * deviceParameters->stream_format.mBytesPerFrame);
-		}
-        else
-        {
-			memset( (uint8_t *)ioData->mBuffers[0].mData,
-				   0, inNumberFrames * deviceParameters->stream_format.mBytesPerFrame);
-        }
+		int framesToWrite = inNumberFrames;
+	int framesAvailable = rb_data_size(deviceParameters->outputBuffer) / deviceParameters->stream_format.mBytesPerFrame;
+		if (framesToWrite > framesAvailable)
+			framesToWrite = framesAvailable;
+	
+		rb_read(deviceParameters->outputBuffer, 
+			(uint8_t *)ioData->mBuffers[0].mData, 
+			framesToWrite * deviceParameters->stream_format.mBytesPerFrame);
+	if (inNumberFrames > framesAvailable)
+	{
+		memset( (uint8_t *)ioData->mBuffers[0].mData + framesAvailable * deviceParameters->stream_format.mBytesPerFrame,
+			   INT8_MIN, (inNumberFrames - framesAvailable) * deviceParameters->stream_format.mBytesPerFrame);
+	}
+	CLog::Log(LOGDEBUG, "buffer full: %i%%", rb_data_size(deviceParameters->outputBuffer) / deviceParameters->outputBuffer->size);
     return( noErr );
 }
 		
