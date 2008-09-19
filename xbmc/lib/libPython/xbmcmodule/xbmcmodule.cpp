@@ -44,6 +44,7 @@
 #include "Util.h"
 #include "FileSystem/File.h"
 #include "Settings.h"
+#include "TextureManager.h"
 
 // include for constants
 #include "pyutil.h"
@@ -724,7 +725,42 @@ namespace PYXBMC
       return NULL;
     }
 
-    return Py_BuildValue("s", result.c_str());
+    return Py_BuildValue((char*)"s", result.c_str());
+  }
+
+  // skinHasImage function
+  PyDoc_STRVAR(skinHasImage__doc__,
+    "skinHasImage(image) -- Returns True if the image file exists in the skin.\n"
+    "\n"
+    "image          : string - image filename\n"
+    "\n"
+    "*Note, If the media resides in a subfolder include it. (eg. home-myfiles\\\\home-myfiles2.png)\n"
+    "\n"
+    "       You can use the above as keywords for arguments and skip certain optional arguments.\n"
+    "       Once you use a keyword, all following arguments require the keyword.\n"
+    "\n"
+    "example:\n"
+    "  - exists = xbmc.skinHasImage('ButtonFocusedTexture.png')\n");
+
+  PyObject* XBMC_SkinHasImage(PyObject *self, PyObject *args, PyObject *kwds)
+  {
+    static const char *keywords[] = { "image", NULL };
+    char *image = NULL;
+    // parse arguments to constructor
+    if (!PyArg_ParseTupleAndKeywords(
+      args,
+      kwds,
+      (char*)"s",
+      (char**)keywords,
+      &image
+      ))
+    {
+      return NULL;
+    };
+
+    bool exists = g_TextureManager.HasTexture(image);
+
+    return Py_BuildValue((char*)"b", exists);
   }
 
   // define c functions to be used in python here

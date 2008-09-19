@@ -306,9 +306,6 @@ bool CGUIWindowSettingsCategory::OnMessage(CGUIMessage &message)
     break;
   case GUI_MSG_WINDOW_DEINIT:
     {
-      // Hardware based stuff
-      // TODO: This should be done in a completely separate screen
-      // to give warning to the user that it writes to the EEPROM.
       if ((g_guiSettings.GetInt("audiooutput.mode") == AUDIO_DIGITAL))
       {
         g_audioConfig.SetAC3Enabled(g_guiSettings.GetBool("audiooutput.ac3passthrough"));
@@ -495,8 +492,8 @@ void CGUIWindowSettingsCategory::CreateSettings()
       CSettingInt *pSettingInt = (CSettingInt*)pSetting;
       CGUISpinControlEx *pControl = (CGUISpinControlEx *)GetControl(GetSetting(strSetting)->GetID());
       pControl->AddLabel(g_localizeStrings.Get(338), AUDIO_ANALOG);
-      if (g_audioConfig.HasDigitalOutput())
-        pControl->AddLabel(g_localizeStrings.Get(339), AUDIO_DIGITAL);
+      //if (g_audioConfig.HasDigitalOutput())
+      pControl->AddLabel(g_localizeStrings.Get(339), AUDIO_DIGITAL);
       pControl->SetValue(pSettingInt->GetData());
     }
 #ifdef __APPLE__
@@ -941,6 +938,15 @@ void CGUIWindowSettingsCategory::CreateSettings()
     else if (strSetting.Equals("audiooutput.audiodevice"))
     {
       FillInAudioDevices(pSetting);
+    }
+    else if (strSetting.Equals("myvideos.resumeautomatically"))
+    {
+      CSettingInt *pSettingInt = (CSettingInt*)pSetting;
+      CGUISpinControlEx *pControl = (CGUISpinControlEx *)GetControl(GetSetting(strSetting)->GetID());
+      pControl->AddLabel(g_localizeStrings.Get(106), RESUME_NO);
+      pControl->AddLabel(g_localizeStrings.Get(107), RESUME_YES);
+      pControl->AddLabel(g_localizeStrings.Get(12020), RESUME_ASK);
+      pControl->SetValue(pSettingInt->GetData());
     }
   }
 
@@ -1531,9 +1537,8 @@ void CGUIWindowSettingsCategory::OnClick(CBaseSettingControl *pSettingControl)
     g_graphicsContext.SetVideoResolution(m_NewResolution, TRUE);
     g_guiSettings.m_LookAndFeelResolution = m_NewResolution;
     g_application.ReloadSkin();
-    CGUIDialogYesNo dlg;
-    dlg.SetAutoClose(5000);
-    if (!dlg.ShowAndGetInput(13110, 13111, 20022, 20022))
+    bool cancelled = false;
+    if (!CGUIDialogYesNo::ShowAndGetInput(13110, 13111, 20022, 20022, -1, -1, cancelled, 5000))
     {
       g_guiSettings.SetInt("videoscreen.resolution", lastRes);
       g_graphicsContext.SetVideoResolution(lastRes, TRUE);

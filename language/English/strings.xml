@@ -874,7 +874,7 @@
   <string id="12019">Yes</string>
   <string id="12020">Ask</string>
   <string id="12021">Start from beginning</string>
-  <string id="12022">Resume from last position</string>
+  <string id="12022">Resume from %s</string>
   <string id="12023">Validating existing trainers...</string>
   <string id="12024">Automatically generate thumbs for videos with no cover art</string>
 
@@ -1155,7 +1155,8 @@
   <string id="13409">Top 250</string>
   <string id="13410">Tune in on lastfm</string>
   <string id="13411">Minimum fanspeed</string>
-  <string id="13412">RSS Feeds Contain Right-To-Left Text</string>
+  <string id="13412">- RSS Feeds Contain Right-To-Left Text</string>
+  <string id="13413">Downloading</string>
   
   <string id="13450">Sleep System</string>
   

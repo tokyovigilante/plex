@@ -1912,6 +1912,26 @@ bool CVideoDatabase::GetResumeBookMark(const CStdString& strFilenameAndPath, CBo
   return false;
 }
 
+void CVideoDatabase::DeleteResumeBookMark(const CStdString &strFilenameAndPath)
+{
+  if (!m_pDB.get() || !m_pDS.get())
+    return;
+
+  int fileID = GetFileId(strFilenameAndPath);
+  if (fileID < -1)
+    return;
+
+  try
+  {
+    CStdString sql = FormatSQL("delete from bookmark where idFile=%i and type=%i", fileID, CBookmark::RESUME);
+    m_pDS->exec(sql.c_str());
+  }
+  catch(...)
+  {
+    CLog::Log(LOGERROR, "%s (%s) failed", __FUNCTION__, strFilenameAndPath.c_str());
+  }
+}
+
 void CVideoDatabase::GetEpisodesByFile(const CStdString& strFilenameAndPath, vector<CVideoInfoTag>& episodes)
 {
   try
@@ -3088,9 +3108,9 @@ void CVideoDatabase::UpdateFanart(const CFileItem &item, VIDEODB_CONTENT_TYPE ty
   const CVideoInfoTag *tag = item.GetVideoInfoTag();
   CStdString exec;
   if (type == VIDEODB_CONTENT_TVSHOWS)
-    exec = FormatSQL("UPDATE tvshow set c%02d=%s WHERE idshow=%i", VIDEODB_ID_TV_FANART, item.GetVideoInfoTag()->m_fanart.m_xml.c_str(), item.GetVideoInfoTag()->m_iDbId);
+    exec = FormatSQL("UPDATE tvshow set c%02d='%s' WHERE idshow=%i", VIDEODB_ID_TV_FANART, item.GetVideoInfoTag()->m_fanart.m_xml.c_str(), item.GetVideoInfoTag()->m_iDbId);
   else if (type == VIDEODB_CONTENT_MOVIES)
-    exec = FormatSQL("UPDATE movie set c%02d=%s WHERE idmovie=%i", VIDEODB_ID_FANART, item.GetVideoInfoTag()->m_fanart.m_xml.c_str(), item.GetVideoInfoTag()->m_iDbId);
+    exec = FormatSQL("UPDATE movie set c%02d='%s' WHERE idmovie=%i", VIDEODB_ID_FANART, item.GetVideoInfoTag()->m_fanart.m_xml.c_str(), item.GetVideoInfoTag()->m_iDbId);
 
   try
   {
@@ -5995,8 +6015,7 @@ void CVideoDatabase::DeleteThumbForItem(const CStdString& strPath, bool bFolder)
 {
   CFileItem item(strPath,bFolder);
   XFILE::CFile::Delete(item.GetCachedVideoThumb());
-  if (bFolder)
-    XFILE::CFile::Delete(item.GetCachedFanart());
+  XFILE::CFile::Delete(item.GetCachedFanart());
     
   // tell our GUI to completely reload all controls (as some of them
   // are likely to have had this image in use so will need refreshing)

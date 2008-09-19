@@ -31,10 +31,8 @@ extern CApplication g_application;
 {
   NSBundle *mainBundle = [NSBundle mainBundle];
   NSDictionary *infoDict = [mainBundle infoDictionary];
-
-  NSString *mainString = [infoDict valueForKey:@"CFBundleShortVersionString"];
-  NSString *subString = [infoDict valueForKey:@"CFBundleVersion"];
-  return [NSString stringWithFormat:@"Version %@ (%@)", mainString, subString];
+  NSString *versionString = [infoDict valueForKey:@"CFBundleVersion"];
+  return [NSString stringWithFormat:@"Version %@", versionString];
 }
 
 - (BOOL)application:(NSApplication *)theApplication openFile:(NSString *)filename

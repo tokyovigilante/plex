@@ -21,6 +21,8 @@
  */
 
 #define XC_AUDIO_FLAGS 9
+#define XC_AUDIO_FLAGS_ENABLE_AC3 1
+#define XC_AUDIO_FLAGS_ENABLE_DTS 2
 
 class XBAudioConfig
 {
@@ -38,9 +40,7 @@ public:
   void Save();
 
 private:
-#ifdef HAS_XBOX_AUDIO
   DWORD m_dwAudioFlags;
-#endif
 };
 
 extern XBAudioConfig g_audioConfig;

@@ -8,5 +8,5 @@ git_rev = version[0:7]
 info = os.environ['BUILT_PRODUCTS_DIR']+"/"+os.environ['WRAPPER_NAME']+"/Contents/Info.plist"
 
 plist = NSMutableDictionary.dictionaryWithContentsOfFile_(info)
-plist['CFBundleVersion'] = git_rev
+plist['CFBundleVersion'] = plist['CFBundleShortVersionString'] + '-' + git_rev
 plist.writeToFile_atomically_(info, 1)

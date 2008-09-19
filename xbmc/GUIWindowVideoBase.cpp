@@ -316,7 +316,9 @@ void CGUIWindowVideoBase::OnInfo(CFileItem* pItem, const SScraperInfo& info)
      (m_gWindowManager.GetActiveWindow() == WINDOW_VIDEO_FILES ||
       m_gWindowManager.GetActiveWindow() == WINDOW_VIDEO_NAV)) // since we can be called from the music library we need this check
   {
+    int itemNumber = m_viewControl.GetSelectedItem();
     Update(m_vecItems->m_strPath);
+    m_viewControl.SetSelectedItem(itemNumber);
   }
 }
 
@@ -480,13 +482,18 @@ bool CGUIWindowVideoBase::ShowIMDB(CFileItem *item, const SScraperInfo& info2)
   if (result == CVideoInfoScanner::URL_NFO)
     IMDB.SetScraperInfo(info);
 
-  CStdString movieName = item->GetLabel();
-  if (item->m_bIsFolder) // always search on tvshow folder name on refresh
+  CStdString movieName;
+  if (item->m_bIsFolder || settings.parent_name) // always search based on file paths on refresh
   {
     movieName = item->m_strPath;
+    if (!item->m_bIsFolder)
+      CUtil::GetParentPath(item->m_strPath,movieName);
     CUtil::RemoveSlashAtEnd(movieName);
     movieName = CUtil::GetFileName(movieName);
   }
+  else
+    movieName = CUtil::GetFileName(item->m_strPath);
+
   // 3. Run a loop so that if we Refresh we re-run this block
   bool needsRefresh(false);
   do
@@ -776,7 +783,7 @@ void CGUIWindowVideoBase::OnQueueItem(int iItem)
   CFileItemList queuedItems;
   AddItemToPlayList(item, queuedItems);
   // if party mode, add items but DONT start playing
-  if (g_partyModeManager.IsEnabled())
+  if (g_partyModeManager.IsEnabled(PARTYMODECONTEXT_VIDEO))
   {
     g_partyModeManager.AddUserSongs(queuedItems, false);
     return;
@@ -908,7 +915,7 @@ int  CGUIWindowVideoBase::GetResumeItemOffset(const CFileItem *item)
 
 bool CGUIWindowVideoBase::OnClick(int iItem)
 {
-  if (g_guiSettings.GetBool("myvideos.autoresume"))
+  if (g_guiSettings.GetInt("myvideos.resumeautomatically") != RESUME_NO)
     OnResumeItem(iItem);
   else
     return CGUIMediaWindow::OnClick(iItem);
@@ -923,7 +930,37 @@ void CGUIWindowVideoBase::OnRestartItem(int iItem)
 
 void CGUIWindowVideoBase::OnResumeItem(int iItem)
 {
-  m_vecItems->Get(iItem)->m_lStartOffset = STARTOFFSET_RESUME;
+  if (iItem < 0 || iItem >= m_vecItems->Size()) return;
+  CFileItemPtr item = m_vecItems->Get(iItem);
+  bool resumeItem = (g_guiSettings.GetInt("myvideos.resumeautomatically") == RESUME_YES);
+  if (!item->m_bIsFolder && !resumeItem && g_guiSettings.GetInt("myvideos.resumeautomatically") == RESUME_ASK)
+  {
+    // check to see whether we have a resume offset available
+    CVideoDatabase db;
+    if (db.Open())
+    {
+      CBookmark bookmark;
+      CStdString itemPath(item->m_strPath);
+      if (item->IsVideoDb())
+        itemPath = item->GetVideoInfoTag()->m_strFileNameAndPath;
+      if (db.GetResumeBookMark(itemPath, bookmark) )
+      { // prompt user whether they wish to resume
+        vector<CStdString> choices;
+        choices.push_back(g_localizeStrings.Get(12021));
+        CStdString resumeString, time;
+        StringUtils::SecondsToTimeString(bookmark.timeInSeconds, time);
+        resumeString.Format(g_localizeStrings.Get(12022).c_str(), time.c_str());
+        choices.push_back(resumeString);
+        int retVal = CGUIDialogContextMenu::ShowAndGetChoice(choices, GetContextPosition());
+        if (!retVal)
+          return; // don't do anything
+        resumeItem = (retVal == 2);
+      }
+      db.Close();
+    }
+  }
+  if (resumeItem)
+    item->m_lStartOffset = STARTOFFSET_RESUME;
   CGUIMediaWindow::OnClick(iItem);
 }
 
@@ -983,9 +1020,9 @@ void CGUIWindowVideoBase::GetContextButtons(int itemNumber, CContextButtons &but
       // check to see if the Resume Video button is applicable
       if (GetResumeItemOffset(item.get()) > 0)
       {
-        if (g_guiSettings.GetBool("myvideos.autoresume"))
+        if (g_guiSettings.GetInt("myvideos.resumeautomatically") == RESUME_YES)
           buttons.Add(CONTEXT_BUTTON_RESTART_ITEM, 20132);    // Restart Video
-        else
+        if (g_guiSettings.GetInt("myvideos.resumeautomatically") == RESUME_NO)
           buttons.Add(CONTEXT_BUTTON_RESUME_ITEM, 13381);     // Resume Video
       }
       if (item->IsSmartPlayList() || m_vecItems->IsSmartPlayList())
@@ -1172,7 +1209,7 @@ bool CGUIWindowVideoBase::OnPlayMedia(int iItem)
   CFileItemPtr pItem = m_vecItems->Get(iItem);
   
   // party mode
-  if (g_partyModeManager.IsEnabled())
+  if (g_partyModeManager.IsEnabled(PARTYMODECONTEXT_VIDEO))
   {
     CPlayList playlistTemp;
     playlistTemp.Add(pItem);

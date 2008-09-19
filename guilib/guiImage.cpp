@@ -156,14 +156,6 @@ void CGUIImage::Render()
 #ifndef HAS_SDL
     LPDIRECT3DDEVICE8 p3DDevice = g_graphicsContext.Get3DDevice();
     // Set state to render the image
-#ifdef ALLOW_TEXTURE_COMPRESSION
-#ifdef HAS_XBOX_D3D
-    if (!m_linearTexture)
-      p3DDevice->SetPalette( 0, m_pPalette);
-    if (m_diffusePalette)
-      p3DDevice->SetPalette( 1, m_diffusePalette);
-#endif
-#endif
     p3DDevice->SetTexture( 0, m_vecTextures[m_iCurrentImage] );
     p3DDevice->SetTextureStageState( 0, D3DTSS_MAGFILTER, D3DTEXF_LINEAR );
     p3DDevice->SetTextureStageState( 0, D3DTSS_MINFILTER, D3DTEXF_LINEAR );
@@ -253,7 +245,6 @@ void CGUIImage::Render()
     
     float uLeft, uRight, vTop, vBottom;
 
-#ifdef ALLOW_TEXTURE_COMPRESSION
     if (!m_linearTexture)
     {
       uLeft = m_image.border.left / m_iImageWidth;
@@ -263,14 +254,11 @@ void CGUIImage::Render()
     }
     else
     {
-#endif
       uLeft = m_image.border.left;
       uRight = m_fU - m_image.border.right;
       vTop = m_image.border.top;
       vBottom = m_fV - m_image.border.bottom;
-#ifdef ALLOW_TEXTURE_COMPRESSION
     }
-#endif
 
 #ifdef HAS_XBOX_D3D
     p3DDevice->Begin(D3DPT_QUADLIST);

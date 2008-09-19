@@ -186,7 +186,20 @@ void CGUIDialogProfileSettings::OnSettingChanged(unsigned int num)
     CStdString strThumb;
     VECSOURCES shares;
     g_mediaManager.GetLocalDrives(shares);
-    if (CGUIDialogFileBrowser::ShowAndGetImage(shares,g_localizeStrings.Get(1030),strThumb))
+    CFileItemList items;
+    if (!m_strThumb.IsEmpty())
+    {
+      CFileItemPtr item(new CFileItem("thumb://Current", false));
+      item->SetThumbnailImage(m_strThumb);
+      item->SetLabel(g_localizeStrings.Get(20016));
+      items.Add(item);
+    } 
+    CFileItemPtr item(new CFileItem("thumb://None", false));
+    item->SetThumbnailImage(m_strDefaultImage);
+    item->SetLabel(g_localizeStrings.Get(20018));
+    items.Add(item);
+    if (CGUIDialogFileBrowser::ShowAndGetImage(items,shares,g_localizeStrings.Get(1030),strThumb) && 
+        !strThumb.Equals("thumb://Current"))
     {
       m_bNeedSave = true;
       CGUIImage *pImage = (CGUIImage*)GetControl(2);
@@ -196,11 +209,20 @@ void CGUIDialogProfileSettings::OnSettingChanged(unsigned int num)
       if (CFile::Exists(m_strThumb))
         CFile::Delete(m_strThumb);
 
-      CPicture pic;
-      pic.DoCreateThumbnail(strThumb, m_strThumb);
-      pImage->SetFileName("foo.bmp");
+      pImage->SetFileName("");
       pImage->Update();
-      pImage->SetFileName(m_strThumb);
+
+      if (!strThumb.Equals("thumb://None"))
+      {
+        CPicture pic;
+        pic.DoCreateThumbnail(strThumb, m_strThumb);
+        pImage->SetFileName(m_strThumb);
+      }
+      else
+      {
+        m_strThumb.clear();
+        pImage->SetFileName(m_strDefaultImage);
+      }
     }
   }
   if (setting.id == 3)
@@ -342,7 +364,7 @@ bool CGUIDialogProfileSettings::ShowForProfile(unsigned int iProfile, bool bDeta
         // save new profile guisettings
         if (CGUIDialogYesNo::ShowAndGetInput(20058,20048,20102,20022,20044,20064))
         {
-          CFile::Cache(CUtil::AddFileToFolder(g_settings.GetUserDataFolder(),"guisettings.xml"),
+          CFile::Cache(_P("T:\\guisettings.xml"),
                        CUtil::AddFileToFolder(g_settings.GetUserDataFolder(),
                                               dialog->m_strDirectory+"\\guisettings.xml"));
         }
@@ -373,6 +395,10 @@ bool CGUIDialogProfileSettings::ShowForProfile(unsigned int iProfile, bool bDeta
           }
       }
     }
+    
+    // Copy RSS feed.
+    CFile::Cache(CUtil::AddFileToFolder(g_settings.GetUserDataFolder(),"RssFeeds.xml"),
+                 CUtil::AddFileToFolder(g_settings.GetUserDataFolder(),dialog->m_strDirectory+"\\RssFeeds.xml"));
 
     /*if (!dialog->m_bIsNewUser)
       if (!CGUIDialogYesNo::ShowAndGetInput(20067,20103,20022,20022))

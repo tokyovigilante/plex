@@ -593,7 +593,7 @@ void setupAndRun()
     IOReturn               ioReturnValue = kIOReturnSuccess;
     CFMutableArrayRef      cookies;
     
-    hidMatchDictionary = IOServiceNameMatching("AppleIRController");
+    hidMatchDictionary = IOServiceMatching("AppleIRController");
     hidService = IOServiceGetMatchingService(kIOMasterPortDefault, hidMatchDictionary);
 
     if (hidService) 

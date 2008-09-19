@@ -380,7 +380,7 @@ CGUISettings::CGUISettings(void)
   AddInt(1, "appleremote.mode", 13601, APPLE_REMOTE_STANDARD, APPLE_REMOTE_DISABLED, 1, APPLE_REMOTE_UNIVERSAL, SPIN_CONTROL_TEXT);
   AddBool(2, "appleremote.alwayson", 13602, false);
   AddInt(3, "appleremote.sequencetime", 13603, 500, 50, 50, 1000, SPIN_CONTROL_INT_PLUS, MASK_MS, TEXT_OFF);
-  AddBool(2, "appleremote.secureinput", 13604, false);
+  AddBool(0, "appleremote.secureinput", 13604, false);
 #endif
 
   AddCategory(4, "autorun", 447);
@@ -456,7 +456,7 @@ CGUISettings::CGUISettings(void)
   AddGroup(5, 3);
   AddCategory(5, "myvideos", 16000);
   AddBool(1, "myvideos.treatstackasfile", 20051, true);
-  AddBool(2, "myvideos.autoresume",12017, false);
+  AddInt(2, "myvideos.resumeautomatically", 12017, RESUME_ASK, RESUME_NO, 1, RESUME_ASK, SPIN_CONTROL_TEXT);
   AddBool(3, "myvideos.autothumb",12024, false);
   AddBool(4, "myvideos.cleanfilenames", 20418, false);
   AddSeparator(5, "myvideos.sep1");
@@ -606,14 +606,14 @@ CGUISettings::CGUISettings(void)
 
   // remote events settings
 #ifdef HAS_EVENT_SERVER
-  AddCategory(6, "remoteevents", 790);
+  AddCategory(0, "remoteevents", 790);
   AddBool(1,  "remoteevents.enabled",         791, true);
   AddString(2,"remoteevents.port",            792, "9777", BUTTON_CONTROL_INPUT, false, 792);
   AddInt(3,   "remoteevents.portrange",       793, 10, 1, 1, 100, SPIN_CONTROL_INT);
   AddInt(4,   "remoteevents.maxclients",      797, 20, 1, 1, 100, SPIN_CONTROL_INT);
   AddSeparator(5,"remoteevents.sep1");
 #ifndef _XBOX
-  AddBool(6,  "remoteevents.allinterfaces",   794, false);
+  AddBool(6,  "remoteevents.allinterfaces",   794, true);
   AddSeparator(7,"remoteevents.sep2");
 #endif
   AddInt(8,   "remoteevents.initialdelay",    795, 750, 5, 5, 10000, SPIN_CONTROL_INT);
@@ -1020,7 +1020,11 @@ void CGUISettings::LoadXML(TiXmlElement *pRootElement, bool hideSettings /* = fa
     g_advancedSettings.m_logLevel = LOG_LEVEL_DEBUG_FREEMEM;
     CLog::Log(LOGNOTICE, "Enabled debug logging due to GUI setting");
   }
-#ifndef __APPLE__
+#ifdef __APPLE__
+  // Set the initial settings.
+  g_audioConfig.SetAC3Enabled(GetBool("audiooutput.ac3passthrough"));
+  g_audioConfig.SetDTSEnabled(GetBool("audiooutput.dtspassthrough"));
+#else
   // Get hardware based stuff...
   CLog::Log(LOGNOTICE, "Getting hardware information now...");
   if (GetInt("audiooutput.mode") == AUDIO_DIGITAL && !g_audioConfig.HasDigitalOutput())

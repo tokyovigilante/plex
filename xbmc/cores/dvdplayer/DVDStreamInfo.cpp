@@ -60,6 +60,7 @@ void CDVDStreamInfo::Clear()
   samplerate = 0;
   blockalign = 0;
   bitrate = 0;
+  forPreview = false;
 
   identifier = 0;
 }
@@ -139,6 +140,8 @@ void CDVDStreamInfo::Assign(const CDVDStreamInfo& right, bool withextradata)
 
   // SUBTITLE
   identifier = right.identifier;
+  
+  forPreview = right.forPreview;
 }
 
 void CDVDStreamInfo::Assign(const CDemuxStream& right, bool withextradata)
@@ -177,4 +180,6 @@ void CDVDStreamInfo::Assign(const CDemuxStream& right, bool withextradata)
     const CDemuxStreamSubtitle *stream = static_cast<const CDemuxStreamSubtitle*>(&right);
     identifier = stream->identifier;
   }
+  
+  forPreview = false;
 }

@@ -860,6 +860,10 @@
 		E3B963BC0E3863F80022F663 /* DVDInputStreamRTMP.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E3B963BA0E3863F80022F663 /* DVDInputStreamRTMP.cpp */; };
 		E3B963EC0E3864C80022F663 /* RSSDirectory.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E3B963EA0E3864C80022F663 /* RSSDirectory.cpp */; };
 		E3B963EF0E3864DB0022F663 /* RssFeed.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E3B963ED0E3864DB0022F663 /* RssFeed.cpp */; };
+		E3C1A65D0E7126F400CE0104 /* Sparkle.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E3C1A65C0E7126F400CE0104 /* Sparkle.framework */; };
+		E3C1A6610E71275B00CE0104 /* Sparkle.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = E3C1A65C0E7126F400CE0104 /* Sparkle.framework */; };
+		E3C1A67D0E72862300CE0104 /* plex in Resources */ = {isa = PBXBuildFile; fileRef = E3C1A67C0E72862300CE0104 /* plex */; };
+		E3C1A6AA0E74E85C00CE0104 /* AsyncFileCopy.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E3C1A6A90E74E85C00CE0104 /* AsyncFileCopy.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -900,6 +904,16 @@
 				E38AABCD0E5D489100C1B750 /* PlexHelper in Copy PlexHelper */,
 			);
 			name = "Copy PlexHelper";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E3C1A66C0E71276000CE0104 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				E3C1A6610E71275B00CE0104 /* Sparkle.framework in CopyFiles */,
+			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXCopyFilesBuildPhase section */
@@ -2945,6 +2959,10 @@
 		E3B963EE0E3864DB0022F663 /* RssFeed.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RssFeed.h; sourceTree = "<group>"; };
 		E3BBB7980D7EA78A00CAAFD3 /* CMythSession.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CMythSession.cpp; sourceTree = "<group>"; };
 		E3BBB7A10D7EA8B200CAAFD3 /* libpcre.0.0.1.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libpcre.0.0.1.dylib; path = ../../../../../opt/local/lib/libpcre.0.0.1.dylib; sourceTree = SOURCE_ROOT; };
+		E3C1A65C0E7126F400CE0104 /* Sparkle.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Sparkle.framework; path = plex/Frameworks/Sparkle.framework; sourceTree = "<group>"; };
+		E3C1A67C0E72862300CE0104 /* plex */ = {isa = PBXFileReference; lastKnownFileType = folder; path = plex; sourceTree = "<group>"; };
+		E3C1A6A80E74E85C00CE0104 /* AsyncFileCopy.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AsyncFileCopy.h; sourceTree = "<group>"; };
+		E3C1A6A90E74E85C00CE0104 /* AsyncFileCopy.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = AsyncFileCopy.cpp; sourceTree = "<group>"; };
 		E3D4B9950DF7E39B0092A179 /* FileShoutcast.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FileShoutcast.h; sourceTree = "<group>"; };
 		E3D4B9960DF7E39B0092A179 /* FileXBMSP.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = FileXBMSP.cpp; sourceTree = "<group>"; };
 		E3D4B9970DF7E39B0092A179 /* FileXBMSP.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FileXBMSP.h; sourceTree = "<group>"; };
@@ -3024,6 +3042,7 @@
 				E3AC01F90E39E16B00DD298E /* libSDL_mixer-osx.a in Frameworks */,
 				E336F0890E60D1A800270758 /* libjpeg.62.dylib in Frameworks */,
 				E336F09C0E62D1FD00270758 /* libmms-osx.a in Frameworks */,
+				E3C1A65D0E7126F400CE0104 /* Sparkle.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3052,6 +3071,7 @@
 		08FB7794FE84155DC02AAC07 /* XBMC */ = {
 			isa = PBXGroup;
 			children = (
+				E3C1A65C0E7126F400CE0104 /* Sparkle.framework */,
 				E38AAB620E5D44D900C1B750 /* SmartCrashReportsAPI.o */,
 				E38AAB5E0E5D447400C1B750 /* CrashReporter.m */,
 				E38AAB540E5D441000C1B750 /* SmartCrashReportsInstall.h */,
@@ -3075,6 +3095,7 @@
 		08FB7795FE84155DC02AAC07 /* Source */ = {
 			isa = PBXGroup;
 			children = (
+				E3C1A66F0E7285EA00CE0104 /* Plex */,
 				E38E13890D25F9F900618676 /* guilib */,
 				E38E14610D25F9F900618676 /* xbmc */,
 			);
@@ -6062,6 +6083,8 @@
 		E38E1E220D25F9FD00618676 /* utils */ = {
 			isa = PBXGroup;
 			children = (
+				E3C1A6A80E74E85C00CE0104 /* AsyncFileCopy.h */,
+				E3C1A6A90E74E85C00CE0104 /* AsyncFileCopy.cpp */,
 				E3B221520E57892500939882 /* ArabicShaping.cpp */,
 				E3B963ED0E3864DB0022F663 /* RssFeed.cpp */,
 				E3B963EE0E3864DB0022F663 /* RssFeed.h */,
@@ -6232,6 +6255,14 @@
 			path = libRTMP;
 			sourceTree = "<group>";
 		};
+		E3C1A66F0E7285EA00CE0104 /* Plex */ = {
+			isa = PBXGroup;
+			children = (
+				E3C1A67C0E72862300CE0104 /* plex */,
+			);
+			name = Plex;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -6245,6 +6276,7 @@
 				E3AC021F0E3B34FA00DD298E /* ShellScript */,
 				E38AABC60E5D472500C1B750 /* Copy CrashReporter */,
 				E38AABD00E5D489900C1B750 /* Copy PlexHelper */,
+				E3C1A66C0E71276000CE0104 /* CopyFiles */,
 			);
 			buildRules = (
 			);
@@ -6315,6 +6347,7 @@
 			files = (
 				E371CB160E2F39CD00FBF841 /* Plex.xib in Resources */,
 				E371CBB10E3044D900FBF841 /* Plex.icns in Resources */,
+				E3C1A67D0E72862300CE0104 /* plex in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -7136,6 +7169,7 @@
 				94EE45400E7B7721001EED6C /* PortaudioDirectSound.cpp in Sources */,
 				94BCAE500E7B8862007C4208 /* CoreAudioPlexSupport.cpp in Sources */,
 				94BCAEB90E7B88AD007C4208 /* CoreAudioAUHAL.cpp in Sources */,
+				E3C1A6AA0E74E85C00CE0104 /* AsyncFileCopy.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -7250,9 +7284,13 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = YES;
-				APPLICATION_VERSION = 0.5.15;
+				APPLICATION_VERSION = 0.5.18;
 				CODE_SIGN_IDENTITY = Plex;
 				COPY_PHASE_STRIP = NO;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$(SRCROOT)/plex/Frameworks\"",
+				);
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_ENABLE_FIX_AND_CONTINUE = YES;
 				GCC_MODEL_TUNING = G5;
@@ -7340,10 +7378,14 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = YES;
-				APPLICATION_VERSION = 0.5.15;
+				APPLICATION_VERSION = 0.5.18;
 				CODE_SIGN_IDENTITY = Plex;
 				COPY_PHASE_STRIP = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$(SRCROOT)/plex/Frameworks\"",
+				);
 				GCC_ENABLE_FIX_AND_CONTINUE = NO;
 				GCC_MODEL_TUNING = G5;
 				GCC_PRECOMPILE_PREFIX_HEADER = NO;

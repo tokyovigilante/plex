@@ -564,6 +564,15 @@ bool CFileItem::IsInternetStream() const
   if (IsOnLAN())
     return false;
 
+  // Check for stacks.
+  if (strProtocol == "stack") 
+  {      
+      CStdString firstStackPath = CStackDirectory::GetFirstStackedFile(m_strPath);
+      CFileItem  fileItem(firstStackPath, false);
+      
+      return fileItem.IsInternetStream();
+  }
+  
   if (strProtocol == "shout" || strProtocol == "mms" ||
       strProtocol == "http"  || strProtocol == "ftp" ||
       strProtocol == "rtsp"  || strProtocol == "rtp" ||
@@ -2425,7 +2434,7 @@ void CFileItem::CacheFanart() const
     return;
   // We don't have a cached image, so let's see if the user has a local image they want to use
 
-  if (IsInternetStream() || CUtil::IsFTP(m_strPath)) // no local fanart available for these
+  if (IsInternetStream() || CUtil::IsFTP(m_strPath) || CUtil::IsUPnP(m_strPath)) // no local fanart available for these
     return;
   
   CStdString localFanart;
