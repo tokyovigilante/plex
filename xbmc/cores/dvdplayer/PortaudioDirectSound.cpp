@@ -270,6 +270,7 @@ DWORD PortAudioDirectSound::AddPackets(unsigned char *data, DWORD len)
   
   // Find out how much space we have available.
   DWORD samplesToWrite  = Pa_GetStreamWriteAvailable(m_pStream);
+	if (samplesToWrite == 0) return 0;
 	  
   // Clip to the amount we got passed in. I was using MIN above, but that
   // was a very bad idea since Pa_GetStreamWriteAvailable would get called
