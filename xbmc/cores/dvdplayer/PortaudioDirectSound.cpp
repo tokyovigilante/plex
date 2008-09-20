@@ -67,7 +67,7 @@ PortAudioDirectSound::PortAudioDirectSound(IAudioCallback* pCallback, int iChann
 		ac3encoder_init(&m_ac3encoder, iChannels, uiSamplesPerSec, uiBitsPerSample, mpeg_remapping);
 		m_bEncodeAC3 = true;
 		m_bPassthrough = true;
-		ac3_framebuffer = (unsigned char *)calloc(SPDIF_CHANNELS * 1024, 1);
+		ac3_framebuffer = (unsigned char *)calloc(m_dwPacketSize, 1);
 	}
 	else
 	{
@@ -142,7 +142,8 @@ HRESULT PortAudioDirectSound::Deinitialize()
   if (m_bEncodeAC3)
   {
 	  ac3encoder_free(&m_ac3encoder);
-	  free(ac3_framebuffer);
+	  ac3_framebuffer = 0;
+	  if (ac3_framebuffer != 0) free(ac3_framebuffer);
   }
 	
 	
