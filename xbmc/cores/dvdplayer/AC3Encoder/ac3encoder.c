@@ -160,19 +160,19 @@ int ac3encoder_write_samples(struct AC3Encoder *encoder, unsigned char *samples,
 		unsigned char AC3_frame_buffer[AC3_SPDIF_FRAME_SIZE], oldendian[AC3_SPDIF_FRAME_SIZE];
 		do 
 		{
-			memset(&AC3_frame_buffer, 0, AC3_SPDIF_FRAME_SIZE);
-			encoder->iAC3FrameSize = aften_encode_frame(&encoder->m_aftenContext, oldendian, sample_buffer, AC3_SAMPLES_PER_FRAME);
+			memset(AC3_frame_buffer, 0, AC3_SPDIF_FRAME_SIZE);
+			encoder->iAC3FrameSize = aften_encode_frame(&encoder->m_aftenContext, &AC3_frame_buffer[8], sample_buffer, AC3_SAMPLES_PER_FRAME);
 			
-			AC3_frame_buffer[0] = 0x72; /* sync words */
-			AC3_frame_buffer[1] = 0xF8;
-			AC3_frame_buffer[2] = 0x1F;
-			AC3_frame_buffer[3] = 0x4E;
-			AC3_frame_buffer[4] = 0x01;
-			AC3_frame_buffer[5] = oldendian[5] & 0x7; /* bsmod */
-			AC3_frame_buffer[6] = (encoder->iAC3FrameSize << 3) & 0xFF;
-			AC3_frame_buffer[7] = (encoder->iAC3FrameSize >> 5) & 0xFF;
+			AC3_frame_buffer[1] = 0x72; /* sync words */
+			AC3_frame_buffer[0] = 0xF8;
+			AC3_frame_buffer[3] = 0x1F;
+			AC3_frame_buffer[2] = 0x4E;
+			AC3_frame_buffer[5] = 0x01;
+			AC3_frame_buffer[4] = AC3_frame_buffer[5] & 0x7; /* bsmod */
+			AC3_frame_buffer[7] = (encoder->iAC3FrameSize << 3) & 0xFF;
+			AC3_frame_buffer[6] = (encoder->iAC3FrameSize >> 5) & 0xFF;
 			
-			swabdata((char*)AC3_frame_buffer+8, (char*)oldendian, encoder->iAC3FrameSize);
+			//swabdata((char*)AC3_frame_buffer+8, (char*)oldendian, encoder->iAC3FrameSize);
 			
 			if(encoder->iAC3FrameSize < 0) 
 			{

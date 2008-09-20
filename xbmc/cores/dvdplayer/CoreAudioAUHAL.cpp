@@ -314,11 +314,11 @@ DWORD CoreAudioAUHAL::AddPackets(unsigned char *data, DWORD len)
 		}
 		else
 		{
-			unsigned char ac3_framebuffer[AC3_SPDIF_FRAME_SIZE];
+			unsigned char ac3_framebuffer[AC3_SPDIF_FRAME_SIZE*2];
 			memset(ac3_framebuffer, 0, sizeof(ac3_framebuffer));
 			
 			int buffer_sample_readcount = -1;
-			if ((buffer_sample_readcount = ac3encoder_get_encoded_samples(&m_ac3encoder, ac3_framebuffer, samplesToWrite)) != samplesToWrite)
+			if ((buffer_sample_readcount = ac3encoder_get_encoded_samples(&m_ac3encoder, (unsigned char *)&ac3_framebuffer, samplesToWrite)) != samplesToWrite)
 			{
 				CLog::Log(LOGERROR, "AC3 output buffer underrun");
 			}
