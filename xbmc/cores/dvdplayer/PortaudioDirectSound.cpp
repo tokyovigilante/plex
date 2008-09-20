@@ -55,6 +55,7 @@ PortAudioDirectSound::PortAudioDirectSound(IAudioCallback* pCallback, int iChann
 	
   m_dwPacketSize = iChannels*(uiBitsPerSample/8)*512;
   m_dwNumPackets = 16;
+  ac3_framebuffer = NULL;
 
 	if (g_guiSettings.GetInt("audiooutput.mode") == AUDIO_DIGITAL 
 		&& g_audioConfig.GetAC3Enabled() 
@@ -142,11 +143,10 @@ HRESULT PortAudioDirectSound::Deinitialize()
   if (m_bEncodeAC3)
   {
 	  ac3encoder_free(&m_ac3encoder);
-	  ac3_framebuffer = 0;
-	  if (ac3_framebuffer != 0) free(ac3_framebuffer);
+	  if (ac3_framebuffer != NULL) free(ac3_framebuffer);
   }
 	
-	
+	ac3_framebuffer = NULL;
   m_bIsAllocated = false;
   m_pStream = 0;
   
