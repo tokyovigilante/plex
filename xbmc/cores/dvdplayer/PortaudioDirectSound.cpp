@@ -52,6 +52,9 @@ PortAudioDirectSound::PortAudioDirectSound(IAudioCallback* pCallback, int iChann
   m_bPause = false;
   m_bCanPause = false;
   m_bIsAllocated = false;
+	
+  m_dwPacketSize = iChannels*(uiBitsPerSample/8)*512;
+  m_dwNumPackets = 16;
 
 	if (g_guiSettings.GetInt("audiooutput.mode") == AUDIO_DIGITAL 
 		&& g_audioConfig.GetAC3Enabled() 
@@ -64,6 +67,7 @@ PortAudioDirectSound::PortAudioDirectSound(IAudioCallback* pCallback, int iChann
 		ac3encoder_init(&m_ac3encoder, iChannels, uiSamplesPerSec, uiBitsPerSample, mpeg_remapping);
 		m_bEncodeAC3 = true;
 		m_bPassthrough = true;
+		ac3_framebuffer = (unsigned char *)calloc(SPDIF_CHANNELS * 1024, 1);
 	}
 	else
 	{
@@ -78,9 +82,6 @@ PortAudioDirectSound::PortAudioDirectSound(IAudioCallback* pCallback, int iChann
   m_nCurrentVolume = g_stSettings.m_nVolumeLevel;
   if (!m_bPassthrough)
      m_amp.SetVolume(m_nCurrentVolume);
-
-  m_dwPacketSize = iChannels*(uiBitsPerSample/8)*512;
-  m_dwNumPackets = 16;
 
   /* Open the device */
   CStdString device, deviceuse;
@@ -141,6 +142,7 @@ HRESULT PortAudioDirectSound::Deinitialize()
   if (m_bEncodeAC3)
   {
 	  ac3encoder_free(&m_ac3encoder);
+	  free(ac3_framebuffer);
   }
 	
 	
@@ -289,9 +291,6 @@ DWORD PortAudioDirectSound::AddPackets(unsigned char *data, DWORD len)
 	  }
  	  else
 	  {
-		  unsigned char ac3_framebuffer[AC3_SPDIF_FRAME_SIZE];
-		  memset(ac3_framebuffer, 0, sizeof(ac3_framebuffer));
-				 
 		  int buffer_sample_readcount = -1;
 		  if ((buffer_sample_readcount = ac3encoder_get_encoded_samples(&m_ac3encoder, ac3_framebuffer, samplesToWrite)) != samplesToWrite)
 		  {

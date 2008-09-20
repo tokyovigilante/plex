@@ -91,6 +91,8 @@ private:
 	
   bool m_bEncodeAC3;
   AC3Encoder m_ac3encoder;
+  unsigned char* ac3_framebuffer;
+
 };
 
 #endif 
