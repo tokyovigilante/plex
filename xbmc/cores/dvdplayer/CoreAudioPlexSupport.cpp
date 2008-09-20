@@ -19,11 +19,8 @@ AudioDeviceArray* CoreAudioPlexSupport::GetDeviceArray()
     UInt32              i = 0, totalDeviceCount = 0, i_param_size = 0;
     AudioDeviceID       devid_def = 0;
     AudioDeviceID       *p_devices = NULL;
-    //vlc_value_t         val, text;
-	
-    //struct aout_sys_t   *p_sys = p_aout->output.p_sys;
-	
-    /* Get number of devices */
+    
+	/* Get number of devices */
     err = AudioHardwareGetPropertyInfo( kAudioHardwarePropertyDevices,
 									   &i_param_size, NULL );
     if( err != noErr )
@@ -72,10 +69,7 @@ AudioDeviceArray* CoreAudioPlexSupport::GetDeviceArray()
         return NULL;
     }
 	newDeviceArray->defaultDevice = devid_def;
-    //var_Create( p_aout, "audio-device", VLC_VAR_INTEGER|VLC_VAR_HASCHOICE );
-    //text.psz_string = (char*)_("Audio Device");
-    //var_Change( p_aout, "audio-device", VLC_VAR_SETTEXT, &text, NULL );
-	
+    
 	for( i = 0; i < totalDeviceCount; i++ )
     {
         char *psz_name;

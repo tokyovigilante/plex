@@ -90,6 +90,9 @@ CoreAudioAUHAL::CoreAudioAUHAL(IAudioCallback* pCallback, int iChannels, unsigne
 	m_bCanPause = false;
 	m_bIsAllocated = false;
 	
+	m_dwPacketSize = iChannels*(uiBitsPerSample/8)*512;
+	m_dwNumPackets = 16;
+	
 	if (g_guiSettings.GetInt("audiooutput.mode") == AUDIO_DIGITAL 
 		&& g_guiSettings.GetBool("audiooutput.ac3passthrough")
 		&& iChannels > 2
@@ -101,6 +104,7 @@ CoreAudioAUHAL::CoreAudioAUHAL(IAudioCallback* pCallback, int iChannels, unsigne
 		ac3encoder_init(&m_ac3encoder, iChannels, uiSamplesPerSec, uiBitsPerSample, mpeg_remapping);
 		m_bEncodeAC3 = true;
 		m_bPassthrough = true;
+		ac3_framebuffer = (unsigned char *)calloc(m_dwPacketSize, 1);
 	}
 	else
 	{
@@ -116,9 +120,6 @@ CoreAudioAUHAL::CoreAudioAUHAL(IAudioCallback* pCallback, int iChannels, unsigne
 	m_nCurrentVolume = g_stSettings.m_nVolumeLevel;
 	if (!m_bPassthrough)
 		m_amp.SetVolume(m_nCurrentVolume);
-	
-	m_dwPacketSize = iChannels*(uiBitsPerSample/8)*512;
-	m_dwNumPackets = 16;
 	
 	/* Open the device */
 	CStdString device, deviceuse;
@@ -285,6 +286,13 @@ DWORD CoreAudioAUHAL::GetSpace()
 //***********************************************************************************************
 DWORD CoreAudioAUHAL::AddPackets(unsigned char *data, DWORD len)
 {
+	// sanity
+	if (!deviceParameters && !deviceParameters->outputBuffer)
+	{
+		CLog::Log(LOGERROR, "No output device");
+		return -1;
+	}
+	
 	int samplesPassedIn, inputByteFactor, outputByteFactor;
 	unsigned char* pcmPtr = data;
 	
@@ -314,11 +322,8 @@ DWORD CoreAudioAUHAL::AddPackets(unsigned char *data, DWORD len)
 		}
 		else
 		{
-			unsigned char ac3_framebuffer[AC3_SPDIF_FRAME_SIZE*2];
-			memset(ac3_framebuffer, 0, sizeof(ac3_framebuffer));
-			
 			int buffer_sample_readcount = -1;
-			if ((buffer_sample_readcount = ac3encoder_get_encoded_samples(&m_ac3encoder, (unsigned char *)&ac3_framebuffer, samplesToWrite)) != samplesToWrite)
+			if ((buffer_sample_readcount = ac3encoder_get_encoded_samples(&m_ac3encoder, ac3_framebuffer, samplesToWrite)) != samplesToWrite)
 			{
 				CLog::Log(LOGERROR, "AC3 output buffer underrun");
 			}
@@ -878,6 +883,8 @@ OSStatus CoreAudioAUHAL::RenderCallbackAnalog(struct CoreAudioDeviceParameters *
 		*/
 		int framesToWrite = inNumberFrames;
 	int framesAvailable = rb_data_size(deviceParameters->outputBuffer) / deviceParameters->stream_format.mBytesPerFrame;
+	if (framesAvailable < 2000)
+		return(noErr);
 		if (framesToWrite > framesAvailable)
 			framesToWrite = framesAvailable;
 	

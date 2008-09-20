@@ -10,7 +10,6 @@
 		946A03E70E71485F0012D7E9 /* PlexDelegate.mm in Sources */ = {isa = PBXBuildFile; fileRef = E371CB8E0E303C7100FBF841 /* PlexDelegate.mm */; };
 		94BCAE500E7B8862007C4208 /* CoreAudioPlexSupport.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 94BCAE4E0E7B8862007C4208 /* CoreAudioPlexSupport.cpp */; };
 		94BCAEB90E7B88AD007C4208 /* CoreAudioAUHAL.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 94BCAEB70E7B88AD007C4208 /* CoreAudioAUHAL.cpp */; };
-		94EE45400E7B7721001EED6C /* PortaudioDirectSound.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E38E159D0D25F9FA00618676 /* PortaudioDirectSound.cpp */; };
 		94F3AFFD0E383E3F00940327 /* RTSPTVDirectory.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 944379670E27096400FB8C08 /* RTSPTVDirectory.cpp */; };
 		94F3AFFF0E383E7000940327 /* DVDInputStreamRTSP.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9443781B0E26DF8900FB8C08 /* DVDInputStreamRTSP.cpp */; };
 		E336EF2F0E60256000270758 /* GUIViewStatePictures.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E336EF000E60250700270758 /* GUIViewStatePictures.cpp */; };
@@ -1501,8 +1500,6 @@
 		E38E15960D25F9FA00618676 /* DVDSubtitleStream.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = DVDSubtitleStream.cpp; sourceTree = "<group>"; };
 		E38E15970D25F9FA00618676 /* DVDSubtitleStream.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DVDSubtitleStream.h; sourceTree = "<group>"; };
 		E38E159A0D25F9FA00618676 /* IDVDPlayer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = IDVDPlayer.h; sourceTree = "<group>"; };
-		E38E159D0D25F9FA00618676 /* PortaudioDirectSound.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = PortaudioDirectSound.cpp; sourceTree = "<group>"; };
-		E38E159E0D25F9FA00618676 /* PortaudioDirectSound.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PortaudioDirectSound.h; sourceTree = "<group>"; };
 		E38E15A50D25F9FA00618676 /* DllAvCodec.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DllAvCodec.h; sourceTree = "<group>"; };
 		E38E15A60D25F9FA00618676 /* DllAvFormat.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DllAvFormat.h; sourceTree = "<group>"; };
 		E38E15A70D25F9FA00618676 /* DllPostProc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DllPostProc.h; sourceTree = "<group>"; };
@@ -4140,8 +4137,6 @@
 				E38E158D0D25F9FA00618676 /* DVDStreamInfo.h */,
 				E38E158E0D25F9FA00618676 /* DVDSubtitles */,
 				E38E159A0D25F9FA00618676 /* IDVDPlayer.h */,
-				E38E159D0D25F9FA00618676 /* PortaudioDirectSound.cpp */,
-				E38E159E0D25F9FA00618676 /* PortaudioDirectSound.h */,
 				94BCAEB70E7B88AD007C4208 /* CoreAudioAUHAL.cpp */,
 				94BCAEB80E7B88AD007C4208 /* CoreAudioAUHAL.h */,
 				94BCAE4E0E7B8862007C4208 /* CoreAudioPlexSupport.cpp */,
@@ -7166,7 +7161,6 @@
 				E336EF4C0E602A8B00270758 /* GUIDialogFullScreenInfo.cpp in Sources */,
 				E336F09F0E62D36200270758 /* FileMMS.cpp in Sources */,
 				946A03E70E71485F0012D7E9 /* PlexDelegate.mm in Sources */,
-				94EE45400E7B7721001EED6C /* PortaudioDirectSound.cpp in Sources */,
 				94BCAE500E7B8862007C4208 /* CoreAudioPlexSupport.cpp in Sources */,
 				94BCAEB90E7B88AD007C4208 /* CoreAudioAUHAL.cpp in Sources */,
 				E3C1A6AA0E74E85C00CE0104 /* AsyncFileCopy.cpp in Sources */,
