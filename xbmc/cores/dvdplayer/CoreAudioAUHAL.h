@@ -79,6 +79,17 @@ class CoreAudioAUHAL : public IDirectSoundRenderer
 															  unsigned int inBusNummer,
 															  unsigned int inNumberFrames,
 											  AudioBufferList *ioData );
+		virtual int OpenSPDIF(struct CoreAudioDeviceParameters *deviceParameters, const CStdString& strName, int channels, int sampleRate, int bitsPerSample, bool isDigital, bool useCoreAudio, int packetSize);
+		virtual int AudioStreamChangeFormat(CoreAudioDeviceParameters *deviceParameters, AudioStreamID i_stream_id, AudioStreamBasicDescription change_format);
+		static OSStatus RenderCallbackSPDIF( AudioDeviceID inDevice,
+													 const AudioTimeStamp * inNow,
+													 const void * inInputData,
+													 const AudioTimeStamp * inInputTime,
+													 AudioBufferList * outOutputData,
+													 const AudioTimeStamp * inOutputTime,
+											void * threadGlobals );
+		
+
 
 		CPCMAmplifier 	m_amp;
 		
