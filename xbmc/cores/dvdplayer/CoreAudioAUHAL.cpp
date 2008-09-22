@@ -579,9 +579,10 @@ bool CoreAudioAUHAL::CreateOutputStream(const CStdString& strName, int channels,
 	if (isDigital && 
 		deviceArray->device[deviceArray->selectedDeviceIndex]->supportsDigital)
     {
-        //if (OpenSPDIF(deviceParameters)) return true;
+        if (OpenSPDIF(deviceParameters, strName, channels, sampleRate, bitsPerSample, isDigital, useCoreAudio, packetSize)) 
+			return true;
     }
-    //else
+    else
     {
         if (OpenPCM(deviceParameters, strName, channels, sampleRate, bitsPerSample, isDigital, useCoreAudio, packetSize))
             return true;
@@ -1145,9 +1146,9 @@ int CoreAudioAUHAL::OpenSPDIF(struct CoreAudioDeviceParameters *deviceParameters
                 if( err != noErr )
                 {
 					CLog::Log(LOGERROR, "Could not retrieve the original streamformat: [%4.4s]", (char *)&err );
-                    continue;
+                    //continue;
                 }
-                deviceParameters->b_revert = true;
+                else deviceParameters->b_revert = true;
             }
 			
             for( j = 0; j < i_formats; j++ )
@@ -1196,6 +1197,10 @@ int CoreAudioAUHAL::OpenSPDIF(struct CoreAudioDeviceParameters *deviceParameters
     //aout_FormatPrepare( &p_aout->output.output );
     //aout_VolumeNoneInit( p_aout );
 	
+	// initialise the CoreAudio sink buffer
+	rb_init(&deviceParameters->outputBuffer, (sampleRate/2) * channels * (bitsPerSample/8)); // buffer 0.5 sec (use 0.1)
+	
+	
     /* Add IOProc callback */
 	AudioDeviceIOProcID sInputIOProcID;
     err = AudioDeviceCreateIOProcID(deviceParameters->device_id,
@@ -1240,23 +1245,29 @@ int CoreAudioAUHAL::AudioStreamChangeFormat(CoreAudioDeviceParameters *devicePar
     UInt32              i_param_size = 0;
     int i;
 	
-    struct { vlc_mutex_t lock; vlc_cond_t cond; } w;
+    struct 
+	{
+		pthread_mutex_t lock; 
+		pthread_cond_t cond; 
+		pthread_condattr_t attr;
+		pthread_mutexattr_t mattr;
+	} w;
 	
-    msg_Dbg( p_aout, STREAM_FORMAT_MSG( "setting stream format: ", change_format ) );
+	CLog::Log(LOGINFO, STREAM_FORMAT_MSG( "setting stream format: ", change_format ));
 	
     /* Condition because SetProperty is asynchronious */
-    vlc_cond_init( &w.cond );
-    vlc_mutex_init( &w.lock );
-    vlc_mutex_lock( &w.lock );
+    pthread_cond_init(&w.cond, &w.attr);
+    pthread_mutex_init(&w.lock, &w.mattr);
+    pthread_mutex_lock(&w.lock);
 	
     /* Install the callback */
-    err = AudioStreamAddPropertyListener( i_stream_id, 0,
-										 kAudioStreamPropertyPhysicalFormat,
-										 StreamListener, (void *)&w );
-    if( err != noErr )
+    //err = AudioStreamAddPropertyListener(i_stream_id, 0,
+	//									 kAudioStreamPropertyPhysicalFormat,
+	//									 StreamListener, (void *)&w );
+    //if( err != noErr )
     {
-        msg_Err( p_aout, "AudioStreamAddPropertyListener failed: [%4.4s]", (char *)&err );
-        return false;
+	//	CLog::Log(LOGERROR, "AudioStreamAddPropertyListener failed: [%4.4s]", (char *)&err );
+      //  return false;
     }
 	
     /* change the format */
@@ -1266,7 +1277,7 @@ int CoreAudioAUHAL::AudioStreamChangeFormat(CoreAudioDeviceParameters *devicePar
 								 &change_format );
     if( err != noErr )
     {
-        msg_Err( p_aout, "could not set the stream format: [%4.4s]", (char *)&err );
+        CLog::Log(LOGERROR, "could not set the stream format: [%4.4s]", (char *)&err );
         return false;
     }
 	
@@ -1277,20 +1288,23 @@ int CoreAudioAUHAL::AudioStreamChangeFormat(CoreAudioDeviceParameters *devicePar
     for( i = 0; i < 5; i++ )
     {
         AudioStreamBasicDescription actual_format;
-        mtime_t timeout = mdate() + 500000;
+        //mtime_t timeout = mdate() + 500000;
+	//	struct timespec timeout;
+	//	timeout.tv_nsec = 50000000; /* 50 msecs */
+	//	++timeout.tv_sec;
 		
-        if( vlc_cond_timedwait( &w.cond, &w.lock, timeout ) )
+	//	if( pthread_cond_timedwait( &w.cond, &w.lock, &timeout))
         {
-            msg_Dbg( p_aout, "reached timeout" );
+	//		CLog::Log(LOGDEBUG, "reached timeout" );
         }
-		
+		usleep(20);	
         i_param_size = sizeof( AudioStreamBasicDescription );
         err = AudioStreamGetProperty( i_stream_id, 0,
 									 kAudioStreamPropertyPhysicalFormat,
 									 &i_param_size,
 									 &actual_format );
 		
-        msg_Dbg( p_aout, STREAM_FORMAT_MSG( "actual format in use: ", actual_format ) );
+        CLog::Log(LOGDEBUG, STREAM_FORMAT_MSG( "actual format in use: ", actual_format ) );
         if( actual_format.mSampleRate == change_format.mSampleRate &&
 		   actual_format.mFormatID == change_format.mFormatID &&
 		   actual_format.mFramesPerPacket == change_format.mFramesPerPacket )
@@ -1307,24 +1321,22 @@ int CoreAudioAUHAL::AudioStreamChangeFormat(CoreAudioDeviceParameters *devicePar
                                             StreamListener );
     if( err != noErr )
     {
-        msg_Err( p_aout, "AudioStreamRemovePropertyListener failed: [%4.4s]", (char *)&err );
+        CLog::Log(LOGERROR, "AudioStreamRemovePropertyListener failed: [%4.4s]", (char *)&err );
         return false;
     }
 	
     /* Destroy the lock and condition */
-    vlc_mutex_unlock( &w.lock );
-    vlc_mutex_destroy( &w.lock );
-    vlc_cond_destroy( &w.cond );
+    pthread_mutex_unlock(&w.lock);
+    pthread_mutex_destroy(&w.lock);
+    pthread_condattr_destroy(&w.attr);
 	
     return true;
-}
-
 }
 
 /*****************************************************************************
  * RenderCallbackSPDIF: callback for SPDIF audio output
  *****************************************************************************/
-OSStatus CoreAudioAUHAL::RenderCallbackSPDIF( AudioDeviceID inDevice,
+OSStatus CoreAudioAUHAL::RenderCallbackSPDIF(AudioDeviceID inDevice,
                                     const AudioTimeStamp * inNow,
                                     const void * inInputData,
                                     const AudioTimeStamp * inInputTime,
@@ -1332,40 +1344,69 @@ OSStatus CoreAudioAUHAL::RenderCallbackSPDIF( AudioDeviceID inDevice,
                                     const AudioTimeStamp * inOutputTime,
                                     void * threadGlobals )
 {
-    aout_buffer_t * p_buffer;
+    //aout_buffer_t * p_buffer;
     mtime_t         current_date;
 	
-    aout_instance_t * p_aout = (aout_instance_t *)threadGlobals;
-    struct aout_sys_t * p_sys = p_aout->output.p_sys;
+    //aout_instance_t * p_aout = (aout_instance_t *)threadGlobals;
+	CoreAudioDeviceParameters *deviceParameters = (CoreAudioDeviceParameters *)threadGlobals;
+    //struct aout_sys_t * p_sys = p_aout->output.p_sys;
 	
     /* Check for the difference between the Device clock and mdate */
-    p_sys->clock_diff = - (mtime_t)
-	AudioConvertHostTimeToNanos( inNow->mHostTime ) / 1000;
-    p_sys->clock_diff += mdate();
+    //p_sys->clock_diff = - (mtime_t)
+	//AudioConvertHostTimeToNanos( inNow->mHostTime ) / 1000;
+    //p_sys->clock_diff += mdate();
 	
-    current_date = p_sys->clock_diff +
-	AudioConvertHostTimeToNanos( inOutputTime->mHostTime ) / 1000;
+    //current_date = p_sys->clock_diff +
+	//AudioConvertHostTimeToNanos( inOutputTime->mHostTime ) / 1000;
 	//- ((mtime_t) 1000000 / p_aout->output.output.i_rate * 31 ); // 31 = Latency in Frames. retrieve somewhere
 	
-    p_buffer = aout_OutputNextBuffer( p_aout, current_date, true );
+    //p_buffer = aout_OutputNextBuffer( p_aout, current_date, true );
 	
-#define BUFFER outOutputData->mBuffers[p_sys->i_stream_index]
-    if( p_buffer != NULL )
+#define BUFFER outOutputData->mBuffers[deviceParameters->i_stream_index]
+    //if( p_buffer != NULL )
     {
-        if( (int)BUFFER.mDataByteSize != (int)p_buffer->i_nb_bytes)
-            msg_Warn( p_aout, "bytesize: %d nb_bytes: %d", (int)BUFFER.mDataByteSize, (int)p_buffer->i_nb_bytes );
+      //  if( (int)BUFFER.mDataByteSize != (int)p_buffer->i_nb_bytes)
+        //    msg_Warn( p_aout, "bytesize: %d nb_bytes: %d", (int)BUFFER.mDataByteSize, (int)p_buffer->i_nb_bytes );
 		
         /* move data into output data buffer */
-        vlc_memcpy( BUFFER.mData, p_buffer->p_buffer, p_buffer->i_nb_bytes );
-        aout_BufferFree( p_buffer );
+        //memcpy( BUFFER.mData, p_buffer->p_buffer, p_buffer->i_nb_bytes );
+        //aout_BufferFree( p_buffer );
     }
-    else
+    //else
     {
-        vlc_memset( BUFFER.mData, 0, BUFFER.mDataByteSize );
+        memset( BUFFER.mData, 0, BUFFER.mDataByteSize );
     }
 #undef BUFFER
 	
     return( noErr );
+}
+
+
+/*****************************************************************************
+ * StreamListener
+ *****************************************************************************/
+OSStatus CoreAudioAUHAL::StreamListener( AudioStreamID inStream,
+							   UInt32 inChannel,
+							   AudioDevicePropertyID inPropertyID,
+							   void * inClientData )
+{
+#if 0
+    OSStatus err = noErr;
+    struct { pthread_mutex_t lock; pthread_cond_t cond; } * w = inClientData;
+	
+    switch( inPropertyID )
+    {
+        case kAudioStreamPropertyPhysicalFormat:
+            vlc_mutex_lock( &w->lock );
+            vlc_cond_signal( &w->cond );
+            vlc_mutex_unlock( &w->lock );
+            break;
+			
+        default:
+            break;
+    }
+    return( err );
+#endif
 }
 
 
