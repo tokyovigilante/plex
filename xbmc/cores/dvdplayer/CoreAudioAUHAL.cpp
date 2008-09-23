@@ -371,9 +371,12 @@ DWORD CoreAudioAUHAL::GetSpace()
 	{
 		freeBufferSpace /= (m_uiChannels * m_uiBitsPerSample/8);
 	}
-	if ((m_uiSamplesPerSec / CA_BUFFER_FACTOR) < freeBufferSpace)
+#warning fix to buffer x ac3 frames
+	//if ((m_uiSamplesPerSec / CA_BUFFER_FACTOR) < freeBufferSpace)
+	if (3072 < freeBufferSpace)
 	{
-		return m_uiSamplesPerSec / CA_BUFFER_FACTOR;
+		return 3072;
+		//return m_uiSamplesPerSec / CA_BUFFER_FACTOR;
 	}
 	return freeBufferSpace;
 }
@@ -1373,9 +1376,27 @@ OSStatus CoreAudioAUHAL::RenderCallbackSPDIF(AudioDeviceID inDevice,
         //aout_BufferFree( p_buffer );
     }
     //else
-    {
+	//int framesToWrite = BUFFER.mDataByteSize;
+	//framesToWrite /= deviceParameters->stream_format.mBytesPerFrame;
+	
+	//int framesAvailable = ;
+	//framesAvailable /= deviceParameters->stream_format.mBytesPerFrame;
+	
+	//if (framesAvailable < (deviceParameters->stream_format.mSampleRate / 10))
+	//	return(noErr);
+	
+	if (BUFFER.mDataByteSize > rb_data_size(deviceParameters->outputBuffer)) // we can't write a frame, send silence
+	{
         memset( BUFFER.mData, 0, BUFFER.mDataByteSize );
+		return (noErr);
     }
+	else // write a frame
+		
+	if (rb_read(deviceParameters->outputBuffer, (uint8_t *)BUFFER.mData, BUFFER.mDataByteSize)  < BUFFER.mDataByteSize)
+	{
+		memset( BUFFER.mData, 0, BUFFER.mDataByteSize );
+	}
+	    
 #undef BUFFER
 	
     return( noErr );
