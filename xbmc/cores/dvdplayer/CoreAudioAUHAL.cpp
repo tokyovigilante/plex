@@ -54,7 +54,7 @@
  */
 typedef int64_t mtime_t;
 #define BUFSIZE 0xffffff
-#define CA_BUFFER_FACTOR 5
+#define CA_BUFFER_FACTOR 0.05
 
 struct CoreAudioDeviceParameters
 {
@@ -362,23 +362,27 @@ HRESULT CoreAudioAUHAL::SetCurrentVolume(LONG nVolume)
 //***********************************************************************************************
 DWORD CoreAudioAUHAL::GetSpace()
 {
-	DWORD freeBufferSpace = rb_free(deviceParameters->outputBuffer);
+	DWORD fakeCeiling, bufferDataSize = rb_data_size(deviceParameters->outputBuffer);
 	if (m_bEncodeAC3)
 	{
-		freeBufferSpace /= (ac3encoder_channelcount(&m_ac3encoder) * m_uiBitsPerSample/8);
+		// limit buffer size to 3 AC3 frames (320 ms)
+		bufferDataSize /= (ac3encoder_channelcount(&m_ac3encoder) * m_uiBitsPerSample/8);
+		fakeCeiling = AC3_SAMPLES_PER_FRAME * 3;
 	}
 	else
 	{
-		freeBufferSpace /= (m_uiChannels * m_uiBitsPerSample/8);
+		// limit buffer size to CA_BUFFER_FACTOR seconds 
+		bufferDataSize /= (m_uiChannels * m_uiBitsPerSample/8);
+		fakeCeiling = m_uiSamplesPerSec * CA_BUFFER_FACTOR;
 	}
-#warning fix to buffer x ac3 frames
-	//if ((m_uiSamplesPerSec / CA_BUFFER_FACTOR) < freeBufferSpace)
-	if (3072 < freeBufferSpace)
+	if (bufferDataSize < fakeCeiling)
 	{
-		return 3072;
-		//return m_uiSamplesPerSec / CA_BUFFER_FACTOR;
+		return fakeCeiling - bufferDataSize;
 	}
-	return freeBufferSpace;
+	else
+	{
+		return 0;
+	}	
 }
 
 //***********************************************************************************************
@@ -387,7 +391,7 @@ DWORD CoreAudioAUHAL::AddPackets(unsigned char *data, DWORD len)
 	// sanity
 	if (!deviceParameters && !deviceParameters->outputBuffer)
 	{
-		CLog::Log(LOGERROR, "No output device");
+		CLog::Log(LOGERROR, "No audio output device");
 		return -1;
 	}
 	
@@ -413,10 +417,6 @@ DWORD CoreAudioAUHAL::AddPackets(unsigned char *data, DWORD len)
 	if (samplesToWrite > samplesPassedIn)
 	{
 		samplesToWrite = samplesPassedIn;
-	}
-	//else if (samplesPassedIn > (m_uiSamplesPerSec / CA_BUFFER_FACTOR) - samplesToWrite)
-	{
-	//	CLog::Log(LOGERROR, "CoreAudio buffer full, dropping %i frames", samplesPassedIn - samplesToWrite);
 	}
 	
 	if (m_bEncodeAC3)
@@ -458,7 +458,7 @@ FLOAT CoreAudioAUHAL::GetDelay()
 {
 	// For now hardwire to about +15ms from "base", which is what we're observing.
 #warning set programmatically
-	FLOAT delay = 0.4;//(1.0 / CA_BUFFER_FACTOR) + 0.015;
+	FLOAT delay = 1000 * CA_BUFFER_FACTOR;
 	
 	if (m_bEncodeAC3)
 		delay += 0.072; // 3072/48000 = 0.064 (two AC3 packets plus 8ms)
@@ -604,7 +604,6 @@ error:
  *****************************************************************************/
 int CoreAudioAUHAL::OpenPCM(struct CoreAudioDeviceParameters *deviceParameters, const CStdString& strName, int channels, int sampleRate, int bitsPerSample, bool isDigital, bool useCoreAudio, int packetSize)
 {
-    //struct aout_sys_t           *p_sys = p_aout->output.p_sys;
     OSStatus                    err = noErr;
     UInt32                      i_param_size = 0, i = 0;
     int                         i_original;
@@ -921,9 +920,6 @@ OSStatus CoreAudioAUHAL::RenderCallbackAnalog(struct CoreAudioDeviceParameters *
 	
 	
 	
-    //aout_instance_t * p_aout = (aout_instance_t *)_p_aout;
-    //struct aout_sys_t * p_sys = p_aout->output.p_sys;
-	//fprintf(stderr, "callback\n");
     //host_time.mFlags = kAudioTimeStampHostTimeValid;
     //AudioDeviceTranslateTime( deviceParameters->device_id, inTimeStamp, &host_time );
 	
@@ -936,77 +932,32 @@ OSStatus CoreAudioAUHAL::RenderCallbackAnalog(struct CoreAudioDeviceParameters *
 	//AudioConvertHostTimeToNanos( host_time.mHostTime ) / 1000;
 	//- ((mtime_t) 1000000 / p_aout->output.output.i_rate * 31 ); // 31 = Latency in Frames. retrieve somewhere
 	
-    //if( ioData == NULL && ioData->mNumberBuffers < 1 )
-    {
-	////	CLog::Log(LOGERROR, "no iodata or buffers");
-    //    return 0;
-    }
-    //if( ioData->mNumberBuffers > 1 )
-     //   CLog::Log(LOGERROR, "well this is weird. seems like there is more than one buffer..." );
-	
-	/*
-    if( deviceParameters->i_total_bytes > 0 )
-    {
-        i_mData_bytes = MIN( deviceParameters->i_total_bytes - deviceParameters->i_read_bytes, ioData->mBuffers[0].mDataByteSize );
-        memcpy( ioData->mBuffers[0].mData,
-				   &deviceParameters->p_remainder_buffer[deviceParameters->i_read_bytes],
-				   i_mData_bytes );
-        deviceParameters->i_read_bytes += i_mData_bytes;
-        //current_date += (mtime_t) ( (mtime_t) 1000000 / deviceParameters-> ) 
-		//( i_mData_bytes / 2 / aout_FormatNbChannels( &p_aout->output.output )  ); // 4 is fl32 specific
-		
-        //if( deviceParameters->i_read_bytes >= p_sys->i_total_bytes )
-          //  deviceParameters->i_read_bytes = p_sys->i_total_bytes = 0;
-    }
-	
-    //while( i_mData_bytes < ioData->mBuffers[0].mDataByteSize )
-    {
-        /* We don't have enough data yet */
-        //aout_buffer_t * p_buffer;
-       // p_buffer = aout_OutputNextBuffer( p_aout, current_date , false );
-		
-        //if( p_buffer != NULL )
-		/*
-        {
-            uint32_t i_second_mData_bytes = MIN( p_buffer->i_nb_bytes, ioData->mBuffers[0].mDataByteSize - i_mData_bytes );
-			
-            memcpy( (uint8_t *)ioData->mBuffers[0].mData + i_mData_bytes,
-					   p_buffer->p_buffer, i_second_mData_bytes );
-            i_mData_bytes += i_second_mData_bytes;
-			
-            if( i_mData_bytes >= ioData->mBuffers[0].mDataByteSize )
-            {
-                p_sys->i_total_bytes = p_buffer->i_nb_bytes - i_second_mData_bytes;
-                vlc_memcpy( p_sys->p_remainder_buffer,
-						   &p_buffer->p_buffer[i_second_mData_bytes],
-						   p_sys->i_total_bytes );
-            }
-            else
-            {
-                 update current_date 
-                current_date += (mtime_t) ( (mtime_t) 1000000 / p_aout->output.output.i_rate ) *
-				( i_second_mData_bytes / 4 / aout_FormatNbChannels( &p_aout->output.output )  ); // 4 is fl32 specific
-            }
-            aout_BufferFree( p_buffer );
-        }
-		*/
-		int framesToWrite = inNumberFrames;
+    // initial calc
+	int framesToWrite = inNumberFrames;
 	int framesAvailable = rb_data_size(deviceParameters->outputBuffer);
-		framesAvailable /= deviceParameters->stream_format.mBytesPerFrame;
-	if (framesAvailable < (deviceParameters->stream_format.mSampleRate / 10))
-		return(noErr);
-		if (framesToWrite > framesAvailable)
-			framesToWrite = framesAvailable;
+	int i, currentPos = 0, underrunLength = 0;
 	
-		rb_read(deviceParameters->outputBuffer, 
-			(uint8_t *)ioData->mBuffers[0].mData, 
-			framesToWrite * deviceParameters->stream_format.mBytesPerFrame);
-	if (inNumberFrames > framesAvailable)
+	framesAvailable /= deviceParameters->stream_format.mBytesPerFrame;
+	
+	if (framesToWrite > framesAvailable)
 	{
-		memset( (uint8_t *)ioData->mBuffers[0].mData + framesAvailable * deviceParameters->stream_format.mBytesPerFrame,
-			   INT8_MIN, (inNumberFrames - framesAvailable) * deviceParameters->stream_format.mBytesPerFrame);
+		framesToWrite = framesAvailable;
 	}
-	CLog::Log(LOGDEBUG, "buffer full: %i%%", rb_data_size(deviceParameters->outputBuffer) / deviceParameters->outputBuffer->size);
+	
+	currentPos = framesToWrite * deviceParameters->stream_format.mBytesPerFrame;
+	underrunLength = currentPos + ((inNumberFrames - framesToWrite) * deviceParameters->stream_format.mBytesPerFrame);
+	
+	// write as many frames as possible from buffer
+	rb_read(deviceParameters->outputBuffer, 
+			(uint8_t *)ioData->mBuffers[0].mData,  
+			framesToWrite * deviceParameters->stream_format.mBytesPerFrame);
+	
+	// write silence to any remainder
+	for (i=currentPos; i < underrunLength; i+=sizeof(int16_t))
+	{
+		*((int16_t *)(ioData->mBuffers[0].mData)+i) = INT16_MIN;	
+	}
+	
     return( noErr );
 }
 		
@@ -1201,7 +1152,7 @@ int CoreAudioAUHAL::OpenSPDIF(struct CoreAudioDeviceParameters *deviceParameters
     //aout_VolumeNoneInit( p_aout );
 	
 	// initialise the CoreAudio sink buffer
-	rb_init(&deviceParameters->outputBuffer, (sampleRate/2) * channels * (bitsPerSample/8)); // buffer 0.5 sec (use 0.1)
+	rb_init(&deviceParameters->outputBuffer, AC3_SPDIF_FRAME_SIZE * 15); // buffer 15 frames
 	
 	
     /* Add IOProc callback */
@@ -1248,30 +1199,7 @@ int CoreAudioAUHAL::AudioStreamChangeFormat(CoreAudioDeviceParameters *devicePar
     UInt32              i_param_size = 0;
     int i;
 	
-    struct 
-	{
-		pthread_mutex_t lock; 
-		pthread_cond_t cond; 
-		pthread_condattr_t attr;
-		pthread_mutexattr_t mattr;
-	} w;
-	
-	CLog::Log(LOGINFO, STREAM_FORMAT_MSG( "setting stream format: ", change_format ));
-	
-    /* Condition because SetProperty is asynchronious */
-    pthread_cond_init(&w.cond, &w.attr);
-    pthread_mutex_init(&w.lock, &w.mattr);
-    pthread_mutex_lock(&w.lock);
-	
-    /* Install the callback */
-    //err = AudioStreamAddPropertyListener(i_stream_id, 0,
-	//									 kAudioStreamPropertyPhysicalFormat,
-	//									 StreamListener, (void *)&w );
-    //if( err != noErr )
-    {
-	//	CLog::Log(LOGERROR, "AudioStreamAddPropertyListener failed: [%4.4s]", (char *)&err );
-      //  return false;
-    }
+    CLog::Log(LOGINFO, STREAM_FORMAT_MSG( "setting stream format: ", change_format ));
 	
     /* change the format */
     err = AudioStreamSetProperty( i_stream_id, 0, 0,
@@ -1286,20 +1214,10 @@ int CoreAudioAUHAL::AudioStreamChangeFormat(CoreAudioDeviceParameters *devicePar
 	
     /* The AudioStreamSetProperty is not only asynchronious (requiring the locks)
      * it is also not atomic in its behaviour.
-     * Therefore we check 5 times before we really give up.
-     * FIXME: failing isn't actually implemented yet. */
+     * Therefore we check 5 times before we really give up.*/
     for( i = 0; i < 5; i++ )
     {
         AudioStreamBasicDescription actual_format;
-        //mtime_t timeout = mdate() + 500000;
-	//	struct timespec timeout;
-	//	timeout.tv_nsec = 50000000; /* 50 msecs */
-	//	++timeout.tv_sec;
-		
-	//	if( pthread_cond_timedwait( &w.cond, &w.lock, &timeout))
-        {
-	//		CLog::Log(LOGDEBUG, "reached timeout" );
-        }
 		usleep(20);	
         i_param_size = sizeof( AudioStreamBasicDescription );
         err = AudioStreamGetProperty( i_stream_id, 0,
@@ -1317,21 +1235,6 @@ int CoreAudioAUHAL::AudioStreamChangeFormat(CoreAudioDeviceParameters *devicePar
         }
         /* We need to check again */
     }
-	
-    /* Removing the property listener */
-    err = AudioStreamRemovePropertyListener( i_stream_id, 0,
-                                            kAudioStreamPropertyPhysicalFormat,
-                                            StreamListener );
-    if( err != noErr )
-    {
-        CLog::Log(LOGERROR, "AudioStreamRemovePropertyListener failed: [%4.4s]", (char *)&err );
-        return false;
-    }
-	
-    /* Destroy the lock and condition */
-    pthread_mutex_unlock(&w.lock);
-    pthread_mutex_destroy(&w.lock);
-    pthread_condattr_destroy(&w.attr);
 	
     return true;
 }
@@ -1375,61 +1278,19 @@ OSStatus CoreAudioAUHAL::RenderCallbackSPDIF(AudioDeviceID inDevice,
         //memcpy( BUFFER.mData, p_buffer->p_buffer, p_buffer->i_nb_bytes );
         //aout_BufferFree( p_buffer );
     }
-    //else
-	//int framesToWrite = BUFFER.mDataByteSize;
-	//framesToWrite /= deviceParameters->stream_format.mBytesPerFrame;
-	
-	//int framesAvailable = ;
-	//framesAvailable /= deviceParameters->stream_format.mBytesPerFrame;
-	
-	//if (framesAvailable < (deviceParameters->stream_format.mSampleRate / 10))
-	//	return(noErr);
+   
 	
 	if (BUFFER.mDataByteSize > rb_data_size(deviceParameters->outputBuffer)) // we can't write a frame, send silence
 	{
         memset( BUFFER.mData, 0, BUFFER.mDataByteSize );
-		return (noErr);
     }
 	else // write a frame
-		
-	if (rb_read(deviceParameters->outputBuffer, (uint8_t *)BUFFER.mData, BUFFER.mDataByteSize)  < BUFFER.mDataByteSize)
 	{
-		memset( BUFFER.mData, 0, BUFFER.mDataByteSize );
+		rb_read(deviceParameters->outputBuffer, (uint8_t *)BUFFER.mData, BUFFER.mDataByteSize);
 	}
-	    
 #undef BUFFER
-	
     return( noErr );
 }
-
-
-/*****************************************************************************
- * StreamListener
- *****************************************************************************/
-OSStatus CoreAudioAUHAL::StreamListener( AudioStreamID inStream,
-							   UInt32 inChannel,
-							   AudioDevicePropertyID inPropertyID,
-							   void * inClientData )
-{
-#if 0
-    OSStatus err = noErr;
-    struct { pthread_mutex_t lock; pthread_cond_t cond; } * w = inClientData;
-	
-    switch( inPropertyID )
-    {
-        case kAudioStreamPropertyPhysicalFormat:
-            vlc_mutex_lock( &w->lock );
-            vlc_cond_signal( &w->cond );
-            vlc_mutex_unlock( &w->lock );
-            break;
-			
-        default:
-            break;
-    }
-    return( err );
-#endif
-}
-
 
 #endif
 
