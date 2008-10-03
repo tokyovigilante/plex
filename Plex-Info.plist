@@ -23,7 +23,7 @@
 	<key>NSPrincipalClass</key>
 	<string>PlexApplication</string>
 	<key>CFBundleVersion</key>
-	<string></string>
+	<string>BUNDLE_VERSION</string>
 	<key>CFBundleShortVersionString</key>
 	<string>${APPLICATION_VERSION}</string>
 	<key>SmartCrashReports_CompanyName</key>

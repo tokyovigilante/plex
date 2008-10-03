@@ -36,6 +36,7 @@ extern "C"
   void Cocoa_GetScreenResolutionOfAnotherScreen(int display, int* w, int* h);
   int  Cocoa_GetNumDisplays();
   int  Cocoa_GetDisplay(int screen);
+  int Cocoa_GetCurrentDisplay();
 
   //
   // Open GL.
@@ -92,6 +93,12 @@ extern "C"
   
   void  Cocoa_MakeChildWindow();
   void  Cocoa_DestroyChildWindow();
+  
+  //
+  // Get/set LCD panel brightness
+  //
+  void Cocoa_GetPanelBrightness(float* brightness);
+  void Cocoa_SetPanelBrightness(float brightness);
 
 #ifdef __cplusplus
 }

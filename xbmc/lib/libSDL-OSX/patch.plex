@@ -1,0 +1,8 @@
+This is needed:
+
+// HACK!
+void QZ_ChangeWindowSize(int w, int h)
+{
+  SDL_VideoSurface->w = w;
+  SDL_VideoSurface->h = h;
+}

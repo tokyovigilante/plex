@@ -435,7 +435,7 @@ void CGUIMediaWindow::SortItems(CFileItemList &items)
     items.Sort(guiState->GetSortMethod(), guiState->GetDisplaySortOrder());
 
     // Should these items be saved to the hdd
-    if (items.GetCacheToDisc())
+    if (items.CacheToDiscAlways())
       items.Save();
   }
 }
@@ -516,7 +516,7 @@ bool CGUIMediaWindow::GetDirectory(const CStdString &strDirectory, CFileItemList
       return false;
 
     // took over a second, and not normally cached, so cache it
-    if (time + 1000 < timeGetTime() && !items.GetCacheToDisc())
+    if (time + 1000 < timeGetTime() && items.CacheToDiscIfSlow())
       items.Save();
 
     // if these items should replace the current listing, then pop it off the top

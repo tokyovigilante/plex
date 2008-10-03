@@ -139,6 +139,8 @@ void CXBoxRenderManager::RenderUpdate(bool clear, DWORD flags, DWORD alpha)
 #ifdef HAS_SDL_OPENGL  
   if (m_pRenderer)
     m_pRenderer->RenderUpdate(clear, flags | RENDER_FLAG_LAST, alpha);
+
+  m_eventPresented.Set();
 #endif
 }
 
@@ -312,8 +314,8 @@ float CXBoxRenderManager::GetMaximumFPS()
   if( m_rendermethod == RENDER_HQ_RGB_SHADER
    || m_rendermethod == RENDER_HQ_RGB_SHADERV2)
   {
-    if( method == VS_INTERLACEMETHOD_AUTO && m_presentfield != FS_NONE
-    || method == VS_INTERLACEMETHOD_RENDER_BOB )
+    if((method == VS_INTERLACEMETHOD_AUTO && m_presentfield != FS_NONE)
+    ||  method == VS_INTERLACEMETHOD_RENDER_BOB )
       fps *= 0.5;
   }
 
@@ -351,14 +353,6 @@ bool CXBoxRenderManager::SupportsGamma()
     return m_pRenderer->SupportsGamma();
   }
   return false;
-}
-
-int CXBoxRenderManager::GetMaxTextureSize()
-{
-  if (m_pRenderer)
-    return m_pRenderer->GetMaxTextureSize();
-  
-  return -1;
 }
 
 void CXBoxRenderManager::Present()

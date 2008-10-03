@@ -7,7 +7,7 @@
   <string id="3">Videos</string>
   <string id="4">TV Guide</string>
   <string id="5">Settings</string>
-  <string id="6">XBMC SVN</string>
+  <string id="6">Plex Git</string>
   <string id="7">Filemanager</string>
   <string id="8">Weather</string>
   <string id="9">Plex</string>
@@ -402,7 +402,7 @@
   <string id="479">Skin and Language</string>
   <string id="480">Appearance</string>
   <string id="481">Audio Options</string>
-  <string id="482">About XBMC</string>
+  <string id="482">About Plex</string>
   <string id="483"></string>
   <string id="484"></string>
   <string id="485">Delete album</string>
@@ -668,7 +668,7 @@
   <string id="999">Online Gaming</string>
   <string id="1000">Screensaver Preview</string>
   <string id="1001">Unable to connect</string>
-  <string id="1002">XBMC was unable to connect to the network location.</string>
+  <string id="1002">Plex was unable to connect to the network location.</string>
   <string id="1003">This could be due to the network not being connected.</string>
   <string id="1004">Would you like to add it anyway?</string>
   <string id="1005"></string>
@@ -954,7 +954,7 @@
   <string id="13005">Shutdown</string>
   <string id="13006">Dashboard</string>
   <string id="13007">Use Custom Dashboard Path</string>
-  <string id="13008">When closing XBMC</string>
+  <string id="13008">When closing Plex</string>
   <string id="13009">Do nothing</string>
   <string id="13010">Hibernate</string>
   <string id="13011">Suspend</string>
@@ -1066,7 +1066,7 @@
   <string id="13306">Hide Parent Folder Items</string>
   <string id="13307">Track Naming Template</string>
   <string id="13308">Do you wish to reboot your Xbox</string>
-  <string id="13309">instead of just XBMC?</string>
+  <string id="13309">instead of just Plex?</string>
   <string id="13310">Zoom Effect</string>
   <string id="13311">Float Effect</string>
   <string id="13312">Black Bar Reduction</string>
@@ -1157,6 +1157,7 @@
   <string id="13411">Minimum fanspeed</string>
   <string id="13412">- RSS Feeds Contain Right-To-Left Text</string>
   <string id="13413">Downloading</string>
+  <string id="13414">Hide artists who appear only on compilations</string>
   
   <string id="13450">Sleep System</string>
   
@@ -1213,7 +1214,7 @@
   <string id="14036">Servers</string>
   <string id="14037">Look and Feel</string>
   <string id="14038">Network settings changed</string>
-  <string id="14039">XBMC requires to restart to change your</string>
+  <string id="14039">Plex requires to restart to change your</string>
   <string id="14040">network setup.  Would you like to restart now?</string>
   <string id="14041">Post Processing</string>
   <string id="14042">Engine IP Address</string>
@@ -1293,7 +1294,7 @@
   <string id="15034">has just signed in</string>
   <string id="15035">has initiated voice chat</string>
   <string id="15036">has sent you an invitation</string>
-  <string id="15037">XBMC is unable to confirm your network is reachable.</string>
+  <string id="15037">Plex is unable to confirm your network is reachable.</string>
   <string id="15038">You may experience difficulties joining or hosting games.</string>
   <string id="15039">Unable to locate game automatically.</string>
   <string id="15040">Insert the game disk into your Xbox or press 'A' to cancel</string>
@@ -1336,7 +1337,7 @@
   <string id="15202">Last.FM Username</string>
   <string id="15203">Last.FM Password</string>
   <string id="15204">Unable to handshake: sleeping...</string>
-  <string id="15205">Please Update XBMC</string>
+  <string id="15205">Please Update Plex</string>
   <string id="15206">Bad authorisation: Check username and password</string>
   <string id="15207">Connected</string>
   <string id="15208">Not Connected</string>
@@ -1474,7 +1475,8 @@
   <string id="16308">Lanczos (software)</string>  
   <string id="16309">Sinc (software)</string>
 
-  <string id="17500">Display Sleep Timeout</string> 
+  <string id="17500">Display Sleep Timeout</string>
+  <string id="17501">Display Brightness</string>
 
   <string id="20000">CDDA Rip Folder</string>
   <string id="20001">Use external DVD Player</string>
@@ -1485,7 +1487,7 @@
   <string id="20006">Playlists Folder</string>
   <string id="20007">Recordings</string>
   <string id="20008">Screenshots</string>
-  <string id="20009">Use XBMC</string>
+  <string id="20009">Use Plex</string>
   <string id="20010"></string>
   <string id="20011">Music Playlists</string>
   <string id="20012">Video Playlists</string>
@@ -1683,7 +1685,7 @@
   <string id="20304"></string>
   <string id="20305"></string>
 
-  <string id="20306">Unknown. Please add MD5 from xbmc.log to BiosIDs.ini.</string>
+  <string id="20306">Unknown. Please add MD5 from plex.log to BiosIDs.ini.</string>
   <string id="20307">Secondary DNS</string>
   <string id="20308">DHCP Server:</string>
   <string id="20309">Make New Folder</string>

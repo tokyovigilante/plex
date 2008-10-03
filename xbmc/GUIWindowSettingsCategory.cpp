@@ -749,6 +749,7 @@ void CGUIWindowSettingsCategory::CreateSettings()
     {
       FillInResolutions(pSetting, true);
     }
+#ifdef HAS_MPLAYER
     else if (strSetting.Equals("videoplayer.framerateconversions"))
     {
       CSettingInt *pSettingInt = (CSettingInt*)pSetting;
@@ -759,6 +760,7 @@ void CGUIWindowSettingsCategory::CreateSettings()
         pControl->AddLabel(g_localizeStrings.Get(12382), FRAME_RATE_USE_PAL60); // "Play NTSC videos in PAL60"
       pControl->SetValue(pSettingInt->GetData());
     }
+#endif
     else if (strSetting.Equals("videoplayer.highqualityupscaling"))
     {
       CSettingInt *pSettingInt = (CSettingInt*)pSetting;
@@ -1760,6 +1762,12 @@ void CGUIWindowSettingsCategory::OnClick(CBaseSettingControl *pSettingControl)
   else if (strSetting.Equals("lcd.contrast"))
   {
     g_lcd->SetContrast(((CSettingInt *)pSettingControl->GetSetting())->GetData());
+  }
+#endif
+#ifdef __APPLE__
+  else if (strSetting.Equals("system.panelbrightness"))
+  {
+    g_application.SetPanelBrightness((float)(g_guiSettings.GetInt("system.panelbrightness")/100.0f));
   }
 #endif
 #ifdef HAS_XBOX_HARDWARE
@@ -3708,6 +3716,8 @@ void CGUIWindowSettingsCategory::OnInitWindow()
   m_strNetworkSubnet = g_guiSettings.GetString("network.subnet");
   m_strNetworkGateway = g_guiSettings.GetString("network.gateway");
   m_strNetworkDNS = g_guiSettings.GetString("network.dns");
+  // Change the panel brightness setting to the current hardware level
+  g_guiSettings.SetInt("system.panelbrightness", ((int)(g_application.GetPanelBrightness()*20))*5);
 #endif
   m_strOldTrackFormat = g_guiSettings.GetString("musicfiles.trackformat");
   m_strOldTrackFormatRight = g_guiSettings.GetString("musicfiles.trackformatright");

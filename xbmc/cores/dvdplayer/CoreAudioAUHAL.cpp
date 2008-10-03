@@ -371,7 +371,7 @@ DWORD CoreAudioAUHAL::GetSpace()
 	{
 		// limit buffer size to 2 AC3 frames
 		bufferDataSize /= (SPDIF_CHANNELS * SPDIF_SAMPLESIZE/8);
-		fakeCeiling = AC3_SAMPLES_PER_FRAME * 2;
+		fakeCeiling = AC3_SAMPLES_PER_FRAME * 3;
 	}
 	else
 	{

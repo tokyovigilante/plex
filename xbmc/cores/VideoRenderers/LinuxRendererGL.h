@@ -144,7 +144,6 @@ public:
   virtual bool SupportsContrast();
   virtual bool SupportsGamma();
   virtual bool SupportsMultiPassRendering();
-  virtual int  GetMaxTextureSize();
 
 protected:
   virtual void Render(DWORD flags, int renderBuffer);

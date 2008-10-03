@@ -301,6 +301,8 @@ typedef void (*FILEITEMFILLFUNC) (CFileItemPtr &item);
 class CFileItemList : public CFileItem
 {
 public:
+  enum CACHE_TYPE { CACHE_NEVER = 0, CACHE_IF_SLOW, CACHE_ALWAYS };
+
   CFileItemList();
   CFileItemList(const CStdString& strPath);
   virtual ~CFileItemList();
@@ -331,6 +333,7 @@ public:
   int GetFolderCount() const;
   int GetFileCount() const;
   int GetSelectedCount() const;
+  int GetObjectCount() const;
   void FilterCueItems();
   void RemoveExtensions();
   void CleanFileNames();
@@ -342,8 +345,9 @@ public:
   SORT_METHOD GetSortMethod() const { return m_sortMethod; }
   bool Load();
   bool Save();
-  void SetCacheToDisc(bool bYesNo) { m_bCacheToDisc=bYesNo; }
-  bool GetCacheToDisc() const { return m_bCacheToDisc; }
+  void SetCacheToDisc(CACHE_TYPE cacheToDisc) { m_cacheToDisc = cacheToDisc; }
+  bool CacheToDiscAlways() const { return m_cacheToDisc == CACHE_ALWAYS; }
+  bool CacheToDiscIfSlow() const { return m_cacheToDisc == CACHE_IF_SLOW; }
   void RemoveDiscCache() const;
   bool AlwaysCache() const;
 
@@ -377,7 +381,7 @@ private:
   bool m_fastLookup;
   SORT_METHOD m_sortMethod;
   SORT_ORDER m_sortOrder;
-  bool m_bCacheToDisc;
+  CACHE_TYPE m_cacheToDisc;
   bool m_replaceListing;
   CStdString m_content;
 

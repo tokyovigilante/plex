@@ -213,7 +213,7 @@ int ac3encoder_get_encoded_samples(struct AC3Encoder *encoder, unsigned char *en
 	else
 	{
 		int samples_read = -1;
-		samples_read = rb_read(encoder->m_outputBuffer, encoded_samples, samples_out * SPDIF_CHANNELS * (SPDIF_SAMPLESIZE / 8));
+		samples_read = rb_read(encoder->m_outputBuffer, encoded_samples, samples_out * SPDIF_CHANNELS * SPDIF_SAMPLESIZE/8);
 		return samples_read / SPDIF_CHANNELS / (SPDIF_SAMPLESIZE / 8);
 	}
 }

@@ -40,8 +40,10 @@
 #include <errno.h>
 
 #include "cdioSupport.h"
-
+#include "AutoPtrHandle.h"
 #include "../utils/log.h"
+
+using namespace AUTOPTR;
 
 HANDLE FindFirstFile(LPCSTR szPath,LPWIN32_FIND_DATA lpFindData) {
   if (lpFindData == NULL || szPath == NULL)
@@ -140,10 +142,8 @@ BOOL FindNextFile(HANDLE hHandle, LPWIN32_FIND_DATA lpFindData)
   } while (stat64(strFileNameTest, &fileStat) != 0);
 
   bool bIsDir = false;
-  DIR *testDir = opendir(strFileNameTest);
-  if (testDir) {
+  if (S_ISDIR(fileStat.st_mode)) {
     bIsDir = true;
-    closedir(testDir);
   }
 
   memset(lpFindData,0,sizeof(WIN32_FIND_DATA));
@@ -439,6 +439,49 @@ BOOL CopyFile(LPCTSTR lpExistingFileName, LPCTSTR lpNewFileName, BOOL bFailIfExi
     return 0;
 
   return 1;
+}
+
+BOOL CopyDirectory(LPCTSTR lpExistingDirectory, LPCTSTR lpNewDirectory, BOOL bFailIfExists)
+{
+  // If the destination directory exists and we should fail...guess what? we fail!
+  struct stat destStat;
+  bool isDestExists = (stat(lpNewDirectory, &destStat) == 0);
+  if (isDestExists && bFailIfExists)
+  {
+    return 0;
+  }
+
+  // Create the directory.
+  CreateDirectory(lpNewDirectory, NULL);
+  
+  WIN32_FIND_DATA wfd;
+  memset(&wfd, 0, sizeof(wfd));
+  
+  // List source directory.
+  CAutoPtrFind hFind(FindFirstFile(lpExistingDirectory, &wfd));
+  if (!hFind.isValid())
+    return FALSE;
+  
+  do
+  {
+    CStdString src, dst;
+    CUtil::AddFileToFolder(lpNewDirectory, wfd.cFileName, dst);
+    CUtil::AddFileToFolder(lpExistingDirectory, wfd.cFileName, src);
+    
+    if (wfd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+    {
+      // Recurse to copy the directory.
+      CopyDirectory(src.c_str(), dst.c_str(), bFailIfExists);
+    }
+    else
+    {
+      // Copy the file.
+      CopyFile(src.c_str(), dst.c_str(), bFailIfExists);
+    }
+  }
+  while (FindNextFile(hFind, &wfd));
+  
+  return true;
 }
 
 BOOL ReadFile(HANDLE hFile, LPVOID lpBuffer, DWORD nNumberOfBytesToRead,

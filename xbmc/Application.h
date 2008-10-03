@@ -171,6 +171,8 @@ public:
   int GetVolume() const;
   void SetVolume(int iPercent);
   void Mute(void);
+  float GetPanelBrightness() const;
+  void SetPanelBrightness(float iPanelBrightness);
   int GetPlaySpeed() const;
   void SetPlaySpeed(int iSpeed);
   bool IsButtonDown(DWORD code);

@@ -982,7 +982,7 @@ CUPnPServer::OnBrowseDirectChildren(PLT_ActionReference& action,
         } else {
             CDirectory::GetDirectory((const char*)id, items);
         }
-        if(items.GetCacheToDisc() || time < GetTickCount())
+        if(items.CacheToDiscAlways() || (items.CacheToDiscIfSlow() && time < GetTickCount()))
           items.Save();
     }
 

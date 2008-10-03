@@ -587,9 +587,7 @@ void CGraphicContext::SetVideoResolution(RESOLUTION &res, BOOL NeedZ, bool force
 {
   RESOLUTION lastRes = m_Resolution;
   if (res == AUTORES)
-  {
     res = g_videoConfig.GetBestMode();
-  }
 
   if (!IsValidResolution(res))
   {
@@ -1427,34 +1425,34 @@ void CGraphicContext::EndPaint(CSurface *dest, bool lock)
 #endif
 }
 
-bool CGraphicContext::ToggleFullScreenRoot ()
+bool CGraphicContext::ToggleFullScreenRoot()
 {
   static RESOLUTION desktopres = DESKTOP;
-  static RESOLUTION windowres = HDTV_480p_16x9;
+  static RESOLUTION windowres = g_videoConfig.GetSafeMode();
   static RESOLUTION lastres = INVALID;
 
+  RESOLUTION currentRes = INVALID;
+  
   if (m_bFullScreenRoot)
   {
     lastres = GetVideoResolution();
     SetVideoResolution(windowres);
     g_guiSettings.m_LookAndFeelResolution = windowres;
+    currentRes = windowres;
   }
   else
   {
     windowres = GetVideoResolution();
-
-    if (lastres != INVALID)
-    {
-      SetVideoResolution(lastres);
-      g_guiSettings.m_LookAndFeelResolution = lastres;
-    }
-    else
-    {
-      SetVideoResolution(desktopres);
-      g_guiSettings.m_LookAndFeelResolution = desktopres;
-    }
+    desktopres = (RESOLUTION)(DESKTOP + Cocoa_GetCurrentDisplay());
+    
+    SetVideoResolution(desktopres);
+    g_guiSettings.m_LookAndFeelResolution = desktopres;
+    currentRes = desktopres;
   }
-
+  
+  // Save the setting.
+  g_guiSettings.SetInt("videoscreen.resolution", currentRes);
+  
   g_fontManager.ReloadTTFFonts();
 
   // FIXME: We should always reload the skin, but we can't because a running

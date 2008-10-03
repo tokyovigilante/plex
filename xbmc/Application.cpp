@@ -877,17 +877,28 @@ extern "C" void __stdcall init_emu_environ();
 
 //
 // Utility function used to copy files from the application bundle
-// over to the user data directory in Application Support/XBMC.
+// over to the user data directory in Application Support/Plex.
 //
-static void CopyUserDataIfNeeded(CStdString strPath, LPCTSTR file)
+static void CopyUserDataIfNeeded(const CStdString& libraryPath, const CStdString& strPath, LPCTSTR file)
 {
-  strPath.append(PATH_SEPARATOR_STRING);
-  strPath.append(file);
-  if (access(strPath.c_str(), 0) == -1)
+  CStdString dstPath = libraryPath;
+  dstPath.append(PATH_SEPARATOR_STRING);
+  dstPath.append(strPath);
+  dstPath.append(PATH_SEPARATOR_STRING);
+  dstPath.append(file);
+  printf("Looking for [%s]\n", dstPath.c_str());
+  if (access(dstPath.c_str(), 0) == -1)
   {
-    CStdString srcFile = _P("q:\\userdata\\");
-    srcFile.append(file);
-    CopyFile(srcFile.c_str(), strPath.c_str(), TRUE);
+    CStdString srcPath = _P("q:\\");
+    srcPath.append(strPath);
+    srcPath.append(PATH_SEPARATOR_STRING);
+    srcPath.append(file);
+    printf("Copying from [%s]\n", srcPath.c_str());
+    
+    if (GetFileAttributes(srcPath.c_str()) & FILE_ATTRIBUTE_DIRECTORY)
+      CopyDirectory(srcPath.c_str(), dstPath.c_str(), TRUE);
+    else
+      CopyFile(srcPath.c_str(), dstPath.c_str(), TRUE);
   }
 }
 
@@ -1669,6 +1680,12 @@ CProfile* CApplication::InitDirectoriesOSX()
     // Make sure the required directories exist.
     CStdString str = home;
 
+    // Put the user data folder somewhere standard for the platform.
+    CStdString homeDir = getenv("HOME");
+    homeDir.append("/Library/Application Support/Plex");
+    CIoSupport::RemapDriveLetter('T', homeDir.c_str());
+    CIoSupport::RemapDriveLetter('U', homeDir.c_str());
+    
     str.append("/Library/Application Support");
     CreateDirectory(str.c_str(), NULL);
     str.append("/Plex");
@@ -1679,15 +1696,26 @@ CProfile* CApplication::InitDirectoriesOSX()
     str2 = str;
     str2.append("/skin");
     CreateDirectory(str2.c_str(), NULL);
-    str.append("/userdata");
-    CreateDirectory(str.c_str(), NULL);
+    CStdString str3 = str;
+    str3.append("/userdata");
+    CreateDirectory(str3.c_str(), NULL);
 
-    // See if the keymap file exists, and if not, copy it from our "virgin" one.
-    CopyUserDataIfNeeded(str, "Keymap.xml");
-    CopyUserDataIfNeeded(str, "RssFeeds.xml");
+    CreateDirectory(_P("U:\\userdata\\Database"), NULL);
+    CreateDirectory(_P("U:\\plugins"), NULL);
+    CreateDirectory(_P("U:\\plugins\\music"), NULL);
+    CreateDirectory(_P("U:\\plugins\\video"), NULL);
+    CreateDirectory(_P("U:\\plugins\\pictures"), NULL);
+    
+    // Install things as needed from our "virgin" copies.
+    CopyUserDataIfNeeded(str, "userdata", "Keymap.xml");
+    CopyUserDataIfNeeded(str, "userdata", "RssFeeds.xml");
+    CopyUserDataIfNeeded(str, "userdata", "advancedsettings.xml");
+    CopyUserDataIfNeeded(str, "userdata", "Database/ViewModes.db");
+    CopyUserDataIfNeeded(str, "plugins/music", "iTunes");
+    CopyUserDataIfNeeded(str, "plugins/pictures", "iPhoto");
 
     // Create a reasonable sources.xml if one doesn't exist already.
-    CStdString sourcesFile = str;
+    CStdString sourcesFile = str3;
     sourcesFile.append("/Sources.xml");
 
     CStdString sampleSourcesFile = strExecutablePath;
@@ -1708,12 +1736,6 @@ CProfile* CApplication::InitDirectoriesOSX()
       // Write the sample.
       XBMCHelper::WriteFile(sourcesFile.c_str(), strSources);
     }
-
-    // Put the user data folder somewhere standard for the platform.
-    str = getenv("HOME");
-    str.append("/Library/Application Support/Plex");
-    CIoSupport::RemapDriveLetter('T', str.c_str());
-    CIoSupport::RemapDriveLetter('U', str.c_str());
   }
 
   g_settings.m_vecProfiles.clear();
@@ -3080,8 +3102,9 @@ void CApplication::Render()
   // Either way, this should fix it!
   //
   static int frameCount = 0;
-  if (frameCount++ % 10 == 0 && g_advancedSettings.m_fullScreen)
-    Cocoa_HideMouse();
+  if (frameCount++ % 10 == 0)
+    if (g_advancedSettings.m_fullScreen)
+      Cocoa_HideMouse();
 #endif
 
   MEASURE_FUNCTION;
@@ -3226,8 +3249,13 @@ bool CApplication::OnKey(CKey& key)
       g_Keyboard.GetCtrl() == true  ||
       g_Keyboard.GetRAlt()  == true)
   {
-    // Ignore modified keys.
-    return false;
+    // Ignore modified + letter (e.g. Apple-F, Apple-Q)
+    if (action.unicode >= 'a' && action.unicode <= 'z' ||
+        action.unicode >= 'A' && action.unicode <= 'Z')
+    {
+      g_Keyboard.Reset();
+      return false;
+    }
   }
   
   // a key has been pressed.
@@ -4700,7 +4728,6 @@ bool CApplication::PlayStack(const CFileItem& item, bool bRestart)
     dbs.Close();
   }
 
-  if (m_pPlayer) SAFE_DELETE(m_pPlayer);
 
   // calculate the total time of the stack
   CStackDirectory dir;
@@ -4724,9 +4751,6 @@ bool CApplication::PlayStack(const CFileItem& item, bool bRestart)
     }
   }
 
-  *m_itemCurrentFile = item;
-  m_currentStackPosition = 0;
-
   double seconds = item.m_lStartOffset / 75.0;
 
   if (!haveTimes || item.m_lStartOffset == STARTOFFSET_RESUME )
@@ -4748,6 +4772,12 @@ bool CApplication::PlayStack(const CFileItem& item, bool bRestart)
       dbs.Close();
     }
   }
+
+  m_bPlaybackStarting = true;
+  if (m_pPlayer) SAFE_DELETE(m_pPlayer);
+  *m_itemCurrentFile = item;
+  m_currentStackPosition = 0;
+  m_eCurrentPlayer = EPC_NONE; // must be reset on initial play otherwise last player will be used 
 
   if (seconds > 0)
   {
@@ -4910,7 +4940,6 @@ bool CApplication::PlayFile(const CFileItem& item, bool bRestart)
 #endif
 
   // tell system we are starting a file
-  while(m_vPlaybackStarting.size()) m_vPlaybackStarting.pop();
   m_bPlaybackStarting = true;
 
   // We should restart the player, unless the previous and next tracks are using
@@ -6386,6 +6415,20 @@ int CApplication::GetVolume() const
   // converts the hardware volume (in mB) to a percentage
   return int(((float)(g_stSettings.m_nVolumeLevel + g_stSettings.m_dynamicRangeCompressionLevel - VOLUME_MINIMUM)) / (VOLUME_MAXIMUM - VOLUME_MINIMUM)*100.0f + 0.5f);
 }
+  
+#ifdef __APPLE__
+float CApplication::GetPanelBrightness() const
+{
+  float panelBrightness = 0.0f;
+  Cocoa_GetPanelBrightness(&panelBrightness);
+  return panelBrightness;
+}
+
+void CApplication::SetPanelBrightness(float iPanelBrightness)
+{
+  Cocoa_SetPanelBrightness(iPanelBrightness);
+}
+#endif
 
 void CApplication::SetPlaySpeed(int iSpeed)
 {
@@ -6418,11 +6461,12 @@ void CApplication::SetPlaySpeed(int iSpeed)
     m_pPlayer->SetVolume(VOLUME_MINIMUM);
   }
 }
-
+  
 int CApplication::GetPlaySpeed() const
 {
   return m_iPlaySpeed;
 }
+  
 
 // Returns the total time in seconds of the current media.  Fractional
 // portions of a second are possible - but not necessarily supported by the
@@ -6819,3 +6863,4 @@ CPerformanceStats &CApplication::GetPerformanceStats()
   return m_perfStats;
 }
 #endif
+

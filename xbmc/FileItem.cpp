@@ -249,7 +249,7 @@ const CFileItem& CFileItem::operator=(const CFileItem& item)
   FreeMemory();
   m_strPath = item.m_strPath;
 #ifdef DEBUG
-  if (m_bIsFolder && !m_strPath.IsEmpty() && !IsFileFolder())  // should root paths be "/" ?
+  if (m_bIsFolder && !m_strPath.IsEmpty() && !IsFileFolder() && !CUtil::IsTuxBox(m_strPath))  // should root paths be "/" ?
   {
 #ifndef __APPLE__
     ASSERT(CUtil::HasSlashAtEnd(m_strPath));
@@ -1100,7 +1100,7 @@ CFileItemList::CFileItemList()
 {
   m_fastLookup = false;
   m_bIsFolder=true;
-  m_bCacheToDisc=false;
+  m_cacheToDisc=CACHE_IF_SLOW;
   m_sortMethod=SORT_METHOD_NONE;
   m_sortOrder=SORT_ORDER_NONE;
   m_replaceListing = false;
@@ -1111,7 +1111,7 @@ CFileItemList::CFileItemList(const CStdString& strPath)
   m_strPath=strPath;
   m_fastLookup = false;
   m_bIsFolder=true;
-  m_bCacheToDisc=false;
+  m_cacheToDisc=CACHE_IF_SLOW;
   m_sortMethod=SORT_METHOD_NONE;
   m_sortOrder=SORT_ORDER_NONE;
   m_replaceListing = false;
@@ -1186,7 +1186,7 @@ void CFileItemList::Clear()
   ClearItems();
   m_sortMethod=SORT_METHOD_NONE;
   m_sortOrder=SORT_ORDER_NONE;
-  m_bCacheToDisc=false;
+  m_cacheToDisc=CACHE_IF_SLOW;
   m_sortDetails.clear();
   m_replaceListing = false;
   m_content.Empty();
@@ -1493,7 +1493,9 @@ void CFileItemList::Sort(SORT_METHOD sortMethod, SORT_ORDER sortOrder)
   default:
     break;
   }
-  if (sortMethod != SORT_METHOD_NONE)
+  if (sortMethod == SORT_METHOD_FILE)
+    Sort(sortOrder==SORT_ORDER_ASC ? SSortFileItem::IgnoreFoldersAscending : SSortFileItem::IgnoreFoldersDescending);
+  else if (sortMethod != SORT_METHOD_NONE)
     Sort(sortOrder==SORT_ORDER_ASC ? SSortFileItem::Ascending : SSortFileItem::Descending);
 
   m_sortMethod=sortMethod;
@@ -1523,7 +1525,7 @@ void CFileItemList::Serialize(CArchive& ar)
 
     ar << (int)m_sortMethod;
     ar << (int)m_sortOrder;
-    ar << m_bCacheToDisc;
+    ar << (int)m_cacheToDisc;
 
     ar << (int)m_sortDetails.size();
     for (unsigned int j = 0; j < m_sortDetails.size(); ++j)
@@ -1579,7 +1581,7 @@ void CFileItemList::Serialize(CArchive& ar)
 
     ar >> (int&)m_sortMethod;
     ar >> (int&)m_sortOrder;
-    ar >> m_bCacheToDisc;
+    ar >> (int&)m_cacheToDisc;
 
     unsigned int detailSize = 0;
     ar >> detailSize;
@@ -1645,6 +1647,17 @@ int CFileItemList::GetFolderCount() const
   }
 
   return nFolderCount;
+}
+
+int CFileItemList::GetObjectCount() const
+{
+  CSingleLock lock(m_lock);
+
+  int numObjects = (int)m_items.size();
+  if (numObjects && m_items[0]->IsParentFolder())
+    numObjects--;
+
+  return numObjects;
 }
 
 int CFileItemList::GetFileCount() const
@@ -2434,7 +2447,7 @@ void CFileItem::CacheFanart() const
     return;
   // We don't have a cached image, so let's see if the user has a local image they want to use
 
-  if (IsInternetStream() || CUtil::IsFTP(m_strPath) || CUtil::IsUPnP(m_strPath)) // no local fanart available for these
+  if (IsInternetStream() || CUtil::IsFTP(m_strPath) || CUtil::IsUPnP(m_strPath) || IsTuxBox()) // no local fanart available for these
     return;
   
   CStdString localFanart;

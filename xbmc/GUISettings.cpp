@@ -39,6 +39,8 @@
 #endif
 #include "utils/Network.h"
 
+#include "CocoaUtils.h"
+
 using namespace std;
 
 // String id's of the masks
@@ -268,10 +270,11 @@ CGUISettings::CGUISettings(void)
 
   AddCategory(3,"musiclibrary",14022);
   AddBool(1, "musiclibrary.enabled", 418, true);
-  AddSeparator(2,"musiclibrary.sep1");
-  AddBool(3,"musiclibrary.autoalbuminfo", 20192, false);
-  AddBool(4,"musiclibrary.autoartistinfo", 20193, false);
-  AddString(5, "musiclibrary.defaultscraper", 20194, "Allmusic", SPIN_CONTROL_TEXT);
+  AddBool(2, "musiclibrary.albumartistsonly", 13414, false);
+  AddSeparator(3,"musiclibrary.sep1");
+  AddBool(4,"musiclibrary.autoalbuminfo", 20192, false);
+  AddBool(5,"musiclibrary.autoartistinfo", 20193, false);
+  AddString(6, "musiclibrary.defaultscraper", 20194, "Allmusic", SPIN_CONTROL_TEXT);
   AddInt(6, "musiclibrary.recentcount", 20250, 25, 10, 5, 250, SPIN_CONTROL_INT_PLUS, -1);
   AddBool(7, "musiclibrary.updateonstartup", 22000, false);
   AddSeparator(8,"musiclibrary.sep2");
@@ -341,6 +344,13 @@ CGUISettings::CGUISettings(void)
   AddInt(2, "system.shutdowntime", 357, 0, 0, 5, 120, SPIN_CONTROL_INT_PLUS, MASK_MINS, TEXT_OFF);
 #ifdef __APPLE__
   AddInt(3, "system.displaysleeptime", 17500, 0, 0, 5, 120, SPIN_CONTROL_INT_PLUS, MASK_MINS, TEXT_OFF);
+  // add panel brightness setting if supported by the display
+  float panelBrightnessLevel = -1.0f;
+  Cocoa_GetPanelBrightness(&panelBrightnessLevel);
+  if (panelBrightnessLevel >= 0)
+  {
+    AddInt(4, "system.panelbrightness", 17501, 0, 0, 5, 100, SPIN_CONTROL_INT_PLUS, MASK_PERCENT);
+  }
 #endif
 #ifdef HAS_HAL
   AddInt(3, "system.shutdownstate", 13008, 0, 0, 1, 4, SPIN_CONTROL_TEXT);
@@ -489,7 +499,9 @@ CGUISettings::CGUISettings(void)
   AddInt(4, "videoplayer.rendermethod", 13354, RENDER_HQ_RGB_SHADER, RENDER_LQ_RGB_SHADER, 1, RENDER_HQ_RGB_SHADERV2, SPIN_CONTROL_TEXT);
 #endif
   AddInt(5, "videoplayer.displayresolution", 169, (int)AUTORES, (int)HDTV_1080i, 1, (int)CUSTOM+MAX_RESOLUTIONS, SPIN_CONTROL_TEXT);
+#ifdef HAS_MPLAYER
   AddInt(6, "videoplayer.framerateconversions", 336, FRAME_RATE_LEAVE_AS_IS, FRAME_RATE_LEAVE_AS_IS, 1, FRAME_RATE_USE_PAL60, SPIN_CONTROL_TEXT);
+#endif
 
   AddSeparator(7, "videoplayer.sep1.5");
   AddInt(8, "videoplayer.highqualityupscaling", 13112, SOFTWARE_UPSCALING_DISABLED, SOFTWARE_UPSCALING_DISABLED, 1, SOFTWARE_UPSCALING_ALWAYS, SPIN_CONTROL_TEXT);
@@ -606,7 +618,7 @@ CGUISettings::CGUISettings(void)
 
   // remote events settings
 #ifdef HAS_EVENT_SERVER
-  AddCategory(0, "remoteevents", 790);
+  AddCategory(6, "remoteevents", 790);
   AddBool(1,  "remoteevents.enabled",         791, true);
   AddString(2,"remoteevents.port",            792, "9777", BUTTON_CONTROL_INPUT, false, 792);
   AddInt(3,   "remoteevents.portrange",       793, 10, 1, 1, 100, SPIN_CONTROL_INT);

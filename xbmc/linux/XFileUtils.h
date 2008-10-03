@@ -42,6 +42,7 @@ HANDLE CreateFile(LPCTSTR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode,
             DWORD dwFlagsAndAttributes, HANDLE hTemplateFile);
 
 BOOL   CopyFile(LPCTSTR lpExistingFileName, LPCTSTR lpNewFileName, BOOL bFailIfExists);
+BOOL   CopyDirectory(LPCTSTR lpExistingDirectory, LPCTSTR lpNewDirectory, BOOL bFailIfExists);
 BOOL   DeleteFile(LPCSTR);
 BOOL   MoveFile(LPCTSTR lpExistingFileName, LPCTSTR lpNewFileName);
 
