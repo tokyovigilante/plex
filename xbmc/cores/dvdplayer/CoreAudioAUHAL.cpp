@@ -71,6 +71,7 @@ struct CoreAudioDeviceParameters
 
 	
     /* CoreAudio SPDIF mode specific */
+	AudioDeviceIOProcID			sInputIOProcID;
     pid_t                       i_hog_pid;      /* The keep the pid of our hog status */
     AudioStreamID               i_stream_id;    /* The StreamID that has a cac3 streamformat */
     int                         i_stream_index; /* The index of i_stream_id in an AudioBufferList */
@@ -191,58 +192,55 @@ HRESULT CoreAudioAUHAL::Deinitialize()
         verify_noerr( CloseComponent( deviceParameters->au_unit ) );
 		deviceParameters->au_unit = NULL;
     }
-#warning fix digital
-#if 0
 
-    if( p_sys->b_digital )
+    if( deviceParameters->b_digital )
     {
         /* Stop device */
-        err = AudioDeviceStop( p_sys->i_selected_dev,
+        err = AudioDeviceStop( deviceParameters->device_id,
 							  (AudioDeviceIOProc)RenderCallbackSPDIF );
         if( err != noErr )
         {
-            msg_Err( p_aout, "AudioDeviceStop failed: [%4.4s]", (char *)&err );
+			CLog::Log(LOGERROR, "AudioDeviceStop failed: [%4.4s]", (char *)&err );
         }
 		
         /* Remove IOProc callback */
-        err = AudioDeviceRemoveIOProc( p_sys->i_selected_dev,
-                                      (AudioDeviceIOProc)RenderCallbackSPDIF );
+		err = AudioDeviceDestroyIOProcID(deviceParameters->device_id, deviceParameters->sInputIOProcID);
+
         if( err != noErr )
         {
-            msg_Err( p_aout, "AudioDeviceRemoveIOProc failed: [%4.4s]", (char *)&err );
+            CLog::Log(LOGERROR, "AudioDeviceRemoveIOProc failed: [%4.4s]", (char *)&err );
         }
 		
-        if( p_sys->b_revert )
+        if( deviceParameters->b_revert )
         {
-            AudioStreamChangeFormat( p_aout, p_sys->i_stream_id, p_sys->sfmt_revert );
+            AudioStreamChangeFormat(deviceParameters, deviceParameters->i_stream_id, deviceParameters->sfmt_revert);
         }
 		
-        if( p_sys->b_changed_mixing && p_sys->sfmt_revert.mFormatID != kAudioFormat60958AC3 )
+        if( deviceParameters->b_changed_mixing && deviceParameters->sfmt_revert.mFormatID != kAudioFormat60958AC3 )
         {
             int b_mix;
             Boolean b_writeable;
             /* Revert mixable to true if we are allowed to */
-            err = AudioDeviceGetPropertyInfo( p_sys->i_selected_dev, 0, FALSE, kAudioDevicePropertySupportsMixing,
+            err = AudioDeviceGetPropertyInfo( deviceParameters->device_id, 0, FALSE, kAudioDevicePropertySupportsMixing,
 											 &i_param_size, &b_writeable );
 			
-            err = AudioDeviceGetProperty( p_sys->i_selected_dev, 0, FALSE, kAudioDevicePropertySupportsMixing,
+            err = AudioDeviceGetProperty( deviceParameters->device_id, 0, FALSE, kAudioDevicePropertySupportsMixing,
 										 &i_param_size, &b_mix );
 			
             if( !err && b_writeable )
             {
-                msg_Dbg( p_aout, "mixable is: %d", b_mix );
+                CLog::Log(LOGDEBUG, "mixable is: %d", b_mix );
                 b_mix = 1;
-                err = AudioDeviceSetProperty( p_sys->i_selected_dev, 0, 0, FALSE,
+                err = AudioDeviceSetProperty( deviceParameters->device_id, 0, 0, FALSE,
 											 kAudioDevicePropertySupportsMixing, i_param_size, &b_mix );
             }
 			
             if( err != noErr )
             {
-                msg_Err( p_aout, "failed to set mixmode: [%4.4s]", (char *)&err );
+                CLog::Log(LOGERROR, "failed to set mixmode: [%4.4s]", (char *)&err );
             }
         }
-    }
-#endif
+    } 
 #warning fix listener
     //err = AudioHardwareRemovePropertyListener( kAudioHardwarePropertyDevices,
 	//										  HardwareListener );
@@ -363,11 +361,12 @@ HRESULT CoreAudioAUHAL::SetCurrentVolume(LONG nVolume)
 DWORD CoreAudioAUHAL::GetSpace()
 {
 	DWORD fakeCeiling, bufferDataSize = rb_data_size(deviceParameters->outputBuffer);
+	
 	if (m_bEncodeAC3)
 	{
-		// limit buffer size to 3 AC3 frames (320 ms)
-		bufferDataSize /= (ac3encoder_channelcount(&m_ac3encoder) * m_uiBitsPerSample/8);
-		fakeCeiling = AC3_SAMPLES_PER_FRAME * 3;
+		// limit buffer size to 2 AC3 frames
+		bufferDataSize /= (SPDIF_CHANNELS * SPDIF_SAMPLESIZE/8);
+		fakeCeiling = AC3_SAMPLES_PER_FRAME * 2;
 	}
 	else
 	{
@@ -403,7 +402,7 @@ DWORD CoreAudioAUHAL::AddPackets(unsigned char *data, DWORD len)
 	if (m_bEncodeAC3) // use the raw PCM channel count to get the number of samples to play
 	{
 		inputByteFactor = ac3encoder_channelcount(&m_ac3encoder) * m_uiBitsPerSample/8;
-		outputByteFactor = SPDIF_CHANNELS * m_uiBitsPerSample/8;
+		outputByteFactor = SPDIF_CHANNELS * SPDIF_SAMPLESIZE/8;
 	}
 	else // the PCM input and stream output should match
 	{
@@ -461,7 +460,7 @@ FLOAT CoreAudioAUHAL::GetDelay()
 	FLOAT delay = 1000 * CA_BUFFER_FACTOR;
 	
 	if (m_bEncodeAC3)
-		delay += 0.072; // 3072/48000 = 0.064 (two AC3 packets plus 8ms)
+		delay += 0.032; // 1536/48000 = 0.064 (one AC3 packet)
 	else
 		delay += 0.008;
 	
@@ -1143,24 +1142,15 @@ int CoreAudioAUHAL::OpenSPDIF(struct CoreAudioDeviceParameters *deviceParameters
     if( !AudioStreamChangeFormat(deviceParameters, deviceParameters->i_stream_id, deviceParameters->stream_format))
         return false;
 	
-    /* Set the format flags */
-    //p_aout->output.output.i_bytes_per_frame = AOUT_SPDIF_SIZE;
-    //p_aout->output.output.i_frame_length = A52_FRAME_NB;
-    //p_aout->output.i_nb_samples = p_aout->output.output.i_frame_length;
-    //p_aout->output.output.i_rate = (unsigned int)p_sys->stream_format.mSampleRate;
-    //aout_FormatPrepare( &p_aout->output.output );
-    //aout_VolumeNoneInit( p_aout );
-	
-	// initialise the CoreAudio sink buffer
+  	// initialise the CoreAudio sink buffer
 	rb_init(&deviceParameters->outputBuffer, AC3_SPDIF_FRAME_SIZE * 15); // buffer 15 frames
 	
 	
     /* Add IOProc callback */
-	AudioDeviceIOProcID sInputIOProcID;
-    err = AudioDeviceCreateIOProcID(deviceParameters->device_id,
+	err = AudioDeviceCreateIOProcID(deviceParameters->device_id,
 									(AudioDeviceIOProc)RenderCallbackSPDIF,
 									deviceParameters,
-									&sInputIOProcID);	
+									&deviceParameters->sInputIOProcID);	
     if( err != noErr )
     {
 		CLog::Log(LOGERROR, "AudioDeviceAddIOProcID failed: [%4.4s]", (char *)&err );
@@ -1250,13 +1240,10 @@ OSStatus CoreAudioAUHAL::RenderCallbackSPDIF(AudioDeviceID inDevice,
                                     const AudioTimeStamp * inOutputTime,
                                     void * threadGlobals )
 {
-    //aout_buffer_t * p_buffer;
     mtime_t         current_date;
 	
-    //aout_instance_t * p_aout = (aout_instance_t *)threadGlobals;
-	CoreAudioDeviceParameters *deviceParameters = (CoreAudioDeviceParameters *)threadGlobals;
-    //struct aout_sys_t * p_sys = p_aout->output.p_sys;
-	
+    CoreAudioDeviceParameters *deviceParameters = (CoreAudioDeviceParameters *)threadGlobals;
+    
     /* Check for the difference between the Device clock and mdate */
     //p_sys->clock_diff = - (mtime_t)
 	//AudioConvertHostTimeToNanos( inNow->mHostTime ) / 1000;
@@ -1265,21 +1252,10 @@ OSStatus CoreAudioAUHAL::RenderCallbackSPDIF(AudioDeviceID inDevice,
     //current_date = p_sys->clock_diff +
 	//AudioConvertHostTimeToNanos( inOutputTime->mHostTime ) / 1000;
 	//- ((mtime_t) 1000000 / p_aout->output.output.i_rate * 31 ); // 31 = Latency in Frames. retrieve somewhere
-	
-    //p_buffer = aout_OutputNextBuffer( p_aout, current_date, true );
+
 	
 #define BUFFER outOutputData->mBuffers[deviceParameters->i_stream_index]
-    //if( p_buffer != NULL )
-    {
-      //  if( (int)BUFFER.mDataByteSize != (int)p_buffer->i_nb_bytes)
-        //    msg_Warn( p_aout, "bytesize: %d nb_bytes: %d", (int)BUFFER.mDataByteSize, (int)p_buffer->i_nb_bytes );
-		
-        /* move data into output data buffer */
-        //memcpy( BUFFER.mData, p_buffer->p_buffer, p_buffer->i_nb_bytes );
-        //aout_BufferFree( p_buffer );
-    }
-   
-	
+
 	if (BUFFER.mDataByteSize > rb_data_size(deviceParameters->outputBuffer)) // we can't write a frame, send silence
 	{
         memset( BUFFER.mData, 0, BUFFER.mDataByteSize );
