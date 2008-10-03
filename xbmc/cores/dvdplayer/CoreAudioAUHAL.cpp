@@ -283,8 +283,13 @@ HRESULT CoreAudioAUHAL::Deinitialize()
 //***********************************************************************************************
 void CoreAudioAUHAL::Flush() 
 {
-	CLog::Log(LOGDEBUG, "Flushing %i bytes from buffer", (rb_data_size(deviceParameters->outputBuffer) - rb_free(deviceParameters->outputBuffer)));
+	CLog::Log(LOGDEBUG, "Flushing %i bytes from buffer", rb_data_size(deviceParameters->outputBuffer));
 	rb_clear(deviceParameters->outputBuffer);
+	
+	if (m_bEncodeAC3)
+	{
+		ac3encoder_flush(&m_ac3encoder);
+	}
 }
 
 //***********************************************************************************************

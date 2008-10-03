@@ -22,6 +22,7 @@
 #pragma once
 #include "ringbuffer.h"
 #include "aften-types.h"
+#include "stdint.h"
 
 //These values are forced to allow spdif out
 #define SPDIF_SAMPLESIZE 16
@@ -47,10 +48,10 @@ struct AC3Encoder
 };
 
 void ac3encoder_init(struct AC3Encoder *encoder, int iChannels, unsigned int uiSamplesPerSec, int uiBitsPerSample, int remap);
-int ac3encoder_write_samples(struct AC3Encoder *encoder, unsigned char *samples, int samples_in);
+int ac3encoder_write_samples(struct AC3Encoder *encoder, uint8_t *samples, int samples_in);
 int ac3coder_get_PCM_samplecount(struct AC3Encoder *encoder);
 int ac3encoder_get_AC3_samplecount(struct AC3Encoder *encoder);
-int ac3encoder_get_encoded_samples(struct AC3Encoder *encoder, unsigned char *encoded_samples, int samples_out);
+int ac3encoder_get_encoded_samples(struct AC3Encoder *encoder, uint8_t *encoded_samples, int samples_out);
 int ac3encoder_channelcount(struct AC3Encoder *encoder);
 void ac3encoder_flush(struct AC3Encoder *encoder);
 void ac3encoder_free(struct AC3Encoder *encoder);
