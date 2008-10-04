@@ -45,6 +45,8 @@ struct AC3Encoder
     int iAC3FrameSize;
     int irawSampleBytesRead;	
 	int remap;
+	
+	CCriticalSection critSection;
 };
 
 void ac3encoder_init(struct AC3Encoder *encoder, int iChannels, unsigned int uiSamplesPerSec, int uiBitsPerSample, int remap);

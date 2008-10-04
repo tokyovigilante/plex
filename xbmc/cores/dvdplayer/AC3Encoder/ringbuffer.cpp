@@ -31,6 +31,8 @@
 
 #include "ringbuffer.h"
 
+#include "SingleLock.h"
+
 /* call before output thread is active !!!!! */
 int rb_init (struct OutRingBuffer **rb, int size)
 {
@@ -41,7 +43,7 @@ int rb_init (struct OutRingBuffer **rb, int size)
         return 0;
     }
     
-    ring = malloc (sizeof (struct OutRingBuffer));
+	ring = new OutRingBuffer();
     if(ring == NULL)
     {
         fprintf(stderr, "Not enough memory");
@@ -56,7 +58,7 @@ int rb_init (struct OutRingBuffer **rb, int size)
 
     ring->rd_pointer = 0;
     ring->wr_pointer = 0;
-    ring->buffer=malloc(sizeof(char)*(ring->size));
+    ring->buffer=(char *)malloc(sizeof(char)*(ring->size));
     
     *rb = ring;
 
@@ -68,6 +70,8 @@ int rb_init (struct OutRingBuffer **rb, int size)
 
 int rb_write (struct OutRingBuffer *rb, unsigned char * buf, int len)
 {
+	//	CSingleLock lock(rb->critSection);
+	
     int total;
     int i;
 
@@ -95,12 +99,16 @@ int rb_write (struct OutRingBuffer *rb, unsigned char * buf, int len)
 
 int rb_free (struct OutRingBuffer *rb)
 {
+	CSingleLock lock(rb->critSection);
+	
     return (rb->size - 1 - rb_data_size(rb));
 }
 
 
 int rb_read (struct OutRingBuffer *rb, unsigned char * buf, int max)
 {
+	//CSingleLock lock(rb->critSection);
+	
     int total;
     int i;
     /* total = len = min(used, len) */
@@ -128,12 +136,16 @@ int rb_read (struct OutRingBuffer *rb, unsigned char * buf, int max)
 
 int rb_data_size (struct OutRingBuffer *rb)
 {
+	CSingleLock lock(rb->critSection);
+	
     return ((rb->wr_pointer - rb->rd_pointer) & (rb->size-1));
 }
 
 
 int rb_clear (struct OutRingBuffer *rb)
 {
+	CSingleLock lock(rb->critSection);
+	
     memset(rb->buffer,0,rb->size);
     rb->rd_pointer=0;
     rb->wr_pointer=0;

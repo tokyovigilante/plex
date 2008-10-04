@@ -139,8 +139,8 @@ int ac3encoder_write_samples(struct AC3Encoder *encoder, uint8_t *samples, int f
 	{
 		// copy to output buffer
 		encoder->irawSampleBytesRead = AC3_SAMPLES_PER_FRAME * encoder->m_aftenContext.channels * encoder->m_iSampleSize / 8;
-		unsigned char *sample_buffer;
-		sample_buffer = calloc(1, encoder->irawSampleBytesRead);
+		uint8_t * sample_buffer;
+		sample_buffer = (uint8_t *)calloc(1, encoder->irawSampleBytesRead);
 		if (rb_read(encoder->m_inputBuffer, sample_buffer, encoder->irawSampleBytesRead) < encoder->irawSampleBytesRead)
 		{
 			free(sample_buffer);
@@ -230,13 +230,13 @@ void ac3encoder_flush(struct AC3Encoder *encoder)
 	int bufferedSamples = ac3encoder_get_AC3_samplecount(encoder);
 	if (bufferedSamples > 0)
 	{
-		sampleSink = malloc(bufferedSamples * SPDIF_CHANNELS * SPDIF_SAMPLESIZE/8);
+		sampleSink = (uint8_t *)malloc(bufferedSamples * SPDIF_CHANNELS * SPDIF_SAMPLESIZE/8);
 		ac3encoder_get_encoded_samples(encoder, sampleSink, bufferedSamples);
 		free(sampleSink);
 	}
 	
 	// write one silent frame
-	uint8_t *silent_PCM_init = calloc(1, encoder->m_aftenContext.channels * encoder->m_iSampleSize / 8 * AC3_SAMPLES_PER_FRAME); // 1536 silent samples
+	uint8_t *silent_PCM_init = (uint8_t *)calloc(1, encoder->m_aftenContext.channels * encoder->m_iSampleSize / 8 * AC3_SAMPLES_PER_FRAME); // 1536 silent samples
 	if (ac3encoder_write_samples(encoder, silent_PCM_init, AC3_SAMPLES_PER_FRAME) < AC3_SAMPLES_PER_FRAME)
 	{
 		fprintf(stderr, "Error pre-buffering AC3 encoder\n");

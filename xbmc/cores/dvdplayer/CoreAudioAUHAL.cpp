@@ -365,21 +365,18 @@ HRESULT CoreAudioAUHAL::SetCurrentVolume(LONG nVolume)
 //***********************************************************************************************
 DWORD CoreAudioAUHAL::GetSpace()
 {
-	DWORD fakeCeiling, bufferDataSize = rb_data_size(deviceParameters->outputBuffer);
+	DWORD bufferDataSize = rb_data_size(deviceParameters->outputBuffer);
 	
 	if (m_bEncodeAC3)
 	{
-		// limit buffer size to 2 AC3 frames
 		bufferDataSize /= (SPDIF_CHANNELS * SPDIF_SAMPLESIZE/8);
-//		fakeCeiling = AC3_SAMPLES_PER_FRAME;
 	}
 	else
 	{
-		// limit buffer size to CA_BUFFER_FACTOR seconds 
 		bufferDataSize /= (m_uiChannels * m_uiBitsPerSample/8);
-//		fakeCeiling = m_uiSamplesPerSec * CA_BUFFER_FACTOR;
 	}
-	fakeCeiling = m_uiSamplesPerSec * CA_BUFFER_FACTOR;
+	// limit buffer length to CA_BUFFER_FACTOR seconds
+	DWORD fakeCeiling = 512;//m_uiSamplesPerSec * CA_BUFFER_FACTOR;
 	if (bufferDataSize < fakeCeiling)
 	{
 		return fakeCeiling - bufferDataSize;

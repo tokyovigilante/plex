@@ -28,17 +28,17 @@
 
 #define rb_magic_check(var,err)  {if(var->magic!=RINGBUFFER_MAGIC) return err;}
 
-
+#include "CriticalSection.h"
 
 struct OutRingBuffer
 {
-//    int *vrb_buf;
-//    vrb_p vrb_buf;
     char *buffer;
     int wr_pointer;
     int rd_pointer;
     long magic;
     int size;
+	
+	CCriticalSection critSection;
 };
 
 
