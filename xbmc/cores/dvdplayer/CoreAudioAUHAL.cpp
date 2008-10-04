@@ -371,14 +371,15 @@ DWORD CoreAudioAUHAL::GetSpace()
 	{
 		// limit buffer size to 2 AC3 frames
 		bufferDataSize /= (SPDIF_CHANNELS * SPDIF_SAMPLESIZE/8);
-		fakeCeiling = AC3_SAMPLES_PER_FRAME * 3;
+//		fakeCeiling = AC3_SAMPLES_PER_FRAME;
 	}
 	else
 	{
 		// limit buffer size to CA_BUFFER_FACTOR seconds 
 		bufferDataSize /= (m_uiChannels * m_uiBitsPerSample/8);
-		fakeCeiling = m_uiSamplesPerSec * CA_BUFFER_FACTOR;
+//		fakeCeiling = m_uiSamplesPerSec * CA_BUFFER_FACTOR;
 	}
+	fakeCeiling = m_uiSamplesPerSec * CA_BUFFER_FACTOR;
 	if (bufferDataSize < fakeCeiling)
 	{
 		return fakeCeiling - bufferDataSize;
@@ -418,6 +419,9 @@ DWORD CoreAudioAUHAL::AddPackets(unsigned char *data, DWORD len)
 	
 	// Find out how much space we have available and clip to the amount we got passed in. 
 	DWORD samplesToWrite  = GetSpace();
+	CLog::Log(LOGDEBUG, "Asked to write %i samples, buffer free %i samples", samplesPassedIn, samplesToWrite);
+	if (samplesToWrite == 0) return samplesToWrite;
+	
 	if (samplesToWrite > samplesPassedIn)
 	{
 		samplesToWrite = samplesPassedIn;
@@ -603,6 +607,8 @@ error:
 		return -1;
 }
 
+#pragma mark Analog (PCM)
+
 /*****************************************************************************
  * Open: open and setup a HAL AudioUnit to do analog (multichannel) audio output
  *****************************************************************************/
@@ -664,177 +670,7 @@ int CoreAudioAUHAL::OpenPCM(struct CoreAudioDeviceParameters *deviceParameters, 
 	
     if( err != noErr ) return false;
     else CLog::Log(LOGINFO, STREAM_FORMAT_MSG("current format is: ", deviceParameters->sfmt_revert) );
-#if 0
-    /* Get the channel layout of the device side of the unit (vlc -> unit -> device) */
-    err = AudioUnitGetPropertyInfo( deviceParameters->au_unit,
-                                   kAudioDevicePropertyPreferredChannelLayout,
-                                   kAudioUnitScope_Output,
-                                   0,
-                                   &i_param_size,
-                                   NULL );
-	
-    if( err == noErr )
-    {
-        layout = (AudioChannelLayout *)malloc( i_param_size);
-		
-        verify_noerr( AudioUnitGetProperty( deviceParameters->au_unit,
-										   kAudioDevicePropertyPreferredChannelLayout,
-										   kAudioUnitScope_Output,
-										   0,
-										   layout,
-										   &i_param_size ));
-		
-        /* We need to "fill out" the ChannelLayout, because there are multiple ways that it can be set */
-        if( layout->mChannelLayoutTag == kAudioChannelLayoutTag_UseChannelBitmap)
-        {
-            /* bitmap defined channellayout */
-            verify_noerr( AudioFormatGetProperty( kAudioFormatProperty_ChannelLayoutForBitmap,
-												 sizeof( UInt32), &layout->mChannelBitmap,
-												 &i_param_size,
-												 layout ));
-        }
-        else if( layout->mChannelLayoutTag != kAudioChannelLayoutTag_UseChannelDescriptions )
-        {
-            /* layouttags defined channellayout */
-            verify_noerr( AudioFormatGetProperty( kAudioFormatProperty_ChannelLayoutForTag,
-												 sizeof( AudioChannelLayoutTag ), &layout->mChannelLayoutTag,
-												 &i_param_size,
-												 layout ));
-        }
-		
-		CLog::Log(LOGINFO, "layout of AUHAL has %d channels" , (int)layout->mNumberChannelDescriptions );
-#endif
-        /* Initialize the VLC core channel count */
-        //deviceParameters->output.output.i_physical_channels = 0;
-        //i_original = p_aout->output.output.i_original_channels & AOUT_CHAN_PHYSMASK;
-		
-        //if( i_original == AOUT_CHAN_CENTER || layout->mNumberChannelDescriptions < 2 )
-        {
-            /* We only need Mono or cannot output more than 1 channel */
-          //  p_aout->output.output.i_physical_channels = AOUT_CHAN_CENTER;
-        }
-        //else if( i_original == (AOUT_CHAN_LEFT | AOUT_CHAN_RIGHT) || layout->mNumberChannelDescriptions < 3 )
-        {
-            /* We only need Stereo or cannot output more than 2 channels */
-          //  p_aout->output.output.i_physical_channels = AOUT_CHAN_RIGHT | AOUT_CHAN_LEFT;
-        }
-        //else
-        {
-            /* We want more than stereo and we can do that */
-            /*for( i = 0; i < layout->mNumberChannelDescriptions; i++ )
-            {
-                msg_Dbg( p_aout, "this is channel: %d", (int)layout->mChannelDescriptions[i].mChannelLabel );
-				
-                switch( layout->mChannelDescriptions[i].mChannelLabel )
-                {
-                    case kAudioChannelLabel_Left:
-                        p_aout->output.output.i_physical_channels |= AOUT_CHAN_LEFT;
-                        continue;
-                    case kAudioChannelLabel_Right:
-                        p_aout->output.output.i_physical_channels |= AOUT_CHAN_RIGHT;
-                        continue;
-                    case kAudioChannelLabel_Center:
-                        p_aout->output.output.i_physical_channels |= AOUT_CHAN_CENTER;
-                        continue;
-                    case kAudioChannelLabel_LFEScreen:
-                        p_aout->output.output.i_physical_channels |= AOUT_CHAN_LFE;
-                        continue;
-                    case kAudioChannelLabel_LeftSurround:
-                        p_aout->output.output.i_physical_channels |= AOUT_CHAN_REARLEFT;
-                        continue;
-                    case kAudioChannelLabel_RightSurround:
-                        p_aout->output.output.i_physical_channels |= AOUT_CHAN_REARRIGHT;
-                        continue;
-                    case kAudioChannelLabel_RearSurroundLeft:
-                        p_aout->output.output.i_physical_channels |= AOUT_CHAN_MIDDLELEFT;
-                        continue;
-                    case kAudioChannelLabel_RearSurroundRight:
-                        p_aout->output.output.i_physical_channels |= AOUT_CHAN_MIDDLERIGHT;
-                        continue;
-                    case kAudioChannelLabel_CenterSurround:
-                        p_aout->output.output.i_physical_channels |= AOUT_CHAN_REARCENTER;
-                        continue;
-                    default:
-                        msg_Warn( p_aout, "unrecognized channel form provided by driver: %d", (int)layout->mChannelDescriptions[i].mChannelLabel );
-                }
-            }
-            if( p_aout->output.output.i_physical_channels == 0 )
-            {
-                p_aout->output.output.i_physical_channels = AOUT_CHAN_LEFT | AOUT_CHAN_RIGHT;
-                msg_Err( p_aout, "You should configure your speaker layout with Audio Midi Setup Utility in /Applications/Utilities. Now using Stereo mode." );
-                intf_UserFatal( p_aout, false, _("Audio device is not configured"),
-							   _("You should configure your speaker layout with "
-								 "the \"Audio Midi Setup\" utility in /Applications/"
-								 "Utilities. Stereo mode is being used now.") );
-            }
-        }
-        free( layout );
-    }
-    else
-    {
-        msg_Warn( p_aout, "this driver does not support kAudioDevicePropertyPreferredChannelLayout. BAD DRIVER AUTHOR !!!" );
-        p_aout->output.output.i_physical_channels = AOUT_CHAN_LEFT | AOUT_CHAN_RIGHT;
-    }*/
-		}
-    //msg_Dbg( p_aout, "selected %d physical channels for device output", aout_FormatNbChannels( &p_aout->output.output ) );
-    //msg_Dbg( p_aout, "VLC will output: %s", aout_FormatPrintChannels( &p_aout->output.output ));
-#if 0
-    memset (&new_layout, 0, sizeof(new_layout));
-    switch(channels)
-    {
-        case 1:
-            new_layout.mChannelLayoutTag = kAudioChannelLayoutTag_Mono;
-            break;
-        case 2:
-            new_layout.mChannelLayoutTag = kAudioChannelLayoutTag_Stereo;
-            break;
-			/*
-        case 3:
-            if( p_aout->output.output.i_physical_channels & AOUT_CHAN_CENTER )
-            {
-                new_layout.mChannelLayoutTag = kAudioChannelLayoutTag_DVD_7; // L R C
-            }
-            else if( p_aout->output.output.i_physical_channels & AOUT_CHAN_LFE )
-            {
-                new_layout.mChannelLayoutTag = kAudioChannelLayoutTag_DVD_4; // L R LFE
-            }
-            break;
-        case 4:
-            if( p_aout->output.output.i_physical_channels & ( AOUT_CHAN_CENTER | AOUT_CHAN_LFE ) )
-            {
-                new_layout.mChannelLayoutTag = kAudioChannelLayoutTag_DVD_10; // L R C LFE
-            }
-            else if( p_aout->output.output.i_physical_channels & ( AOUT_CHAN_REARLEFT | AOUT_CHAN_REARRIGHT ) )
-            {
-                new_layout.mChannelLayoutTag = kAudioChannelLayoutTag_DVD_3; // L R Ls Rs
-            }
-            else if( p_aout->output.output.i_physical_channels & ( AOUT_CHAN_CENTER | AOUT_CHAN_REARCENTER ) )
-            {
-                new_layout.mChannelLayoutTag = kAudioChannelLayoutTag_DVD_3; // L R C Cs
-            }
-            break;
-        case 5:
-            if( p_aout->output.output.i_physical_channels & ( AOUT_CHAN_CENTER ) )
-            {
-                new_layout.mChannelLayoutTag = kAudioChannelLayoutTag_DVD_19; // L R Ls Rs C
-            }
-            else if( p_aout->output.output.i_physical_channels & ( AOUT_CHAN_LFE ) )
-            {
-                new_layout.mChannelLayoutTag = kAudioChannelLayoutTag_DVD_18; // L R Ls Rs LFE
-            }
-            break;
-        case 6:
-            if( p_aout->output.output.i_physical_channels & ( AOUT_CHAN_LFE ) )
-            {
-                new_layout.mChannelLayoutTag = kAudioChannelLayoutTag_DVD_20; // L R Ls Rs C LFE
-            }
-            else
-            {
-                new_layout.mChannelLayoutTag = kAudioChannelLayoutTag_AudioUnit_6_0; // L R Ls Rs C Cs
-            }
-            break;*/
-            }
-#endif
+
     /* Set up the format to be used */
 	DeviceFormat.mSampleRate = sampleRate;
     DeviceFormat.mFormatID = kAudioFormatLinearPCM;
@@ -878,15 +714,6 @@ int CoreAudioAUHAL::OpenPCM(struct CoreAudioDeviceParameters *deviceParameters, 
 									   kAudioUnitScope_Global,
 									   0, &input, sizeof(input)));
 	
-#if 0
-    /* Set the new_layout as the layout VLC will use to feed the AU unit */
-    verify_noerr( AudioUnitSetProperty(deviceParameters->au_unit,
-									   kAudioUnitProperty_AudioChannelLayout,
-									   kAudioUnitScope_Input,
-									   0, &new_layout, sizeof(new_layout) ) );
-    if( new_layout.mNumberChannelDescriptions > 0 )
-        free( new_layout.mChannelDescriptions );
-#endif
     /* AU initiliaze */
     verify_noerr( AudioUnitInitialize(deviceParameters->au_unit) );
 	
@@ -896,7 +723,7 @@ int CoreAudioAUHAL::OpenPCM(struct CoreAudioDeviceParameters *deviceParameters, 
     //deviceParameters->clock_diff += mdate();
 	
 	// initialise the CoreAudio sink buffer
-	rb_init(&deviceParameters->outputBuffer, (sampleRate/2) * channels * (bitsPerSample/8)); // buffer 0.5 sec (use 0.1)
+	rb_init(&deviceParameters->outputBuffer, sampleRate * DeviceFormat.mBytesPerFrame);
 	
 	
     /* Start the AU */
@@ -939,14 +766,14 @@ OSStatus CoreAudioAUHAL::RenderCallbackAnalog(struct CoreAudioDeviceParameters *
     // initial calc
 	int framesToWrite = inNumberFrames;
 	int framesAvailable = rb_data_size(deviceParameters->outputBuffer);
-	int i, currentPos = 0, underrunLength = 0;
-	
 	framesAvailable /= deviceParameters->stream_format.mBytesPerFrame;
 	
 	if (framesToWrite > framesAvailable)
 	{
 		framesToWrite = framesAvailable;
 	}
+	
+	int i, currentPos = 0, underrunLength = 0;
 	
 	currentPos = framesToWrite * deviceParameters->stream_format.mBytesPerFrame;
 	underrunLength = currentPos + ((inNumberFrames - framesToWrite) * deviceParameters->stream_format.mBytesPerFrame);
@@ -957,13 +784,16 @@ OSStatus CoreAudioAUHAL::RenderCallbackAnalog(struct CoreAudioDeviceParameters *
 			framesToWrite * deviceParameters->stream_format.mBytesPerFrame);
 	
 	// write silence to any remainder
-	for (i=currentPos; i < underrunLength; i+=sizeof(int16_t))
+	if (underrunLength > 0) memset((void *)((uint8_t *)(ioData->mBuffers[0].mData)+currentPos), 0, underrunLength);
+	//for (i=currentPos; i < underrunLength; i+=sizeof(int16_t))
 	{
-		*((int16_t *)(ioData->mBuffers[0].mData)+i) = INT16_MIN;	
+		//*((int16_t *)(ioData->mBuffers[0].mData)+i) = 0x0000;	
 	}
 	
     return( noErr );
 }
+
+#pragma mark Digital (SPDIF)
 		
 /*****************************************************************************
  * Setup a encoded digital stream (SPDIF)
@@ -1096,8 +926,8 @@ int CoreAudioAUHAL::OpenSPDIF(struct CoreAudioDeviceParameters *deviceParameters
             if(deviceParameters->b_revert == false )
             {
                 /* Retrieve the original format of this stream first if not done so already */
-                i_param_size = sizeof(deviceParameters->sfmt_revert );
-                err = AudioStreamGetProperty(deviceParameters->device_id, 0,
+                i_param_size = sizeof(deviceParameters->sfmt_revert);
+                err = AudioStreamGetProperty(deviceParameters->i_stream_id, 0,
 											 kAudioStreamPropertyPhysicalFormat,
 											 &i_param_size,
 											 &deviceParameters->sfmt_revert );
@@ -1148,7 +978,7 @@ int CoreAudioAUHAL::OpenSPDIF(struct CoreAudioDeviceParameters *deviceParameters
         return false;
 	
   	// initialise the CoreAudio sink buffer
-	rb_init(&deviceParameters->outputBuffer, AC3_SPDIF_FRAME_SIZE * 15); // buffer 15 frames
+	rb_init(&deviceParameters->outputBuffer, SPDIF_SAMPLERATE * SPDIF_SAMPLESIZE/8 * SPDIF_CHANNELS);
 	
 	
     /* Add IOProc callback */
@@ -1261,7 +1091,7 @@ OSStatus CoreAudioAUHAL::RenderCallbackSPDIF(AudioDeviceID inDevice,
 	
 #define BUFFER outOutputData->mBuffers[deviceParameters->i_stream_index]
 
-	if (BUFFER.mDataByteSize > rb_data_size(deviceParameters->outputBuffer)) // we can't write a frame, send silence
+	if (BUFFER.mDataByteSize > rb_data_size(deviceParameters->outputBuffer)) // we can't write a frame, send null frame
 	{
         memset( BUFFER.mData, 0, BUFFER.mDataByteSize );
     }
