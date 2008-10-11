@@ -54,7 +54,7 @@
  */
 typedef int64_t mtime_t;
 #define BUFSIZE 0xffffff
-#define CA_BUFFER_FACTOR 0.05
+#define CA_BUFFER_FACTOR 0.032
 
 struct CoreAudioDeviceParameters
 {
@@ -410,7 +410,6 @@ DWORD CoreAudioAUHAL::AddPackets(unsigned char *data, DWORD len)
 	
 	// Find out how much space we have available and clip to the amount we got passed in. 
  	DWORD samplesToWrite = GetSpace();
-	CLog::Log(LOGDEBUG, "Asked to write %i samples, buffer free %i samples", samplesPassedIn, samplesToWrite);
 	if (samplesToWrite == 0) return samplesToWrite;
 	
 	if (samplesToWrite > samplesPassedIn)
@@ -459,8 +458,8 @@ FLOAT CoreAudioAUHAL::GetDelay()
 #warning set programmatically
 	FLOAT delay = CA_BUFFER_FACTOR;
 	
-	//if (m_bEncodeAC3)
-	//	delay += 0.032; // 1536/48000 = 0.064 (one AC3 packet)
+	if (m_bEncodeAC3)
+		delay += 0.032; // 1536/48000 = 0.032 (one AC3 packet)
 	//else
 	//	delay += 0.008;
 	
@@ -991,16 +990,14 @@ int CoreAudioAUHAL::OpenSPDIF(struct CoreAudioDeviceParameters *deviceParameters
 	{
 		framecount <<= 1;
 	}
+	
+#warning free
 	deviceParameters->outputBuffer = (PaUtilRingBuffer *)malloc(sizeof(PaUtilRingBuffer));
-	deviceParameters->outputBufferData = malloc(framecount * deviceParameters->stream_format.mBytesPerFrame);
+	deviceParameters->outputBufferData = malloc(framecount * SPDIF_SAMPLE_BYTES);
 	
-	PaUtil_InitializeRingBuffer(deviceParameters->outputBuffer, 
-								deviceParameters->stream_format.mBytesPerFrame,
+	PaUtil_InitializeRingBuffer(deviceParameters->outputBuffer, SPDIF_SAMPLE_BYTES,
 								framecount, deviceParameters->outputBufferData);
-	//rb_init(&deviceParameters->outputBuffer, SPDIF_SAMPLERATE * SPDIF_SAMPLESIZE/8 * SPDIF_CHANNELS);
-	
-	
-    /* Add IOProc callback */
+	/* Add IOProc callback */
 	err = AudioDeviceCreateIOProcID(deviceParameters->device_id,
 									(AudioDeviceIOProc)RenderCallbackSPDIF,
 									deviceParameters,
@@ -1109,17 +1106,17 @@ OSStatus CoreAudioAUHAL::RenderCallbackSPDIF(AudioDeviceID inDevice,
 
 	
 #define BUFFER outOutputData->mBuffers[deviceParameters->i_stream_index]
-
-	if (BUFFER.mDataByteSize > (PaUtil_GetRingBufferReadAvailable(deviceParameters->outputBuffer) / 
-								(SPDIF_SAMPLESIZE/8 * SPDIF_CHANNELS))) // we can't write a frame, send null frame
+	int framesToWrite = BUFFER.mDataByteSize / deviceParameters->outputBuffer->elementSizeBytes;
+	
+	if (framesToWrite > PaUtil_GetRingBufferReadAvailable(deviceParameters->outputBuffer)) 
 	{
-        memset( BUFFER.mData, 0, BUFFER.mDataByteSize );
+		// we can't write a frame, send null frame
+        memset(BUFFER.mData, 0, BUFFER.mDataByteSize);
     }
-	else // write a frame
+	else 
 	{
-		PaUtil_ReadRingBuffer(deviceParameters->outputBuffer, BUFFER.mData, 
-							  BUFFER.mDataByteSize / (SPDIF_SAMPLESIZE/8 * SPDIF_CHANNELS));
-		//rb_read(deviceParameters->outputBuffer, (uint8_t *)BUFFER.mData, BUFFER.mDataByteSize);
+		// write a frame
+		PaUtil_ReadRingBuffer(deviceParameters->outputBuffer, BUFFER.mData, framesToWrite);
 	}
 #undef BUFFER
     return( noErr );
