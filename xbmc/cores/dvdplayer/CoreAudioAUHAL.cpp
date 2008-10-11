@@ -64,7 +64,8 @@ struct CoreAudioDeviceParameters
 	AudioDeviceID				device_id; 
     Component                   au_component;   /* The Audiocomponent we use */
     AudioUnit                   au_unit;        /* The AudioUnit we use */
-	OutRingBuffer*				outputBuffer;
+	PaUtilRingBuffer*			outputBuffer;
+	void*						outputBufferData;
     uint32_t                    i_read_bytes;
     uint32_t                    i_total_bytes;
 	bool						b_digital;      /* Are we running in digital mode? */
@@ -87,7 +88,8 @@ CoreAudioAUHAL::CoreAudioAUHAL(IAudioCallback* pCallback, int iChannels, unsigne
 	
 	if (iChannels == 0)
 		iChannels = 2;
-	
+	bool bAudioOnAllSpeakers = false; 
+	g_audioContext.SetupSpeakerConfig(iChannels, bAudioOnAllSpeakers, bIsMusic);
 	g_audioContext.SetActiveDevice(CAudioContext::DIRECTSOUND_DEVICE);
 	
 	m_bPause = false;
@@ -283,8 +285,9 @@ HRESULT CoreAudioAUHAL::Deinitialize()
 //***********************************************************************************************
 void CoreAudioAUHAL::Flush() 
 {
-	CLog::Log(LOGDEBUG, "Flushing %i bytes from buffer", rb_data_size(deviceParameters->outputBuffer));
-	rb_clear(deviceParameters->outputBuffer);
+	CLog::Log(LOGDEBUG, "Flushing %i bytes from buffer", PaUtil_GetRingBufferReadAvailable(deviceParameters->outputBuffer));
+#warning disabled
+	//rb_clear(deviceParameters->outputBuffer);
 	
 	if (m_bEncodeAC3)
 	{
@@ -365,18 +368,9 @@ HRESULT CoreAudioAUHAL::SetCurrentVolume(LONG nVolume)
 //***********************************************************************************************
 DWORD CoreAudioAUHAL::GetSpace()
 {
-	DWORD bufferDataSize = rb_data_size(deviceParameters->outputBuffer);
+	DWORD bufferDataSize = PaUtil_GetRingBufferReadAvailable(deviceParameters->outputBuffer);
+	DWORD fakeCeiling = m_uiSamplesPerSec * CA_BUFFER_FACTOR;
 	
-	if (m_bEncodeAC3)
-	{
-		bufferDataSize /= (SPDIF_CHANNELS * SPDIF_SAMPLESIZE/8);
-	}
-	else
-	{
-		bufferDataSize /= (m_uiChannels * m_uiBitsPerSample/8);
-	}
-	// limit buffer length to CA_BUFFER_FACTOR seconds
-	DWORD fakeCeiling = 512;//m_uiSamplesPerSec * CA_BUFFER_FACTOR;
 	if (bufferDataSize < fakeCeiling)
 	{
 		return fakeCeiling - bufferDataSize;
@@ -415,7 +409,7 @@ DWORD CoreAudioAUHAL::AddPackets(unsigned char *data, DWORD len)
 	samplesPassedIn = len / inputByteFactor;
 	
 	// Find out how much space we have available and clip to the amount we got passed in. 
-	DWORD samplesToWrite  = GetSpace();
+ 	DWORD samplesToWrite = GetSpace();
 	CLog::Log(LOGDEBUG, "Asked to write %i samples, buffer free %i samples", samplesPassedIn, samplesToWrite);
 	if (samplesToWrite == 0) return samplesToWrite;
 	
@@ -441,7 +435,7 @@ DWORD CoreAudioAUHAL::AddPackets(unsigned char *data, DWORD len)
 			}
 			else
 			{
-				rb_write(deviceParameters->outputBuffer, ac3_framebuffer, samplesToWrite * outputByteFactor);
+				PaUtil_WriteRingBuffer(deviceParameters->outputBuffer, ac3_framebuffer, samplesToWrite);
 			}
 		}
 	}
@@ -452,7 +446,7 @@ DWORD CoreAudioAUHAL::AddPackets(unsigned char *data, DWORD len)
 			m_amp.DeAmplify((short *)pcmPtr, samplesToWrite);
 		
 		// Write data to the stream.
-		rb_write(deviceParameters->outputBuffer, pcmPtr, samplesToWrite * outputByteFactor);
+		PaUtil_WriteRingBuffer(deviceParameters->outputBuffer, pcmPtr, samplesToWrite);
 	}
 	return samplesToWrite * inputByteFactor;
 
@@ -463,12 +457,12 @@ FLOAT CoreAudioAUHAL::GetDelay()
 {
 	// For now hardwire to about +15ms from "base", which is what we're observing.
 #warning set programmatically
-	FLOAT delay = 1000 * CA_BUFFER_FACTOR;
+	FLOAT delay = CA_BUFFER_FACTOR;
 	
-	if (m_bEncodeAC3)
-		delay += 0.032; // 1536/48000 = 0.064 (one AC3 packet)
-	else
-		delay += 0.008;
+	//if (m_bEncodeAC3)
+	//	delay += 0.032; // 1536/48000 = 0.064 (one AC3 packet)
+	//else
+	//	delay += 0.008;
 	
 	return delay;
 }
@@ -678,7 +672,7 @@ int CoreAudioAUHAL::OpenPCM(struct CoreAudioDeviceParameters *deviceParameters, 
 	
     /* Calculate framesizes and stuff */
     DeviceFormat.mFramesPerPacket = 1;
-    DeviceFormat.mBytesPerFrame = DeviceFormat.mBitsPerChannel * DeviceFormat.mChannelsPerFrame / 8;
+    DeviceFormat.mBytesPerFrame = DeviceFormat.mBitsPerChannel/8 * DeviceFormat.mChannelsPerFrame;
     DeviceFormat.mBytesPerPacket = DeviceFormat.mBytesPerFrame * DeviceFormat.mFramesPerPacket;
 	
     /* Set the desired format */
@@ -720,7 +714,18 @@ int CoreAudioAUHAL::OpenPCM(struct CoreAudioDeviceParameters *deviceParameters, 
     //deviceParameters->clock_diff += mdate();
 	
 	// initialise the CoreAudio sink buffer
-	rb_init(&deviceParameters->outputBuffer, sampleRate * DeviceFormat.mBytesPerFrame);
+	uint32_t framecount = 1;
+	while(framecount <= deviceParameters->stream_format.mSampleRate) // ensure power of 2
+	{
+		framecount <<= 1;
+	}
+	deviceParameters->outputBuffer = (PaUtilRingBuffer *)malloc(sizeof(PaUtilRingBuffer));
+	deviceParameters->outputBufferData = malloc(framecount * deviceParameters->stream_format.mBytesPerFrame);
+	
+	PaUtil_InitializeRingBuffer(deviceParameters->outputBuffer, 
+								deviceParameters->stream_format.mBytesPerFrame,
+								framecount, deviceParameters->outputBufferData);
+	//rb_init(&deviceParameters->outputBuffer, sampleRate * DeviceFormat.mBytesPerFrame);
 	
 	
     /* Start the AU */
@@ -762,8 +767,9 @@ OSStatus CoreAudioAUHAL::RenderCallbackAnalog(struct CoreAudioDeviceParameters *
 	
     // initial calc
 	int framesToWrite = inNumberFrames;
-	int framesAvailable = rb_data_size(deviceParameters->outputBuffer);
-	framesAvailable /= deviceParameters->stream_format.mBytesPerFrame;
+	int framesAvailable = PaUtil_GetRingBufferReadAvailable(deviceParameters->outputBuffer);
+	//rb_data_size(deviceParameters->outputBuffer);
+	//framesAvailable /= deviceParameters->stream_format.mBytesPerFrame;
 	
 	if (framesToWrite > framesAvailable)
 	{
@@ -773,15 +779,20 @@ OSStatus CoreAudioAUHAL::RenderCallbackAnalog(struct CoreAudioDeviceParameters *
 	int i, currentPos = 0, underrunLength = 0;
 	
 	currentPos = framesToWrite * deviceParameters->stream_format.mBytesPerFrame;
-	underrunLength = currentPos + ((inNumberFrames - framesToWrite) * deviceParameters->stream_format.mBytesPerFrame);
+	underrunLength = (inNumberFrames - framesToWrite) * deviceParameters->stream_format.mBytesPerFrame;
 	
 	// write as many frames as possible from buffer
-	rb_read(deviceParameters->outputBuffer, 
-			(uint8_t *)ioData->mBuffers[0].mData,  
-			framesToWrite * deviceParameters->stream_format.mBytesPerFrame);
+	PaUtil_ReadRingBuffer(deviceParameters->outputBuffer, ioData->mBuffers[0].mData, framesToWrite);
+	//rb_read(deviceParameters->outputBuffer, 
+	//		(uint8_t *)ioData->mBuffers[0].mData,  
+	//		framesToWrite * deviceParameters->stream_format.mBytesPerFrame);
 	
 	// write silence to any remainder
-	if (underrunLength > 0) memset((void *)((uint8_t *)(ioData->mBuffers[0].mData)+currentPos), 0, underrunLength);
+	if (underrunLength > 0)
+	{
+		memset((void *)((uint8_t *)(ioData->mBuffers[0].mData)+currentPos), 0, underrunLength);
+		CLog::Log(LOGERROR, "Buffer underrun by %i bytes", underrunLength);
+	}
 	//for (i=currentPos; i < underrunLength; i+=sizeof(int16_t))
 	{
 		//*((int16_t *)(ioData->mBuffers[0].mData)+i) = 0x0000;	
@@ -975,7 +986,18 @@ int CoreAudioAUHAL::OpenSPDIF(struct CoreAudioDeviceParameters *deviceParameters
         return false;
 	
   	// initialise the CoreAudio sink buffer
-	rb_init(&deviceParameters->outputBuffer, SPDIF_SAMPLERATE * SPDIF_SAMPLESIZE/8 * SPDIF_CHANNELS);
+	uint32_t framecount = 1;
+	while(framecount <= deviceParameters->stream_format.mSampleRate) // ensure power of 2
+	{
+		framecount <<= 1;
+	}
+	deviceParameters->outputBuffer = (PaUtilRingBuffer *)malloc(sizeof(PaUtilRingBuffer));
+	deviceParameters->outputBufferData = malloc(framecount * deviceParameters->stream_format.mBytesPerFrame);
+	
+	PaUtil_InitializeRingBuffer(deviceParameters->outputBuffer, 
+								deviceParameters->stream_format.mBytesPerFrame,
+								framecount, deviceParameters->outputBufferData);
+	//rb_init(&deviceParameters->outputBuffer, SPDIF_SAMPLERATE * SPDIF_SAMPLESIZE/8 * SPDIF_CHANNELS);
 	
 	
     /* Add IOProc callback */
@@ -1088,13 +1110,16 @@ OSStatus CoreAudioAUHAL::RenderCallbackSPDIF(AudioDeviceID inDevice,
 	
 #define BUFFER outOutputData->mBuffers[deviceParameters->i_stream_index]
 
-	if (BUFFER.mDataByteSize > rb_data_size(deviceParameters->outputBuffer)) // we can't write a frame, send null frame
+	if (BUFFER.mDataByteSize > (PaUtil_GetRingBufferReadAvailable(deviceParameters->outputBuffer) / 
+								(SPDIF_SAMPLESIZE/8 * SPDIF_CHANNELS))) // we can't write a frame, send null frame
 	{
         memset( BUFFER.mData, 0, BUFFER.mDataByteSize );
     }
 	else // write a frame
 	{
-		rb_read(deviceParameters->outputBuffer, (uint8_t *)BUFFER.mData, BUFFER.mDataByteSize);
+		PaUtil_ReadRingBuffer(deviceParameters->outputBuffer, BUFFER.mData, 
+							  BUFFER.mDataByteSize / (SPDIF_SAMPLESIZE/8 * SPDIF_CHANNELS));
+		//rb_read(deviceParameters->outputBuffer, (uint8_t *)BUFFER.mData, BUFFER.mDataByteSize);
 	}
 #undef BUFFER
     return( noErr );

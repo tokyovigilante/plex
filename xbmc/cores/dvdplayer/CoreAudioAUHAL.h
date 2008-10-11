@@ -30,7 +30,7 @@
 #ifndef __COREAUDIO_AUHAL_H__
 #define __COREAUDIO_AUHAL_H__
 
-#include "ringbuffer.h"
+#include "pa_ringbuffer.h"
 #include "../mplayer/IDirectSoundRenderer.h"
 #include "../../utils/PCMAmplifier.h"
 #include "ac3encoder.h"

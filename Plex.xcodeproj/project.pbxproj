@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		946A03E70E71485F0012D7E9 /* PlexDelegate.mm in Sources */ = {isa = PBXBuildFile; fileRef = E371CB8E0E303C7100FBF841 /* PlexDelegate.mm */; };
+		94BAC55F0E99E8AB00E3CF0E /* pa_ringbuffer.c in Sources */ = {isa = PBXBuildFile; fileRef = 94BAC55D0E99E8AB00E3CF0E /* pa_ringbuffer.c */; };
 		94BCAE500E7B8862007C4208 /* CoreAudioPlexSupport.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 94BCAE4E0E7B8862007C4208 /* CoreAudioPlexSupport.cpp */; };
 		94BCAEB90E7B88AD007C4208 /* CoreAudioAUHAL.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 94BCAEB70E7B88AD007C4208 /* CoreAudioAUHAL.cpp */; };
 		94F3AFFD0E383E3F00940327 /* RTSPTVDirectory.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 944379670E27096400FB8C08 /* RTSPTVDirectory.cpp */; };
@@ -1011,6 +1012,9 @@
 		94437B060E283D1900FB8C08 /* GUIWindowEPG.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = GUIWindowEPG.cpp; sourceTree = "<group>"; };
 		94B9CC7C0E201D6200FA073E /* DVDDemuxMPEGTS.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = DVDDemuxMPEGTS.cpp; sourceTree = "<group>"; };
 		94B9CC7D0E201D6200FA073E /* DVDDemuxMPEGTS.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DVDDemuxMPEGTS.h; sourceTree = "<group>"; };
+		94BAC55D0E99E8AB00E3CF0E /* pa_ringbuffer.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = pa_ringbuffer.c; path = AC3Encoder/pa_ringbuffer.c; sourceTree = "<group>"; };
+		94BAC55E0E99E8AB00E3CF0E /* pa_ringbuffer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = pa_ringbuffer.h; path = AC3Encoder/pa_ringbuffer.h; sourceTree = "<group>"; };
+		94BAC5AE0E99EA3C00E3CF0E /* pa_memorybarrier.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = pa_memorybarrier.h; path = AC3Encoder/pa_memorybarrier.h; sourceTree = "<group>"; };
 		94BCAE4E0E7B8862007C4208 /* CoreAudioPlexSupport.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CoreAudioPlexSupport.cpp; sourceTree = "<group>"; };
 		94BCAE4F0E7B8862007C4208 /* CoreAudioPlexSupport.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CoreAudioPlexSupport.h; sourceTree = "<group>"; };
 		94BCAEB70E7B88AD007C4208 /* CoreAudioAUHAL.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CoreAudioAUHAL.cpp; sourceTree = "<group>"; };
@@ -3223,12 +3227,15 @@
 		9409C1E50E01D680001626C3 /* AC3Encoder */ = {
 			isa = PBXGroup;
 			children = (
+				94BAC55D0E99E8AB00E3CF0E /* pa_ringbuffer.c */,
+				94BAC55E0E99E8AB00E3CF0E /* pa_ringbuffer.h */,
 				9409C1E80E01D696001626C3 /* ac3encoder.cpp */,
 				9409C1E90E01D696001626C3 /* ac3encoder.h */,
 				9409C1EA0E01D696001626C3 /* aften-types.h */,
 				9409C1EB0E01D696001626C3 /* aften.h */,
 				9409C1EC0E01D696001626C3 /* ringbuffer.cpp */,
 				9409C1ED0E01D696001626C3 /* ringbuffer.h */,
+				94BAC5AE0E99EA3C00E3CF0E /* pa_memorybarrier.h */,
 			);
 			name = AC3Encoder;
 			sourceTree = "<group>";
@@ -7164,6 +7171,7 @@
 				94BCAE500E7B8862007C4208 /* CoreAudioPlexSupport.cpp in Sources */,
 				94BCAEB90E7B88AD007C4208 /* CoreAudioAUHAL.cpp in Sources */,
 				E3C1A6AA0E74E85C00CE0104 /* AsyncFileCopy.cpp in Sources */,
+				94BAC55F0E99E8AB00E3CF0E /* pa_ringbuffer.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
